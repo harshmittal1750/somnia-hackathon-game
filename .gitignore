@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Hardhat artifacts
+artifacts/
+cache/
+coverage/
+coverage.json
+
+# TypeScript
+*.tsbuildinfo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Build outputs
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/
+
+# IDE files
+*.sublime-project
+*.sublime-workspace
+
+# Package manager locks (keep package-lock.json)
+yarn.lock
+pnpm-lock.yaml
+
+# Audio files (too large for git - add manually)
+assets/audio/*.mp3
+assets/audio/*.wav
+assets/audio/*.ogg
+
+# Images (add selectively)
+assets/images/*.png
+assets/images/*.jpg
+assets/images/*.gif
+!assets/images/favicon.ico

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Somnia Space Defender - Web3 Game</title>
+    <link rel="stylesheet" href="styles/main.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="gameContainer">
+      <!-- Web3 Connection Panel -->
+      <div id="web3Panel" class="panel">
+        <div class="panel-content">
+          <h1>🚀 Somnia Space Defender</h1>
+          <p>Defend the galaxy against alien invasion!</p>
+          <button id="connectWallet" class="btn btn-primary">
+            Connect Wallet
+          </button>
+          <button
+            id="refreshConnection"
+            class="btn btn-secondary"
+            style="margin-top: 10px"
+          >
+            🔄 Refresh Connection
+          </button>
+          <div id="walletInfo" class="wallet-info hidden">
+            <p>Connected: <span id="walletAddress"></span></p>
+            <p>Network: <span id="networkName"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game UI -->
+      <div id="gameUI" class="hidden">
+        <div class="hud">
+          <div class="hud-left">
+            <div class="stat">
+              <span class="label">Score:</span>
+              <span id="score">0</span>
+            </div>
+            <div class="stat">
+              <span class="label">Level:</span>
+              <span id="level">1</span>
+            </div>
+            <div class="stat">
+              <span class="label">Lives:</span>
+              <span id="lives">3</span>
+            </div>
+            <div class="stat" style="color: #ffd700">
+              <span class="label">💰 Session:</span>
+              <span id="sessionSSD">0</span>
+            </div>
+          </div>
+          <div class="hud-right">
+            <div class="stat">
+              <span class="label">💰 SSD:</span>
+              <span id="hudSSDBalance">0</span>
+            </div>
+            <div class="stat">
+              <span class="label">High Score:</span>
+              <span id="highScore">0</span>
+            </div>
+            <button id="pauseBtn" class="btn btn-small">⏸️</button>
+          </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+        <div class="controls-info">
+          <p>🎮 WASD or Arrow Keys to move • SPACE to shoot • ESC to pause</p>
+        </div>
+      </div>
+
+      <!-- Game Menu -->
+      <div id="gameMenu" class="panel hidden">
+        <div class="panel-content">
+          <h2>🛸 Space Defender</h2>
+          <div class="level-selector">
+            <h3>Select Difficulty Level</h3>
+            <div class="level-grid">
+              <button class="level-btn" data-level="1">1 - Rookie</button>
+              <button class="level-btn" data-level="2">2 - Cadet</button>
+              <button class="level-btn" data-level="3">3 - Pilot</button>
+              <button class="level-btn" data-level="4">4 - Ace</button>
+              <button class="level-btn" data-level="5">5 - Veteran</button>
+              <button class="level-btn" data-level="6">6 - Elite</button>
+              <button class="level-btn" data-level="7">7 - Legend</button>
+              <button class="level-btn" data-level="8">8 - Master</button>
+              <button class="level-btn" data-level="9">9 - Nightmare</button>
+              <button class="level-btn" data-level="10">10 - INSANE</button>
+            </div>
+          </div>
+          <button id="startGame" class="btn btn-primary">
+            🚀 Start Mission
+          </button>
+          <div class="menu-buttons">
+            <button id="leaderboard" class="btn btn-secondary">
+              🏆 Leaderboard
+            </button>
+            <button id="openShop" class="btn btn-secondary">🛍️ SSD Shop</button>
+            <button id="openTwitter" class="btn btn-secondary">
+              🐦 Twitter (5 SSD)
+            </button>
+            <button id="openFeatures" class="btn btn-secondary">
+              🚀 Upcoming
+            </button>
+          </div>
+          <div class="euclid-link">
+            <p>
+              💎 Trade SSD tokens on
+              <a
+                href="https://testnet.euclidswap.io/pools/ssd.eucl-stt"
+                target="_blank"
+              >
+                Euclid Swap
+              </a>
+            </p>
+          </div>
+          <div class="admin-section">
+            <button
+              id="openAdmin"
+              class="btn btn-secondary"
+              style="
+                background: linear-gradient(145deg, #ff6600, #ff4400);
+                margin-top: 10px;
+              "
+            >
+              👑 Admin Panel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pause Menu -->
+      <div id="pauseMenu" class="panel overlay hidden">
+        <div class="panel-content">
+          <h2>⏸️ Game Paused</h2>
+          <button id="resumeGame" class="btn btn-primary">Resume</button>
+          <button id="restartGame" class="btn btn-secondary">Restart</button>
+          <button id="backToMenu" class="btn btn-secondary">Main Menu</button>
+        </div>
+      </div>
+
+      <!-- Game Over Screen -->
+      <div id="gameOverScreen" class="panel overlay hidden">
+        <div class="panel-content">
+          <h2 id="gameOverTitle">💥 Mission Failed</h2>
+          <div class="game-over-stats">
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <p>Level Reached: <span id="finalLevel">1</span></p>
+            <p>Aliens Defeated: <span id="aliensKilled">0</span></p>
+            <p style="color: #ffd700; font-weight: bold">
+              💰 SSD Earned: <span id="sessionSSDEarned">0</span>
+            </p>
+          </div>
+          <div id="newHighScore" class="new-record hidden">
+            <p>🎉 NEW HIGH SCORE!</p>
+
+            <button id="saveScore" class="btn btn-primary">
+              Save to Blockchain to get rewards
+            </button>
+          </div>
+          <button id="playAgain" class="btn btn-primary">Play Again</button>
+          <button id="backToMenuFromGameOver" class="btn btn-secondary">
+            Main Menu
+          </button>
+        </div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div id="leaderboardPanel" class="panel overlay hidden">
+        <div class="panel-content">
+          <h2>🏆 Galactic Leaderboard</h2>
+          <div id="leaderboardList" class="leaderboard-list">
+            <div class="loading">Loading from blockchain...</div>
+          </div>
+          <button id="closeLeaderboard" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+
+      <!-- SSD Shop -->
+      <div id="ssdShop" class="panel overlay hidden">
+        <div class="panel-content">
+          <h2>🛍️ SSD Power-Up Shop</h2>
+          <div class="ssd-balance">
+            <p>💰 SSD Balance: <span id="ssdBalance">0</span> SSD</p>
+            <p>
+              🎮 Earned: <span id="ssdEarned">0</span> | 💸 Spent:
+              <span id="ssdSpent">0</span>
+            </p>
+          </div>
+          <div id="shopItems" class="shop-grid">
+            <div class="loading">Loading shop items...</div>
+          </div>
+          <button id="closeShop" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+
+      <!-- Twitter Verification -->
+      <div id="twitterPanel" class="panel overlay hidden">
+        <div class="panel-content">
+          <h2>🐦 Twitter Verification</h2>
+          <p>
+            Connect your Twitter account to earn <strong>5 SSD tokens!</strong>
+          </p>
+          <div id="twitterForm" class="twitter-form">
+            <input
+              type="text"
+              id="twitterHandle"
+              placeholder="@your_handle"
+              maxlength="50"
+            />
+            <button id="verifyTwitter" class="btn btn-primary">
+              Verify & Claim 5 SSD
+            </button>
+          </div>
+          <div id="twitterVerified" class="twitter-verified hidden">
+            <p>✅ Twitter Verified: <span id="verifiedHandle"></span></p>
+            <p>🎉 5 SSD tokens claimed!</p>
+          </div>
+          <button id="closeTwitter" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+
+      <!-- Upcoming Features -->
+      <div id="upcomingFeatures" class="panel overlay hidden">
+        <div class="panel-content">
+          <h2>🚀 Upcoming Features</h2>
+          <div class="features-list">
+            <div class="feature-item">
+              <h3>🏆 Tournament System</h3>
+              <p>Weekly tournaments with massive SSD prize pools</p>
+              <span class="eta">ETA: 2 weeks</span>
+            </div>
+            <div class="feature-item">
+              <h3>🎨 NFT Achievements</h3>
+              <p>Exclusive NFTs for milestone achievements</p>
+              <span class="eta">ETA: 3 weeks</span>
+            </div>
+            <div class="feature-item">
+              <h3>👥 Guild System</h3>
+              <p>Team up with friends for guild battles</p>
+              <span class="eta">ETA: 1 month</span>
+            </div>
+            <div class="feature-item">
+              <h3>🏪 Advanced Marketplace</h3>
+              <p>Trade rare items and achievements</p>
+              <span class="eta">ETA: 1.5 months</span>
+            </div>
+            <div class="feature-item">
+              <h3>🌊 Liquidity Mining</h3>
+              <p>Earn bonus SSD for providing liquidity</p>
+              <span class="eta">ETA: 2 months</span>
+            </div>
+            <div class="feature-item">
+              <h3>📱 Mobile App</h3>
+              <p>Play anywhere with our mobile version</p>
+              <span class="eta">ETA: 3 months</span>
+            </div>
+          </div>
+          <button id="closeFeatures" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+
+      <!-- Admin Panel -->
+      <div id="adminPanel" class="panel overlay hidden">
+        <div class="panel-content">
+          <h2>👑 Admin Panel</h2>
+          <div class="admin-stats">
+            <div class="stat-item">
+              <label>Contract SSD Balance:</label>
+              <span id="contractBalance">Loading...</span> SSD
+            </div>
+            <div class="stat-item">
+              <label>Your SSD Balance:</label>
+              <span id="adminSSDBalance">Loading...</span> SSD
+            </div>
+          </div>
+
+          <div class="admin-actions">
+            <h3>💰 Fund Contract</h3>
+            <p>Transfer SSD tokens to the contract so it can reward players:</p>
+            <div class="fund-section">
+              <input
+                type="number"
+                id="fundAmount"
+                placeholder="Amount (e.g., 1000)"
+                min="1"
+              />
+              <button id="fundContract" class="btn btn-primary">
+                Fund Contract
+              </button>
+            </div>
+
+            <h3>💸 Withdraw from Contract</h3>
+            <p>Withdraw SSD tokens from the contract back to your wallet:</p>
+            <div class="withdraw-section">
+              <input
+                type="number"
+                id="withdrawAmount"
+                placeholder="Amount (e.g., 100)"
+                min="1"
+              />
+              <button id="withdrawContract" class="btn btn-secondary">
+                Withdraw SSD
+              </button>
+            </div>
+          </div>
+
+          <button id="closeAdmin" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+
+      <!-- Loading Screen -->
+      <div id="loadingScreen" class="panel">
+        <div class="panel-content">
+          <div class="loading-animation">
+            <div class="spaceship">🚀</div>
+            <div class="stars">✨</div>
+          </div>
+          <p>Initializing Quantum Drive...</p>
+          <div class="progress-bar">
+            <div id="loadingProgress" class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="backgroundMusic" loop>
+      <source src="assets/audio/background.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="shootSound">
+      <source src="assets/audio/shoot.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="explosionSound">
+      <source src="assets/audio/explosion.mp3" type="audio/mpeg" />
+    </audio>
+    <audio id="powerupSound">
+      <source src="assets/audio/powerup.mp3" type="audio/mpeg" />
+    </audio>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/web3Manager.js"></script>
+    <script src="js/gameEngine.js"></script>
+    <script src="js/entities.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
