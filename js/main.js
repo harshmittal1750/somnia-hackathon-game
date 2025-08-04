@@ -14,24 +14,37 @@ class GameApp {
     console.log("🚀 Initializing Somnia Space Defender...");
 
     try {
-      // Show loading screen
-      this.showLoadingScreen();
+      // Mobile optimizations
+      this.setupMobileOptimizations();
+
+      // Loading screen is already visible by default
+      this.updateLoadingProgress(10, "Loading game assets...");
 
       // Initialize components step by step
       await this.loadAssets();
+      this.updateLoadingProgress(40, "Initializing components...");
+
       await this.initializeComponents();
+      this.updateLoadingProgress(70, "Setting up event listeners...");
+
       this.setupEventListeners();
+      this.updateLoadingProgress(85, "Finalizing UI...");
+
       this.initializeUI();
+      this.updateLoadingProgress(95, "Connecting to wallet...");
 
       // Check wallet connection status
       this.checkWalletConnection();
 
+      this.updateLoadingProgress(100, "Ready to launch!");
+
+      // Hide loading screen after a brief moment to show completion
+      setTimeout(() => {
+        this.hideLoadingScreen();
+      }, 500);
+
       this.isInitialized = true;
       console.log("✅ Game fully initialized!");
-
-      // Hide loading screen and show wallet connection
-      this.hideLoadingScreen();
-      this.showWalletPanel();
     } catch (error) {
       console.error("❌ Failed to initialize game:", error);
       this.showErrorScreen(error.message);
@@ -379,6 +392,12 @@ class GameApp {
 
   hideLoadingScreen() {
     document.getElementById("loadingScreen").classList.add("hidden");
+
+    // Only show wallet panel if we're not already connected and in game menu
+    if (!web3Manager.canPlayGame()) {
+      this.showWalletPanel();
+    }
+    // If wallet is connected, the checkWalletConnection() already handled showing the right screen
   }
 
   updateLoadingProgress(percent, message) {
@@ -392,6 +411,98 @@ class GameApp {
 
     if (loadingText && message) {
       loadingText.textContent = message;
+    }
+  }
+
+  setupMobileOptimizations() {
+    console.log("📱 Setting up mobile optimizations...");
+
+    // Detect mobile device
+    this.isMobile = this.detectMobileDevice();
+
+    if (this.isMobile) {
+      // Prevent zoom on double tap
+      document.addEventListener(
+        "touchstart",
+        function (event) {
+          if (event.touches.length > 1) {
+            event.preventDefault();
+          }
+        },
+        { passive: false }
+      );
+
+      // Prevent zoom on double tap for specific elements
+      let lastTouchEnd = 0;
+      document.addEventListener(
+        "touchend",
+        function (event) {
+          const now = new Date().getTime();
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+          lastTouchEnd = now;
+        },
+        false
+      );
+
+      // Handle orientation changes
+      window.addEventListener("orientationchange", () => {
+        setTimeout(() => {
+          this.handleOrientationChange();
+        }, 100);
+      });
+
+      // Improve touch scrolling for panels
+      this.setupTouchScrolling();
+
+      // Add mobile-specific CSS class
+      document.body.classList.add("mobile-device");
+
+      console.log("✅ Mobile optimizations applied");
+    }
+  }
+
+  detectMobileDevice() {
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ) ||
+      (navigator.maxTouchPoints &&
+        navigator.maxTouchPoints > 2 &&
+        /MacIntel/.test(navigator.platform))
+    );
+  }
+
+  handleOrientationChange() {
+    // Force a reflow to handle orientation changes properly
+    const gameContainer = document.getElementById("gameContainer");
+    if (gameContainer) {
+      gameContainer.style.display = "none";
+      gameContainer.offsetHeight; // Force reflow
+      gameContainer.style.display = "flex";
+    }
+
+    // Close any open dropdowns on orientation change
+    const dropdown = document.getElementById("somniaDropdown");
+    if (dropdown && !dropdown.classList.contains("hidden")) {
+      dropdown.classList.add("hidden");
+    }
+  }
+
+  setupTouchScrolling() {
+    // Improve touch scrolling for panels with overflow
+    const panels = document.querySelectorAll(".panel");
+    panels.forEach((panel) => {
+      panel.style.webkitOverflowScrolling = "touch";
+      panel.style.overflowScrolling = "touch";
+    });
+
+    // Improve dropdown touch scrolling
+    const dropdownContent = document.getElementById("somniaDropdown");
+    if (dropdownContent) {
+      dropdownContent.style.webkitOverflowScrolling = "touch";
+      dropdownContent.style.overflowScrolling = "touch";
     }
   }
 
