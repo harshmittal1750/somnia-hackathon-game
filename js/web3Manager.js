@@ -20,6 +20,9 @@ class Web3Manager {
   async init() {
     console.log("🔗 Initializing Web3 Manager...");
 
+    // Show checking status
+    this.updateWalletStatus("checking", "🔍 Checking for wallet...");
+
     // Reset state first
     this.resetState();
 
@@ -55,9 +58,8 @@ class Web3Manager {
         this.handleDisconnect();
       }
     } else {
-      console.error("MetaMask not detected");
-      this.handleDisconnect();
-      this.showInstallMetaMaskPrompt();
+      console.log("No Web3 wallet detected");
+      this.handleNoWalletDetected();
     }
   }
 
@@ -702,16 +704,76 @@ class Web3Manager {
   }
 
   updateWalletUI() {
-    const connectBtn = document.getElementById("connectWallet");
+    if (this.isConnected && this.account) {
+      this.updateWalletStatus("detected", "✅ Wallet Connected");
+      this.showWalletActions(["disconnectWallet", "refreshConnection"]);
+      this.showWalletInfo();
+    } else {
+      // Check if wallet is available
+      if (typeof window.ethereum !== "undefined") {
+        this.updateWalletStatus("detected", "🦊 Wallet Detected");
+        this.showWalletActions(["connectWallet"]);
+      } else {
+        this.updateWalletStatus("not-detected", "No wallet detected");
+        this.showWalletActions(["downloadWallet"]);
+      }
+      this.hideWalletInfo();
+    }
+  }
+
+  updateWalletStatus(status, message) {
+    const walletStatus = document.getElementById("walletStatus");
+    const walletStatusText = document.getElementById("walletStatusText");
+
+    if (walletStatus && walletStatusText) {
+      // Remove all status classes
+      walletStatus.classList.remove("checking", "detected", "not-detected");
+
+      // Add current status class
+      walletStatus.classList.add(status);
+
+      // Update message
+      walletStatusText.textContent = message;
+    }
+  }
+
+  showWalletActions(actions) {
+    // Hide all buttons first
+    const allButtons = [
+      "connectWallet",
+      "disconnectWallet",
+      "refreshConnection",
+      "downloadWallet",
+    ];
+
+    allButtons.forEach((buttonId) => {
+      const button = document.getElementById(buttonId);
+      if (button) {
+        button.classList.add("hidden");
+      }
+    });
+
+    // Show only requested buttons
+    actions.forEach((buttonId) => {
+      const button = document.getElementById(buttonId);
+      if (button) {
+        button.classList.remove("hidden");
+      }
+    });
+
+    // Hide download options by default
+    const downloadOptions = document.getElementById("walletDownloadOptions");
+    if (downloadOptions) {
+      downloadOptions.classList.add("hidden");
+    }
+  }
+
+  showWalletInfo() {
     const walletInfo = document.getElementById("walletInfo");
     const walletAddress = document.getElementById("walletAddress");
     const networkName = document.getElementById("networkName");
 
-    if (this.isConnected && this.account) {
-      connectBtn.textContent = "Connected ✅";
-      connectBtn.disabled = true;
-      connectBtn.classList.add("btn-secondary");
-
+    if (walletInfo && walletAddress && networkName) {
       walletInfo.classList.remove("hidden");
       walletAddress.textContent = UTILS.formatAddress(this.account);
 
@@ -723,24 +785,30 @@ class Web3Manager {
         networkName.textContent = "Wrong Network";
         networkName.style.color = "#ff4444";
       }
-    } else {
-      connectBtn.textContent = "Connect Wallet";
-      connectBtn.disabled = false;
-      connectBtn.classList.remove("btn-secondary");
+    }
+  }
+
+  hideWalletInfo() {
+    const walletInfo = document.getElementById("walletInfo");
+    if (walletInfo) {
       walletInfo.classList.add("hidden");
     }
   }
 
-  showInstallMetaMaskPrompt() {
-    this.showError(
-      "MetaMask is required to play. Please install MetaMask and refresh the page."
-    );
+  handleNoWalletDetected() {
+    this.isConnected = false;
+    this.updateWalletStatus("not-detected", "No wallet detected");
+    this.showWalletActions(["downloadWallet"]);
   }
 
   showError(message) {
     console.error("❌", message);
-    // You can implement a toast notification system here
-    alert("Error: " + message);
+    // Show user-friendly notification instead of alert
+    if (window.gameApp && window.gameApp.showNotification) {
+      window.gameApp.showNotification(message, "error", 5000);
+    } else {
+      console.error("Error:", message);
+    }
   }
 
   showWarning(message) {
@@ -750,7 +818,72 @@ class Web3Manager {
 
   showSuccess(message) {
     console.log("✅", message);
-    // You can implement a toast notification system here
+    // Show user-friendly notification instead of console only
+    if (window.gameApp && window.gameApp.showNotification) {
+      window.gameApp.showNotification(message, "success", 3000);
+    }
+  }
+
+  // Wallet download handling
+  showWalletDownloadOptions() {
+    const downloadOptions = document.getElementById("walletDownloadOptions");
+    const walletActions = document.getElementById("walletActions");
+
+    if (downloadOptions && walletActions) {
+      walletActions.classList.add("hidden");
+      downloadOptions.classList.remove("hidden");
+    }
+  }
+
+  hideWalletDownloadOptions() {
+    const downloadOptions = document.getElementById("walletDownloadOptions");
+    const walletActions = document.getElementById("walletActions");
+
+    if (downloadOptions && walletActions) {
+      downloadOptions.classList.add("hidden");
+      walletActions.classList.remove("hidden");
+    }
+  }
+
+  redirectToWalletDownload(walletType) {
+    const walletUrls = {
+      metamask: "https://metamask.io/download/",
+      coinbase: "https://wallet.coinbase.com/",
+      walletconnect: "https://explorer.walletconnect.com/?type=wallet",
+    };
+
+    const url = walletUrls[walletType];
+    if (url) {
+      console.log(`🔗 Redirecting to ${walletType} download page`);
+      window.open(url, "_blank");
+
+      // Show helpful message
+      this.showSuccess(
+        `Opening ${walletType} download page. Please install and refresh this page.`
+      );
+    }
+  }
+
+  // Disconnect wallet
+  async disconnectWallet() {
+    try {
+      // Reset our state
+      this.resetState();
+
+      // Update UI
+      this.updateWalletUI();
+
+      // Call disconnect callback
+      if (this.onDisconnect) {
+        this.onDisconnect();
+      }
+
+      this.showSuccess("Wallet disconnected successfully");
+      console.log("🔌 Wallet disconnected by user");
+    } catch (error) {
+      console.error("Failed to disconnect wallet:", error);
+      this.showError("Failed to disconnect wallet: " + error.message);
+    }
   }
 
   // Utility methods

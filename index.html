@@ -11,6 +11,11 @@
       href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
   </head>
   <body>
     <div id="gameContainer">
@@ -19,19 +24,110 @@
         <div class="panel-content">
           <h1>🚀 Somnia Space Defender</h1>
           <p>Defend the galaxy against alien invasion!</p>
-          <button id="connectWallet" class="btn btn-primary">
-            Connect Wallet
-          </button>
-          <button
-            id="refreshConnection"
-            class="btn btn-secondary"
-            style="margin-top: 10px"
-          >
-            🔄 Refresh Connection
-          </button>
+
+          <!-- Wallet Detection Status -->
+          <div id="walletStatus" class="wallet-status">
+            <p id="walletStatusText">Checking for wallet...</p>
+          </div>
+
+          <!-- Wallet Actions -->
+          <div id="walletActions" class="wallet-actions">
+            <button id="connectWallet" class="btn btn-primary hidden">
+              🔗 Connect Wallet
+            </button>
+            <button id="disconnectWallet" class="btn btn-secondary hidden">
+              🔌 Disconnect
+            </button>
+            <button id="refreshConnection" class="btn btn-secondary hidden">
+              🔄 Refresh Connection
+            </button>
+            <button id="downloadWallet" class="btn btn-primary hidden">
+              📥 Get Wallet
+            </button>
+          </div>
+
+          <!-- Connected Wallet Info -->
           <div id="walletInfo" class="wallet-info hidden">
             <p>Connected: <span id="walletAddress"></span></p>
             <p>Network: <span id="networkName"></span></p>
+          </div>
+
+          <!-- Wallet Download Options -->
+          <div
+            id="walletDownloadOptions"
+            class="wallet-download-options hidden"
+          >
+            <p>Choose a Web3 wallet to get started:</p>
+            <div class="wallet-options">
+              <button class="wallet-option-btn" data-wallet="metamask">
+                🦊 MetaMask
+              </button>
+              <button class="wallet-option-btn" data-wallet="coinbase">
+                🔵 Coinbase Wallet
+              </button>
+              <button class="wallet-option-btn" data-wallet="walletconnect">
+                🔗 WalletConnect
+              </button>
+            </div>
+            <button
+              id="backToConnect"
+              class="btn btn-secondary"
+              style="margin-top: 15px"
+            >
+              ← Back
+            </button>
+          </div>
+
+          <!-- Somnia Resources Dropdown -->
+          <div class="somnia-resources">
+            <div class="dropdown">
+              <button
+                id="somniaResourcesBtn"
+                class="btn btn-secondary dropdown-btn"
+              >
+                🌐 Somnia Resources ▼
+              </button>
+              <div id="somniaDropdown" class="dropdown-content hidden">
+                <h4>🚰 Get STT Tokens (Faucets)</h4>
+                <a
+                  href="https://testnet.somnia.network"
+                  target="_blank"
+                  class="dropdown-link"
+                >
+                  🏠 Official Somnia Testnet
+                </a>
+                <a
+                  href="https://www.gas.zip/faucet/somnia"
+                  target="_blank"
+                  class="dropdown-link"
+                >
+                  ⛽ Gas.zip Faucet
+                </a>
+                <a
+                  href="https://faucet.trade/somnia-shannon-stt-faucet"
+                  target="_blank"
+                  class="dropdown-link"
+                >
+                  💧 Faucet.trade
+                </a>
+                <hr class="dropdown-divider" />
+                <h4>💱 Trade SSD Tokens</h4>
+                <a
+                  href="https://testnet.euclidswap.io/swap"
+                  target="_blank"
+                  class="dropdown-link"
+                >
+                  🔄 Euclid Swap (SSD Trading)
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tutorial Access -->
+          <div class="tutorial-access">
+            <button id="openTutorialFromWallet" class="btn btn-secondary">
+              🎓 How to Play
+            </button>
           </div>
         </div>
       </div>
@@ -102,6 +198,9 @@
           <div class="menu-buttons">
             <button id="leaderboard" class="btn btn-secondary">
               🏆 Leaderboard
+            </button>
+            <button id="openTutorial" class="btn btn-secondary">
+              🎓 Tutorial
             </button>
             <button id="openShop" class="btn btn-secondary">🛍️ SSD Shop</button>
             <button id="openTwitter" class="btn btn-secondary">
@@ -314,6 +413,54 @@
           </div>
 
           <button id="closeAdmin" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+
+      <!-- Tutorial Panel -->
+      <div id="tutorialPanel" class="panel overlay hidden">
+        <div class="panel-content">
+          <div class="tutorial-header">
+            <h2>🎓 Space Defender Tutorial</h2>
+            <div class="tutorial-progress">
+              <div class="progress-bar">
+                <div id="tutorialProgressBar" class="progress-fill"></div>
+              </div>
+              <span id="tutorialStepIndicator">Step 1 of 6</span>
+            </div>
+          </div>
+
+          <div class="tutorial-content">
+            <div id="tutorialStepContent">
+              <div class="tutorial-icon">🚀</div>
+              <h3 id="tutorialStepTitle">Welcome to Space Defender!</h3>
+              <p id="tutorialStepDescription">
+                Use WASD or arrow keys to move your spaceship
+              </p>
+              <div class="tutorial-visual" id="tutorialVisual">
+                <div class="key-demo">
+                  <div class="key-row">
+                    <div class="key">W</div>
+                  </div>
+                  <div class="key-row">
+                    <div class="key">A</div>
+                    <div class="key">S</div>
+                    <div class="key">D</div>
+                  </div>
+                  <div class="key-text">Movement Keys</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tutorial-controls">
+            <button id="tutorialPrev" class="btn btn-secondary" disabled>
+              ← Previous
+            </button>
+            <button id="tutorialSkip" class="btn btn-secondary">
+              Skip Tutorial
+            </button>
+            <button id="tutorialNext" class="btn btn-primary">Next →</button>
+          </div>
         </div>
       </div>
 

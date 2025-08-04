@@ -152,12 +152,64 @@ class GameApp {
       this.connectWallet();
     });
 
+    // Disconnect wallet
+    document
+      .getElementById("disconnectWallet")
+      ?.addEventListener("click", () => {
+        this.disconnectWallet();
+      });
+
     // Refresh connection
     document
       .getElementById("refreshConnection")
       ?.addEventListener("click", () => {
         this.refreshConnection();
       });
+
+    // Download wallet
+    document.getElementById("downloadWallet")?.addEventListener("click", () => {
+      this.showWalletDownloadOptions();
+    });
+
+    // Back to connect (from download options)
+    document.getElementById("backToConnect")?.addEventListener("click", () => {
+      this.hideWalletDownloadOptions();
+    });
+
+    // Wallet download option buttons
+    document.querySelectorAll(".wallet-option-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const walletType = e.target.dataset.wallet;
+        this.downloadWallet(walletType);
+      });
+    });
+
+    // Somnia Resources Dropdown
+    document
+      .getElementById("somniaResourcesBtn")
+      ?.addEventListener("click", () => {
+        this.toggleSomniaDropdown();
+      });
+
+    // Tutorial from wallet page
+    document
+      .getElementById("openTutorialFromWallet")
+      ?.addEventListener("click", () => {
+        this.startTutorial();
+      });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", (e) => {
+      const dropdown = document.getElementById("somniaDropdown");
+      const button = document.getElementById("somniaResourcesBtn");
+      if (
+        dropdown &&
+        !dropdown.contains(e.target) &&
+        !button.contains(e.target)
+      ) {
+        dropdown.classList.add("hidden");
+      }
+    });
 
     // Level selection
     document.querySelectorAll(".level-btn").forEach((btn) => {
@@ -207,6 +259,11 @@ class GameApp {
       ?.addEventListener("click", () => {
         this.hideLeaderboard();
       });
+
+    // Tutorial
+    document.getElementById("openTutorial")?.addEventListener("click", () => {
+      this.startTutorial();
+    });
 
     // SSD Shop event listeners
     document.getElementById("openShop")?.addEventListener("click", () => {
@@ -261,6 +318,19 @@ class GameApp {
     // Score saving
     document.getElementById("saveScore")?.addEventListener("click", () => {
       this.saveScoreToBlockchain();
+    });
+
+    // Tutorial event listeners
+    document.getElementById("tutorialNext")?.addEventListener("click", () => {
+      this.nextTutorialStep();
+    });
+
+    document.getElementById("tutorialPrev")?.addEventListener("click", () => {
+      this.prevTutorialStep();
+    });
+
+    document.getElementById("tutorialSkip")?.addEventListener("click", () => {
+      this.skipTutorial();
     });
 
     // Keyboard shortcuts
@@ -334,7 +404,43 @@ class GameApp {
       }
     } catch (error) {
       console.error("Failed to connect wallet:", error);
-      alert("Failed to connect wallet: " + error.message);
+      this.showNotification(
+        "Failed to connect wallet: " + error.message,
+        "error"
+      );
+    }
+  }
+
+  async disconnectWallet() {
+    try {
+      await web3Manager.disconnectWallet();
+      // Stay on wallet panel to show disconnected state
+      this.showWalletPanel();
+    } catch (error) {
+      console.error("Failed to disconnect wallet:", error);
+      this.showNotification(
+        "Failed to disconnect wallet: " + error.message,
+        "error"
+      );
+    }
+  }
+
+  showWalletDownloadOptions() {
+    web3Manager.showWalletDownloadOptions();
+  }
+
+  hideWalletDownloadOptions() {
+    web3Manager.hideWalletDownloadOptions();
+  }
+
+  downloadWallet(walletType) {
+    web3Manager.redirectToWalletDownload(walletType);
+  }
+
+  toggleSomniaDropdown() {
+    const dropdown = document.getElementById("somniaDropdown");
+    if (dropdown) {
+      dropdown.classList.toggle("hidden");
     }
   }
 
@@ -346,9 +452,13 @@ class GameApp {
 
       // Show success message
       console.log("✅ Connection refreshed successfully");
+      this.showNotification("🔄 Connection refreshed successfully", "success");
     } catch (error) {
       console.error("Failed to refresh connection:", error);
-      alert("Failed to refresh connection: " + error.message);
+      this.showNotification(
+        "Failed to refresh connection: " + error.message,
+        "error"
+      );
     }
   }
 
@@ -419,6 +529,30 @@ class GameApp {
     this.currentState = GAME_STATES.CONNECTING;
     this.hideAllPanels();
     document.getElementById("web3Panel").classList.remove("hidden");
+
+    // Check if tutorial should be shown for new users
+    this.checkTutorialForNewUsers();
+  }
+
+  checkTutorialForNewUsers() {
+    // Only show tutorial prompt if user hasn't completed it and hasn't been prompted recently
+    if (!levelManager.isTutorialCompleted()) {
+      const lastTutorialPrompt = localStorage.getItem("lastTutorialPrompt");
+      const now = Date.now();
+      const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+
+      // Show tutorial if never prompted, or if it's been more than 1 hour since last prompt
+      if (!lastTutorialPrompt || now - parseInt(lastTutorialPrompt) > oneHour) {
+        localStorage.setItem("lastTutorialPrompt", now.toString());
+
+        // Delay the tutorial prompt slightly to let the UI settle
+        setTimeout(() => {
+          if (this.currentState === GAME_STATES.CONNECTING) {
+            this.showTutorialPrompt();
+          }
+        }, 1000);
+      }
+    }
   }
 
   showGameMenu() {
@@ -447,6 +581,7 @@ class GameApp {
       "twitterPanel",
       "upcomingFeatures",
       "adminPanel",
+      "tutorialPanel",
     ];
 
     panels.forEach((panelId) => {
@@ -644,42 +779,238 @@ class GameApp {
 
   // Tutorial System
   showTutorialPrompt() {
-    const showTutorial = confirm(
-      "Welcome to Somnia Space Defender! Would you like to see the tutorial?"
-    );
-
-    if (showTutorial) {
-      this.startTutorial();
-    } else {
-      levelManager.markTutorialCompleted();
-    }
+    this.startTutorial();
   }
 
   startTutorial() {
-    const steps = levelManager.getTutorialSteps();
-    let currentStep = 0;
+    this.currentTutorialStep = 0;
+    this.tutorialSteps = this.getTutorialSteps();
+    this.showTutorialPanel();
+    this.updateTutorialStep();
+  }
 
-    const showStep = () => {
-      if (currentStep >= steps.length) {
-        levelManager.markTutorialCompleted();
-        alert("Tutorial completed! Ready to defend the galaxy!");
-        return;
-      }
+  showTutorialPanel() {
+    this.hideAllPanels();
+    document.getElementById("tutorialPanel").classList.remove("hidden");
+  }
 
-      const step = steps[currentStep];
-      const proceed = confirm(
-        `${step.title}\n\n${step.description}\n\nPress OK to continue or Cancel to skip tutorial.`
-      );
+  hideTutorialPanel() {
+    document.getElementById("tutorialPanel").classList.add("hidden");
+  }
 
-      if (proceed) {
-        currentStep++;
-        setTimeout(showStep, 1000);
-      } else {
-        levelManager.markTutorialCompleted();
-      }
-    };
+  getTutorialSteps() {
+    return [
+      {
+        step: 1,
+        icon: "🚀",
+        title: "Welcome to Space Defender!",
+        description:
+          "Use WASD or arrow keys to move your spaceship around the battlefield",
+        visual: this.createMovementDemo(),
+      },
+      {
+        step: 2,
+        icon: "💥",
+        title: "Shooting Aliens",
+        description:
+          "Press SPACE or J to shoot powerful lasers at incoming alien invaders",
+        visual: this.createShootingDemo(),
+      },
+      {
+        step: 3,
+        icon: "⚡",
+        title: "Power-ups",
+        description:
+          "Collect glowing power-ups to enhance your ship's abilities temporarily",
+        visual: this.createPowerupDemo(),
+      },
+      {
+        step: 4,
+        icon: "❤️",
+        title: "Health & Lives",
+        description:
+          "Avoid alien contact or you'll take damage. Keep track of your health!",
+        visual: this.createHealthDemo(),
+      },
+      {
+        step: 5,
+        icon: "🎯",
+        title: "Level Progression",
+        description:
+          "Kill aliens to advance through 10 increasingly difficult levels",
+        visual: this.createLevelDemo(),
+      },
+      {
+        step: 6,
+        icon: "💰",
+        title: "Web3 Integration",
+        description:
+          "Connect your wallet to earn SSD tokens and save high scores on Somnia blockchain",
+        visual: this.createWeb3Demo(),
+      },
+    ];
+  }
 
-    showStep();
+  updateTutorialStep() {
+    const step = this.tutorialSteps[this.currentTutorialStep];
+
+    // Update content
+    document.getElementById("tutorialStepTitle").textContent = step.title;
+    document.getElementById("tutorialStepDescription").textContent =
+      step.description;
+    document.querySelector(".tutorial-icon").textContent = step.icon;
+
+    // Update visual
+    const visualContainer = document.getElementById("tutorialVisual");
+    visualContainer.innerHTML = step.visual;
+
+    // Update progress
+    const progress =
+      ((this.currentTutorialStep + 1) / this.tutorialSteps.length) * 100;
+    document.getElementById("tutorialProgressBar").style.width = `${progress}%`;
+    document.getElementById("tutorialStepIndicator").textContent = `Step ${
+      this.currentTutorialStep + 1
+    } of ${this.tutorialSteps.length}`;
+
+    // Update buttons
+    const prevBtn = document.getElementById("tutorialPrev");
+    const nextBtn = document.getElementById("tutorialNext");
+
+    prevBtn.disabled = this.currentTutorialStep === 0;
+    nextBtn.textContent =
+      this.currentTutorialStep === this.tutorialSteps.length - 1
+        ? "Finish"
+        : "Next →";
+  }
+
+  nextTutorialStep() {
+    if (this.currentTutorialStep < this.tutorialSteps.length - 1) {
+      this.currentTutorialStep++;
+      this.updateTutorialStep();
+    } else {
+      // Tutorial completed
+      this.completeTutorial();
+    }
+  }
+
+  prevTutorialStep() {
+    if (this.currentTutorialStep > 0) {
+      this.currentTutorialStep--;
+      this.updateTutorialStep();
+    }
+  }
+
+  skipTutorial() {
+    this.completeTutorial();
+  }
+
+  completeTutorial() {
+    levelManager.markTutorialCompleted();
+    this.hideTutorialPanel();
+
+    // Return to appropriate screen based on wallet connection status
+    if (web3Manager.isConnected && web3Manager.canPlayGame()) {
+      this.showGameMenu();
+    } else {
+      this.showWalletPanel();
+    }
+
+    this.showNotification(
+      "🎉 Tutorial completed! Ready to defend the galaxy!",
+      "success",
+      3000
+    );
+  }
+
+  // Create visual demonstrations for each tutorial step
+  createMovementDemo() {
+    return `
+      <div class="key-demo">
+        <div class="key-row">
+          <div class="key">W</div>
+        </div>
+        <div class="key-row">
+          <div class="key">A</div>
+          <div class="key">S</div>
+          <div class="key">D</div>
+        </div>
+        <div class="key-text">Movement Keys</div>
+      </div>
+    `;
+  }
+
+  createShootingDemo() {
+    return `
+      <div class="weapon-demo">
+        <div class="space-key">SPACE</div>
+        <div class="key-text">Fire Weapons</div>
+      </div>
+    `;
+  }
+
+  createPowerupDemo() {
+    return `
+      <div class="powerup-demo">
+        <div class="powerup-item">
+          <div class="powerup-icon">⚡</div>
+          <div class="powerup-name">Rapid Fire</div>
+        </div>
+        <div class="powerup-item">
+          <div class="powerup-icon">🛡️</div>
+          <div class="powerup-name">Shield</div>
+        </div>
+        <div class="powerup-item">
+          <div class="powerup-icon">🔫</div>
+          <div class="powerup-name">Multi-Shot</div>
+        </div>
+        <div class="powerup-item">
+          <div class="powerup-icon">❤️</div>
+          <div class="powerup-name">Health</div>
+        </div>
+      </div>
+    `;
+  }
+
+  createHealthDemo() {
+    return `
+      <div class="health-demo">
+        <div class="health-bar">
+          <div class="health-heart">❤️</div>
+          <div class="health-heart">❤️</div>
+          <div class="health-heart">❤️</div>
+        </div>
+        <div class="key-text">Lives Remaining</div>
+      </div>
+    `;
+  }
+
+  createLevelDemo() {
+    return `
+      <div class="level-demo">
+        <div class="level-progression">
+          <div class="level-badge">1</div>
+          <div class="level-arrow">→</div>
+          <div class="level-badge">2</div>
+          <div class="level-arrow">→</div>
+          <div class="level-badge">10</div>
+        </div>
+        <div class="key-text">Level Progression</div>
+      </div>
+    `;
+  }
+
+  createWeb3Demo() {
+    return `
+      <div class="web3-demo">
+        <div class="wallet-icon">🔗</div>
+        <div class="blockchain-benefits">
+          <div class="benefit-item">💰 Earn SSD</div>
+          <div class="benefit-item">🏆 Save Scores</div>
+          <div class="benefit-item">🛍️ Shop Items</div>
+          <div class="benefit-item">🐦 Verify Twitter</div>
+        </div>
+      </div>
+    `;
   }
 
   // Global Event Handlers

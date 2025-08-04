@@ -914,3 +914,552 @@ body::before {
     width: 100%;
   }
 }
+
+/* Tutorial Panel Styling */
+.tutorial-header {
+  margin-bottom: 30px;
+}
+
+.tutorial-progress {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #00ffff, #ff00ff);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  width: 16.67%; /* 1/6 for first step */
+}
+
+#tutorialStepIndicator {
+  color: #00ffff;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.tutorial-content {
+  margin: 30px 0;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tutorial-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+#tutorialStepTitle {
+  color: #00ffff;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+#tutorialStepDescription {
+  color: #aaaaff;
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.tutorial-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.key-demo {
+  text-align: center;
+}
+
+.key-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.key {
+  background: linear-gradient(145deg, #333, #555);
+  border: 2px solid #777;
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: #fff;
+  font-weight: bold;
+  font-family: "Orbitron", monospace;
+  min-width: 40px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: keyPulse 2s ease-in-out infinite;
+}
+
+@keyframes keyPulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 6px 12px rgba(0, 255, 255, 0.5);
+    transform: scale(1.05);
+  }
+}
+
+.key-text {
+  color: #00ffff;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+.tutorial-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  gap: 10px;
+}
+
+.weapon-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.space-key {
+  background: linear-gradient(145deg, #ff6600, #ff4400);
+  border: 2px solid #ff8800;
+  border-radius: 8px;
+  padding: 15px 30px;
+  color: #fff;
+  font-weight: bold;
+  font-family: "Orbitron", monospace;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 8px rgba(255, 102, 0, 0.3);
+  animation: spaceKeyPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spaceKeyPulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 8px rgba(255, 102, 0, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 6px 12px rgba(255, 102, 0, 0.8);
+    transform: scale(1.1);
+  }
+}
+
+.powerup-demo {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  max-width: 300px;
+}
+
+.powerup-item {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  animation: powerupGlow 3s ease-in-out infinite;
+}
+
+@keyframes powerupGlow {
+  0%,
+  100% {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    border-color: rgba(255, 255, 0, 0.8);
+  }
+}
+
+.powerup-item .powerup-icon {
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+.powerup-item .powerup-name {
+  font-size: 0.8rem;
+  color: #ffff00;
+}
+
+.health-demo {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.health-bar {
+  display: flex;
+  gap: 5px;
+}
+
+.health-heart {
+  color: #ff0000;
+  font-size: 1.5rem;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.level-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.level-progression {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.level-badge {
+  background: linear-gradient(145deg, #330066, #220044);
+  border: 2px solid #6600cc;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccccff;
+  font-weight: bold;
+  animation: levelGlow 2s ease-in-out infinite;
+}
+
+@keyframes levelGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(102, 0, 204, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(102, 0, 204, 1);
+  }
+}
+
+.level-arrow {
+  color: #00ffff;
+  font-size: 1.5rem;
+  animation: arrowPulse 1s ease-in-out infinite;
+}
+
+@keyframes arrowPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.web3-demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.wallet-icon {
+  font-size: 3rem;
+  color: #ffd700;
+  animation: walletShine 2s ease-in-out infinite;
+}
+
+@keyframes walletShine {
+  0%,
+  100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 20px #ffd700;
+  }
+}
+
+.blockchain-benefits {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-width: 300px;
+}
+
+.benefit-item {
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #00ffff;
+}
+
+/* Wallet Connection Improvements */
+.wallet-status {
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 10px;
+  text-align: center;
+}
+
+#walletStatusText {
+  color: #00ffff;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wallet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.wallet-download-options {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.wallet-download-options p {
+  color: #aaaaff;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.wallet-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.wallet-option-btn {
+  background: linear-gradient(145deg, #0066ff, #0044cc);
+  border: 2px solid #00aaff;
+  color: white;
+  padding: 15px 20px;
+  font-size: 1rem;
+  font-family: "Orbitron", monospace;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wallet-option-btn:hover {
+  background: linear-gradient(145deg, #0080ff, #0066ff);
+  box-shadow: 0 6px 20px rgba(0, 128, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.wallet-option-btn:active {
+  transform: translateY(0);
+}
+
+/* Status indicators */
+.wallet-status.checking {
+  border-color: rgba(255, 255, 0, 0.5);
+  background: rgba(255, 255, 0, 0.1);
+}
+
+.wallet-status.checking #walletStatusText {
+  color: #ffff00;
+}
+
+.wallet-status.detected {
+  border-color: rgba(0, 255, 0, 0.5);
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.wallet-status.detected #walletStatusText {
+  color: #00ff00;
+}
+
+.wallet-status.not-detected {
+  border-color: rgba(255, 136, 0, 0.5);
+  background: rgba(255, 136, 0, 0.1);
+}
+
+.wallet-status.not-detected #walletStatusText {
+  color: #ff8800;
+}
+
+/* Animation for status checking */
+.checking-animation {
+  display: inline-block;
+  animation: checkingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes checkingPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Dropdown Styles */
+.somnia-resources {
+  margin: 20px 0;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.dropdown-btn {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: linear-gradient(
+    145deg,
+    rgba(15, 15, 45, 0.98),
+    rgba(30, 30, 70, 0.98)
+  );
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  border-radius: 15px;
+  padding: 20px;
+  z-index: 1001;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 255, 255, 0.2);
+  backdrop-filter: blur(15px);
+  margin-top: 5px;
+  animation: dropdownSlide 0.3s ease-out;
+}
+
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-content h4 {
+  color: #00ffff;
+  font-size: 1rem;
+  margin: 10px 0 8px 0;
+  text-align: center;
+  font-weight: 600;
+}
+
+.dropdown-content h4:first-child {
+  margin-top: 0;
+}
+
+.dropdown-link {
+  display: block;
+  padding: 12px 15px;
+  background: linear-gradient(
+    145deg,
+    rgba(0, 102, 255, 0.1),
+    rgba(0, 68, 204, 0.1)
+  );
+  border: 1px solid rgba(0, 170, 255, 0.3);
+  border-radius: 8px;
+  color: #ffffff;
+  text-decoration: none;
+  margin: 8px 0;
+  transition: all 0.3s ease;
+  font-family: "Orbitron", monospace;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-link:hover {
+  background: linear-gradient(
+    145deg,
+    rgba(0, 128, 255, 0.2),
+    rgba(0, 102, 255, 0.2)
+  );
+  border-color: rgba(0, 170, 255, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 128, 255, 0.3);
+}
+
+.dropdown-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 255, 0.5),
+    transparent
+  );
+  margin: 15px 0;
+}
+
+/* Tutorial Access Button */
+.tutorial-access {
+  margin: 15px 0;
+}
+
+.tutorial-access button {
+  width: 100%;
+}
