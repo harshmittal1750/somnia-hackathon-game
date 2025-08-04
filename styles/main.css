@@ -1463,3 +1463,326 @@ body::before {
 .tutorial-access button {
   width: 100%;
 }
+
+/* Enhanced Mobile Responsiveness */
+@media (max-width: 480px) {
+  /* Body and container adjustments */
+  body {
+    overflow-x: hidden;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  }
+
+  #gameContainer {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Panel improvements for small screens */
+  .panel {
+    width: 95vw;
+    max-width: 95vw;
+    min-width: unset;
+    margin: 10px auto;
+    padding: 20px 15px;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+
+  .panel-content {
+    padding: 10px;
+  }
+
+  .panel-content h1 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+    line-height: 1.2;
+  }
+
+  .panel-content h2 {
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    line-height: 1.3;
+  }
+
+  .panel-content h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
+  .panel-content p {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 15px;
+  }
+
+  /* Button improvements for touch */
+  .btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+    min-height: 44px; /* iOS touch target size */
+    margin: 5px 0;
+    border-radius: 8px;
+    touch-action: manipulation; /* Prevent zoom on double tap */
+  }
+
+  .btn-small {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    min-height: 36px;
+  }
+
+  /* Menu buttons layout */
+  .menu-buttons {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 20px 0;
+  }
+
+  /* Wallet actions improvements */
+  .wallet-actions {
+    gap: 12px;
+  }
+
+  .wallet-status {
+    margin: 15px 0;
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Dropdown improvements */
+  .dropdown-content {
+    position: fixed;
+    top: 20%;
+    left: 5vw;
+    right: 5vw;
+    width: 90vw;
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 1002;
+  }
+
+  .dropdown-link {
+    padding: 15px 12px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    margin: 8px 0;
+  }
+
+  /* Loading screen mobile optimizations */
+  .loading-animation {
+    font-size: 3rem;
+    margin: 20px 0;
+  }
+
+  .progress-bar {
+    height: 8px;
+    margin: 15px 0;
+  }
+
+  /* Game UI mobile adjustments */
+  .hud {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+
+  .hud-left,
+  .hud-right {
+    gap: 5px;
+  }
+
+  .stat {
+    padding: 4px 6px;
+    font-size: 0.7rem;
+    min-width: 60px;
+  }
+
+  /* Canvas adjustments */
+  #gameCanvas {
+    width: 95vw;
+    height: calc(95vw * 0.75); /* Maintain 4:3 ratio */
+    max-height: 60vh;
+    border-width: 2px;
+  }
+
+  /* Form elements */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"] {
+    padding: 12px;
+    font-size: 1rem;
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 5px 0;
+  }
+
+  /* Shop grid mobile */
+  .shop-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    max-height: 60vh;
+    padding: 0 5px;
+  }
+
+  .shop-item {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Tutorial mobile adjustments */
+  .tutorial-content {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .tutorial-nav {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .tutorial-nav .btn {
+    width: 100%;
+  }
+
+  /* Stats and info displays */
+  .wallet-info p {
+    font-size: 0.85rem;
+    margin: 8px 0;
+    word-break: break-all;
+  }
+
+  .admin-stats,
+  .feature-list {
+    font-size: 0.85rem;
+  }
+
+  .stat-item {
+    margin: 8px 0;
+    padding: 8px;
+  }
+
+  /* Level selection mobile */
+  .level-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .level-card {
+    padding: 12px;
+    font-size: 0.85rem;
+  }
+
+  /* Leaderboard mobile */
+  .leaderboard-list {
+    max-height: 50vh;
+    font-size: 0.85rem;
+  }
+
+  .leaderboard-item {
+    padding: 10px 8px;
+    margin: 5px 0;
+  }
+
+  /* Somnia resources dropdown mobile fix */
+  .somnia-resources {
+    margin: 15px 0;
+  }
+
+  .dropdown-btn {
+    width: 100%;
+    font-size: 0.9rem;
+  }
+}
+
+/* Very small screens (iPhone SE, etc.) */
+@media (max-width: 375px) {
+  .panel {
+    width: 98vw;
+    padding: 15px 10px;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+
+  .panel-content h1 {
+    font-size: 1.6rem;
+  }
+
+  .btn {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+
+  #gameCanvas {
+    width: 98vw;
+    height: calc(98vw * 0.75);
+    max-height: 55vh;
+  }
+
+  .loading-animation {
+    font-size: 2.5rem;
+  }
+
+  .dropdown-content {
+    left: 2vw;
+    right: 2vw;
+    width: 96vw;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 900px) and (orientation: landscape) {
+  .panel {
+    max-height: 80vh;
+    max-height: 80dvh;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+
+  #gameCanvas {
+    width: 80vw;
+    height: calc(80vw * 0.75);
+    max-height: 70vh;
+  }
+
+  .dropdown-content {
+    max-height: 60vh;
+    top: 10vh;
+  }
+}
+
+/* Touch-specific improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device specific styles */
+  .btn:hover {
+    transform: none; /* Disable hover animations on touch */
+  }
+
+  .btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
+  }
+
+  .shop-item:hover {
+    transform: none; /* Disable hover on touch devices */
+  }
+
+  .level-card:hover {
+    transform: none;
+  }
+
+  /* Larger touch targets */
+  button,
+  .btn,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
