@@ -169,7 +169,29 @@
         <canvas id="gameCanvas" width="800" height="600"></canvas>
 
         <div class="controls-info">
-          <p>🎮 WASD or Arrow Keys to move • SPACE to shoot • ESC to pause</p>
+          <p id="controlsText">
+            🎮 WASD or Arrow Keys to move • SPACE to shoot • ESC to pause
+          </p>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div id="mobileControls" class="mobile-controls hidden">
+          <!-- Virtual Joystick -->
+          <div id="virtualJoystick" class="virtual-joystick">
+            <div class="joystick-base">
+              <div id="joystickKnob" class="joystick-knob"></div>
+            </div>
+            <div class="joystick-label">MOVE</div>
+          </div>
+
+          <!-- Fire Button -->
+          <div id="fireButton" class="fire-button">
+            <div class="fire-button-inner">🔥</div>
+            <div class="fire-button-label">FIRE</div>
+          </div>
+
+          <!-- Pause Button (Mobile) -->
+          <div id="mobilePauseBtn" class="mobile-pause-btn">⏸️</div>
         </div>
       </div>
 
