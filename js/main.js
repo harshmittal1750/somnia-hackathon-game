@@ -14,24 +14,34 @@ class GameApp {
     console.log("🚀 Initializing Somnia Space Defender...");
 
     try {
-      // Show loading screen
-      this.showLoadingScreen();
+      // Loading screen is already visible by default
+      this.updateLoadingProgress(10, "Loading game assets...");
 
       // Initialize components step by step
       await this.loadAssets();
+      this.updateLoadingProgress(40, "Initializing components...");
+
       await this.initializeComponents();
+      this.updateLoadingProgress(70, "Setting up event listeners...");
+
       this.setupEventListeners();
+      this.updateLoadingProgress(85, "Finalizing UI...");
+
       this.initializeUI();
+      this.updateLoadingProgress(95, "Connecting to wallet...");
 
       // Check wallet connection status
       this.checkWalletConnection();
 
+      this.updateLoadingProgress(100, "Ready to launch!");
+
+      // Hide loading screen after a brief moment to show completion
+      setTimeout(() => {
+        this.hideLoadingScreen();
+      }, 500);
+
       this.isInitialized = true;
       console.log("✅ Game fully initialized!");
-
-      // Hide loading screen and show wallet connection
-      this.hideLoadingScreen();
-      this.showWalletPanel();
     } catch (error) {
       console.error("❌ Failed to initialize game:", error);
       this.showErrorScreen(error.message);
@@ -379,6 +389,8 @@ class GameApp {
 
   hideLoadingScreen() {
     document.getElementById("loadingScreen").classList.add("hidden");
+    // Show wallet panel after loading is complete
+    this.showWalletPanel();
   }
 
   updateLoadingProgress(percent, message) {
