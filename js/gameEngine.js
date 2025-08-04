@@ -37,6 +37,24 @@ class GameEngine {
     this.keys = {};
     this.inputCooldown = {};
 
+    // Touch controls state
+    this.touchControls = {
+      joystick: {
+        active: false,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0,
+        deltaX: 0,
+        deltaY: 0,
+        maxDistance: 50,
+      },
+      fireButton: {
+        active: false,
+      },
+    };
+    this.isMobile = false;
+
     // Audio
     this.audioManager = null;
     this.soundEnabled = true;
@@ -125,6 +143,9 @@ class GameEngine {
     window.addEventListener("resize", () => {
       this.handleResize();
     });
+
+    // Touch controls setup
+    this.setupTouchControls();
   }
 
   handleKeyDown(e) {
@@ -152,14 +173,49 @@ class GameEngine {
   handlePlayerInput() {
     if (!this.player || this.gameState !== GAME_STATES.PLAYING) return;
 
-    // Movement
-    this.player.keys.left = this.keys["KeyA"] || this.keys["ArrowLeft"];
-    this.player.keys.right = this.keys["KeyD"] || this.keys["ArrowRight"];
-    this.player.keys.up = this.keys["KeyW"] || this.keys["ArrowUp"];
-    this.player.keys.down = this.keys["KeyS"] || this.keys["ArrowDown"];
+    // Keyboard movement
+    let leftPressed = this.keys["KeyA"] || this.keys["ArrowLeft"];
+    let rightPressed = this.keys["KeyD"] || this.keys["ArrowRight"];
+    let upPressed = this.keys["KeyW"] || this.keys["ArrowUp"];
+    let downPressed = this.keys["KeyS"] || this.keys["ArrowDown"];
 
-    // Shooting
-    if (this.keys["Space"] || this.keys["KeyJ"]) {
+    // Touch joystick movement
+    if (this.touchControls.joystick.active) {
+      const deadZone = 10; // Minimum distance to register movement
+      const distance = Math.sqrt(
+        this.touchControls.joystick.deltaX ** 2 +
+          this.touchControls.joystick.deltaY ** 2
+      );
+
+      if (distance > deadZone) {
+        // Normalize deltas to -1 to 1 range
+        const normalizedX =
+          this.touchControls.joystick.deltaX /
+          this.touchControls.joystick.maxDistance;
+        const normalizedY =
+          this.touchControls.joystick.deltaY /
+          this.touchControls.joystick.maxDistance;
+
+        // Apply threshold for directional input
+        if (normalizedX < -0.3) leftPressed = true;
+        if (normalizedX > 0.3) rightPressed = true;
+        if (normalizedY < -0.3) upPressed = true;
+        if (normalizedY > 0.3) downPressed = true;
+      }
+    }
+
+    // Set player movement keys
+    this.player.keys.left = leftPressed;
+    this.player.keys.right = rightPressed;
+    this.player.keys.up = upPressed;
+    this.player.keys.down = downPressed;
+
+    // Shooting (keyboard or touch)
+    const shouldShoot =
+      this.keys["Space"] ||
+      this.keys["KeyJ"] ||
+      this.touchControls.fireButton.active;
+    if (shouldShoot) {
       const newBullets = this.player.shoot();
       this.bullets.push(...newBullets);
 
@@ -232,6 +288,9 @@ class GameEngine {
     // Start background music
     this.playSound("backgroundMusic", true);
 
+    // Update mobile controls visibility
+    this.updateMobileControlsVisibility();
+
     this.updateUI();
     console.log("🚀 Game Started!");
   }
@@ -241,6 +300,9 @@ class GameEngine {
       this.isPaused = true;
       this.gameState = GAME_STATES.PAUSED;
       this.showPauseMenu();
+
+      // Update mobile controls visibility
+      this.updateMobileControlsVisibility();
 
       // Pause background music
       if (this.audioManager.backgroundMusic) {
@@ -254,6 +316,9 @@ class GameEngine {
       this.isPaused = false;
       this.gameState = GAME_STATES.PLAYING;
       this.hidePauseMenu();
+
+      // Update mobile controls visibility
+      this.updateMobileControlsVisibility();
 
       // Resume background music
       if (this.audioManager.backgroundMusic) {
@@ -556,6 +621,9 @@ class GameEngine {
 
   gameOver() {
     this.gameState = GAME_STATES.GAME_OVER;
+
+    // Update mobile controls visibility
+    this.updateMobileControlsVisibility();
 
     // Stop background music
     if (this.audioManager.backgroundMusic) {
@@ -997,6 +1065,192 @@ class GameEngine {
     this.updateUI();
 
     console.log("✅ Game state reset complete");
+  }
+
+  // Setup touch controls for mobile devices
+  setupTouchControls() {
+    console.log("📱 Setting up touch controls...");
+
+    // Detect if device supports touch
+    this.isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
+    if (!this.isMobile) {
+      console.log("📱 Non-touch device detected, skipping touch controls");
+      return;
+    }
+
+    console.log("📱 Touch device detected, initializing mobile controls");
+
+    // Get touch control elements
+    const mobileControls = document.getElementById("mobileControls");
+    const virtualJoystick = document.getElementById("virtualJoystick");
+    const joystickKnob = document.getElementById("joystickKnob");
+    const fireButton = document.getElementById("fireButton");
+    const mobilePauseBtn = document.getElementById("mobilePauseBtn");
+
+    if (!mobileControls || !virtualJoystick || !fireButton) {
+      console.warn("📱 Touch control elements not found");
+      return;
+    }
+
+    // Show mobile controls
+    mobileControls.classList.remove("hidden");
+
+    // Update controls text for mobile
+    const controlsText = document.getElementById("controlsText");
+    if (controlsText) {
+      controlsText.textContent =
+        "📱 Use virtual joystick to move • Fire button to shoot • Top-right to pause";
+    }
+
+    // Virtual Joystick Touch Events
+    const joystickBase = virtualJoystick.querySelector(".joystick-base");
+
+    // Get joystick center position
+    const getJoystickCenter = () => {
+      const rect = joystickBase.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+    };
+
+    // Update joystick knob position
+    const updateJoystickKnob = (x, y) => {
+      const center = getJoystickCenter();
+      this.touchControls.joystick.deltaX = x - center.x;
+      this.touchControls.joystick.deltaY = y - center.y;
+
+      // Limit to max distance
+      const distance = Math.sqrt(
+        this.touchControls.joystick.deltaX ** 2 +
+          this.touchControls.joystick.deltaY ** 2
+      );
+
+      if (distance > this.touchControls.joystick.maxDistance) {
+        this.touchControls.joystick.deltaX =
+          (this.touchControls.joystick.deltaX / distance) *
+          this.touchControls.joystick.maxDistance;
+        this.touchControls.joystick.deltaY =
+          (this.touchControls.joystick.deltaY / distance) *
+          this.touchControls.joystick.maxDistance;
+      }
+
+      // Update visual position
+      joystickKnob.style.transform = `translate(-50%, -50%) translate(${this.touchControls.joystick.deltaX}px, ${this.touchControls.joystick.deltaY}px)`;
+    };
+
+    // Reset joystick to center
+    const resetJoystick = () => {
+      this.touchControls.joystick.active = false;
+      this.touchControls.joystick.deltaX = 0;
+      this.touchControls.joystick.deltaY = 0;
+      joystickKnob.style.transform = "translate(-50%, -50%)";
+      joystickBase.classList.remove("active");
+    };
+
+    // Joystick touch start
+    virtualJoystick.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const center = getJoystickCenter();
+
+      this.touchControls.joystick.active = true;
+      this.touchControls.joystick.startX = center.x;
+      this.touchControls.joystick.startY = center.y;
+
+      updateJoystickKnob(touch.clientX, touch.clientY);
+      joystickBase.classList.add("active");
+    });
+
+    // Joystick touch move
+    virtualJoystick.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      if (!this.touchControls.joystick.active) return;
+
+      const touch = e.touches[0];
+      updateJoystickKnob(touch.clientX, touch.clientY);
+    });
+
+    // Joystick touch end
+    virtualJoystick.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      resetJoystick();
+    });
+
+    // Fire Button Touch Events
+    const fireButtonInner = fireButton.querySelector(".fire-button-inner");
+
+    fireButton.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      this.touchControls.fireButton.active = true;
+      fireButtonInner.classList.add("active");
+    });
+
+    fireButton.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      this.touchControls.fireButton.active = false;
+      fireButtonInner.classList.remove("active");
+    });
+
+    // Prevent fire button from triggering when touch moves outside
+    fireButton.addEventListener("touchcancel", (e) => {
+      e.preventDefault();
+      this.touchControls.fireButton.active = false;
+      fireButtonInner.classList.remove("active");
+    });
+
+    // Mobile Pause Button
+    if (mobilePauseBtn) {
+      mobilePauseBtn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        if (this.gameState === GAME_STATES.PLAYING) {
+          this.pauseGame();
+        } else if (this.gameState === GAME_STATES.PAUSED) {
+          this.resumeGame();
+        }
+      });
+    }
+
+    // Prevent context menu on long press
+    document.addEventListener("contextmenu", (e) => {
+      if (
+        this.isMobile &&
+        (e.target.closest("#mobileControls") || e.target.closest("#gameCanvas"))
+      ) {
+        e.preventDefault();
+      }
+    });
+
+    // Prevent page scrolling when touching game area
+    document.addEventListener(
+      "touchmove",
+      (e) => {
+        if (
+          e.target.closest("#gameUI") ||
+          e.target.closest("#mobileControls")
+        ) {
+          e.preventDefault();
+        }
+      },
+      { passive: false }
+    );
+
+    console.log("✅ Touch controls initialized");
+  }
+
+  // Hide/show mobile controls based on game state
+  updateMobileControlsVisibility() {
+    if (!this.isMobile) return;
+
+    const mobileControls = document.getElementById("mobileControls");
+    if (!mobileControls) return;
+
+    if (this.gameState === GAME_STATES.PLAYING) {
+      mobileControls.classList.remove("hidden");
+    } else {
+      mobileControls.classList.add("hidden");
+    }
   }
 
   // Save score to blockchain
