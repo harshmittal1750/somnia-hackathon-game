@@ -185,20 +185,28 @@ class GameApp {
     });
 
     // Somnia Resources Dropdown
-    document.getElementById("somniaResourcesBtn")?.addEventListener("click", () => {
-      this.toggleSomniaDropdown();
-    });
+    document
+      .getElementById("somniaResourcesBtn")
+      ?.addEventListener("click", () => {
+        this.toggleSomniaDropdown();
+      });
 
     // Tutorial from wallet page
-    document.getElementById("openTutorialFromWallet")?.addEventListener("click", () => {
-      this.startTutorial();
-    });
+    document
+      .getElementById("openTutorialFromWallet")
+      ?.addEventListener("click", () => {
+        this.startTutorial();
+      });
 
     // Close dropdown when clicking outside
     document.addEventListener("click", (e) => {
       const dropdown = document.getElementById("somniaDropdown");
       const button = document.getElementById("somniaResourcesBtn");
-      if (dropdown && !dropdown.contains(e.target) && !button.contains(e.target)) {
+      if (
+        dropdown &&
+        !dropdown.contains(e.target) &&
+        !button.contains(e.target)
+      ) {
         dropdown.classList.add("hidden");
       }
     });
@@ -521,7 +529,7 @@ class GameApp {
     this.currentState = GAME_STATES.CONNECTING;
     this.hideAllPanels();
     document.getElementById("web3Panel").classList.remove("hidden");
-    
+
     // Check if tutorial should be shown for new users
     this.checkTutorialForNewUsers();
   }
@@ -532,11 +540,11 @@ class GameApp {
       const lastTutorialPrompt = localStorage.getItem("lastTutorialPrompt");
       const now = Date.now();
       const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
-      
+
       // Show tutorial if never prompted, or if it's been more than 1 hour since last prompt
-      if (!lastTutorialPrompt || (now - parseInt(lastTutorialPrompt)) > oneHour) {
+      if (!lastTutorialPrompt || now - parseInt(lastTutorialPrompt) > oneHour) {
         localStorage.setItem("lastTutorialPrompt", now.toString());
-        
+
         // Delay the tutorial prompt slightly to let the UI settle
         setTimeout(() => {
           if (this.currentState === GAME_STATES.CONNECTING) {
@@ -899,14 +907,14 @@ class GameApp {
   completeTutorial() {
     levelManager.markTutorialCompleted();
     this.hideTutorialPanel();
-    
+
     // Return to appropriate screen based on wallet connection status
     if (web3Manager.isConnected && web3Manager.canPlayGame()) {
       this.showGameMenu();
     } else {
       this.showWalletPanel();
     }
-    
+
     this.showNotification(
       "🎉 Tutorial completed! Ready to defend the galaxy!",
       "success",

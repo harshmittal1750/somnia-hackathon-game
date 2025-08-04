@@ -1373,7 +1373,11 @@ body::before {
   top: 100%;
   left: 0;
   right: 0;
-  background: linear-gradient(145deg, rgba(15, 15, 45, 0.98), rgba(30, 30, 70, 0.98));
+  background: linear-gradient(
+    145deg,
+    rgba(15, 15, 45, 0.98),
+    rgba(30, 30, 70, 0.98)
+  );
   border: 2px solid rgba(0, 255, 255, 0.3);
   border-radius: 15px;
   padding: 20px;
@@ -1410,7 +1414,11 @@ body::before {
 .dropdown-link {
   display: block;
   padding: 12px 15px;
-  background: linear-gradient(145deg, rgba(0, 102, 255, 0.1), rgba(0, 68, 204, 0.1));
+  background: linear-gradient(
+    145deg,
+    rgba(0, 102, 255, 0.1),
+    rgba(0, 68, 204, 0.1)
+  );
   border: 1px solid rgba(0, 170, 255, 0.3);
   border-radius: 8px;
   color: #ffffff;
@@ -1425,7 +1433,11 @@ body::before {
 }
 
 .dropdown-link:hover {
-  background: linear-gradient(145deg, rgba(0, 128, 255, 0.2), rgba(0, 102, 255, 0.2));
+  background: linear-gradient(
+    145deg,
+    rgba(0, 128, 255, 0.2),
+    rgba(0, 102, 255, 0.2)
+  );
   border-color: rgba(0, 170, 255, 0.6);
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 128, 255, 0.3);
@@ -1434,7 +1446,12 @@ body::before {
 .dropdown-divider {
   border: none;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.5), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 255, 255, 0.5),
+    transparent
+  );
   margin: 15px 0;
 }
 
