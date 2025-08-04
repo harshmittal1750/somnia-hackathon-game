@@ -955,6 +955,50 @@ class GameEngine {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 
+  // Reset game to initial state
+  resetGame() {
+    console.log("🔄 Resetting game state...");
+
+    // Reset game state
+    this.gameState = GAME_STATES.MENU;
+    this.score = 0;
+    this.level = 1;
+    this.lives = CONFIG.GAME.PLAYER.MAX_HEALTH;
+    this.aliensKilled = 0;
+    this.sessionSSDEarned = 0;
+    this.scoreMultiplier = 1;
+    this.isPaused = false;
+
+    // Clear entities
+    this.bullets = [];
+    this.aliens = [];
+    this.powerUps = [];
+    this.particles = [];
+
+    // Reset player
+    if (this.player) {
+      const playerX =
+        CONFIG.GAME.CANVAS_WIDTH / 2 - CONFIG.GAME.PLAYER.WIDTH / 2;
+      const playerY =
+        CONFIG.GAME.CANVAS_HEIGHT - CONFIG.GAME.PLAYER.HEIGHT - 20;
+      this.player = new Player(playerX, playerY);
+    }
+
+    // Reset level
+    this.initLevel(1);
+
+    // Stop any playing audio
+    if (this.audioManager?.backgroundMusic) {
+      this.audioManager.backgroundMusic.pause();
+      this.audioManager.backgroundMusic.currentTime = 0;
+    }
+
+    // Update UI
+    this.updateUI();
+
+    console.log("✅ Game state reset complete");
+  }
+
   // Save score to blockchain
   async saveScore() {
     const success = await web3Manager.saveScore(
