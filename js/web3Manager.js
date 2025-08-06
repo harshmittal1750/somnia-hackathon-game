@@ -26,6 +26,9 @@ class Web3Manager {
     // Reset state first
     this.resetState();
 
+    // Small delay to allow MetaMask to fully load
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Check if MetaMask is installed and available
     if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
       this.web3 = new Web3(window.ethereum);
@@ -42,11 +45,22 @@ class Web3Manager {
           const isConnected = await this.verifyConnection();
           if (isConnected) {
             await this.handleAccountsChanged(accounts);
-            // Also check the network
-            const chainId = await window.ethereum.request({
-              method: "eth_chainId",
-            });
-            this.handleNetworkChanged(chainId);
+            // Enhanced network verification with retry
+            const networkCorrect = await this.verifyNetworkConnection();
+            if (networkCorrect) {
+              console.log("✅ Network verified and correct");
+              this.handleNetworkChanged(this.networkId); // Update UI state
+
+              // Update high score if game app is available
+              if (window.gameApp && window.gameApp.updateHighScore) {
+                console.log("🎯 Auto-updating high score on wallet connection");
+                setTimeout(() => window.gameApp.updateHighScore(), 500);
+              }
+            } else {
+              console.warn(
+                "⚠️ Network verification failed or incorrect network"
+              );
+            }
           } else {
             this.handleDisconnect();
           }
@@ -226,6 +240,17 @@ class Web3Manager {
     } else {
       console.log("✅ Connected to correct network:", CONFIG.NETWORK.chainName);
       this.onCorrectNetwork();
+
+      // If we're now on the correct network and have an account, enable game functionality
+      if (this.account && window.gameApp) {
+        console.log("🎮 Network is now correct, updating game UI");
+        // Small delay to let UI update
+        setTimeout(() => {
+          if (window.gameApp.updateGameAvailability) {
+            window.gameApp.updateGameAvailability();
+          }
+        }, 100);
+      }
     }
 
     if (this.onNetworkChange) {
@@ -262,22 +287,55 @@ class Web3Manager {
 
   // Check if we can proceed with game functionality
   canPlayGame() {
-    return this.isConnected && this.networkId === CONFIG.NETWORK.chainId;
+    const connected = this.isConnected && this.account;
+    const correctNetwork = this.networkId === CONFIG.NETWORK.chainId;
+
+    console.log("🎮 canPlayGame check:", {
+      isConnected: this.isConnected,
+      hasAccount: !!this.account,
+      networkId: this.networkId,
+      expectedNetwork: CONFIG.NETWORK.chainId,
+      connected,
+      correctNetwork,
+    });
+
+    return connected && correctNetwork;
+  }
+
+  // Enhanced network check with retry
+  async verifyNetworkConnection(retries = 3) {
+    for (let i = 0; i < retries; i++) {
+      try {
+        if (window.ethereum) {
+          const chainId = await window.ethereum.request({
+            method: "eth_chainId",
+          });
+          console.log(`🌐 Network verification attempt ${i + 1}: ${chainId}`);
+          this.networkId = chainId;
+          return chainId === CONFIG.NETWORK.chainId;
+        }
+      } catch (error) {
+        console.warn(`Network check attempt ${i + 1} failed:`, error);
+        if (i < retries - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms before retry
+        }
+      }
+    }
+    return false;
   }
 
   async loadContractABI() {
     // Complete ABI with all functions needed for the game
     return [
-      // Core game functions
+      // Core game functions - New submitScore for direct blockchain submission
       {
         inputs: [
           { name: "_score", type: "uint256" },
           { name: "_level", type: "uint8" },
           { name: "_aliensKilled", type: "uint16" },
-          { name: "_gameMode", type: "string" },
         ],
         name: "submitScore",
-        outputs: [],
+        outputs: [{ name: "success", type: "bool" }],
         stateMutability: "nonpayable",
         type: "function",
       },
@@ -443,77 +501,140 @@ class Web3Manager {
     level,
     aliensKilled = 0,
     gameMode = "normal",
-    gameSession = null
+    gameSession = null,
+    playTime = 0,
+    powerUpsCollected = 0,
+    accuracy = 0
   ) {
-    if (!this.isConnected) {
-      console.warn("Wallet not connected, saving score locally");
-      this.saveScoreLocally(score, level);
-      return;
-    }
-
-    // 🛡️ ANTI-CHEAT VALIDATION
-    const validationResult = this.validateScore(
-      score,
-      level,
-      aliensKilled,
-      gameSession
-    );
-    if (!validationResult.valid) {
-      console.error("🚨 Score validation failed:", validationResult.reason);
-      this.showError(`Score validation failed: ${validationResult.reason}`);
-      return false;
-    }
-
     try {
-      // Save locally as backup
-      this.saveScoreLocally(score, level);
+      // Generate session if not provided
+      if (!gameSession) {
+        gameSession = {
+          startTime: Date.now(),
+          startLevel: level,
+          sessionId: apiService.generateGameSession(),
+          events: [],
+        };
+      }
 
-      // Save to blockchain if contract is available
-      if (this.gameContract) {
-        console.log("🔗 Saving score to blockchain...", {
+      let blockchainTxHash = null;
+      let ssdReward = 0;
+
+      // Step 1: Submit to blockchain first (if connected and has aliens killed)
+      if (this.isConnected && this.gameContract && aliensKilled > 0) {
+        console.log("🔗 Submitting score to blockchain...", {
           score,
           level,
           aliensKilled,
-          gameMode,
-          validation: "✅ Passed",
+          account: this.account,
         });
 
-        const tx = await this.gameContract.methods
-          .submitScore(score, level, aliensKilled, gameMode)
-          .send({
-            from: this.account,
-            gas: 500000, // Increased gas limit for more complex function
+        try {
+          const tx = await this.gameContract.methods
+            .submitScore(score, level, aliensKilled)
+            .send({
+              from: this.account,
+              gas: 1200000, // Increased gas limit for score submission
+            });
+
+          blockchainTxHash = tx.transactionHash;
+          ssdReward = aliensKilled * 0.01; // 0.01 SSD per alien
+
+          console.log("✅ Blockchain submission successful!", {
+            txHash: blockchainTxHash,
+            ssdReward,
           });
 
-        console.log("✅ Score saved to blockchain!", tx.transactionHash);
+          // Update local high score immediately after blockchain success
+          this.saveScoreLocally(score, level);
 
-        // 🎉 Calculate and show SSD reward
-        const ssdReward = aliensKilled * parseFloat(CONFIG.SSD.REWARD_PER_KILL);
-        if (ssdReward > 0) {
-          console.log(
-            `💰 SSD Reward: ${ssdReward} SSD for ${aliensKilled} aliens killed`
-          );
+          // Show SSD reward notification immediately
           this.showSSDRewardNotification(ssdReward, aliensKilled);
+        } catch (blockchainError) {
+          console.error("❌ Blockchain submission failed:", blockchainError);
+          throw new Error(
+            `Blockchain submission failed: ${blockchainError.message}`
+          );
+        }
+      } else {
+        // Save locally if not connected to blockchain or no aliens killed
+        console.log(
+          "💾 Saving locally (no blockchain connection or no aliens killed)"
+        );
+        this.saveScoreLocally(score, level);
+      }
+
+      // Step 2: Submit to backend (for analytics, leaderboards, achievements)
+      console.log("🔗 Submitting score to backend...", {
+        score,
+        level,
+        aliensKilled,
+        gameMode,
+        playTime,
+        txHash: blockchainTxHash,
+      });
+
+      const submitData = {
+        score,
+        level,
+        aliensKilled,
+        gameMode,
+        gameSession,
+        playTime,
+        powerUpsCollected,
+        accuracy,
+        playerAddress:
+          this.account || "0x0000000000000000000000000000000000000000",
+        blockchainTxHash, // Include blockchain transaction hash
+        ssdAlreadyRewarded: ssdReward > 0, // Tell backend SSD was already rewarded
+      };
+
+      const result = await apiService.submitScore(submitData);
+
+      if (result.success) {
+        console.log("✅ Backend submission successful!", {
+          scoreId: result.scoreId,
+          blockchainTxHash,
+          ssdReward,
+          newAchievements: result.newAchievements,
+        });
+
+        // Show achievement notifications
+        if (result.newAchievements && result.newAchievements.length > 0) {
+          this.showAchievementNotifications(result.newAchievements);
         }
 
-        this.showSuccess("Score saved to blockchain!");
-        return true;
+        this.showSuccess("Score saved successfully!");
+        return {
+          success: true,
+          blockchainTxHash,
+          ssdReward,
+          ...result,
+        };
       } else {
-        console.log("💾 Score saved locally (contract not initialized)");
-        return true;
+        throw new Error(result.error || "Failed to submit score");
       }
     } catch (error) {
-      console.error("Failed to save score to blockchain:", error);
-      console.log("💾 Score saved locally as fallback");
+      console.error("Score submission failed:", error);
+
+      // Save locally as fallback if blockchain/backend failed
+      this.saveScoreLocally(score, level);
 
       // Show user-friendly error message
-      if (error.message.includes("User denied")) {
-        this.showWarning("Transaction cancelled by user");
+      if (error.message.includes("validation failed")) {
+        this.showError(`Score validation failed: ${error.message}`);
+      } else if (error.message.includes("Submission cooldown")) {
+        this.showWarning("Please wait before submitting another score");
+      } else if (error.message.includes("timeout")) {
+        this.showWarning("Score submission timed out, but saved locally");
       } else {
-        this.showWarning("Failed to save to blockchain, saved locally instead");
+        this.showWarning("Failed to submit score, saved locally instead");
       }
 
-      return false;
+      return {
+        success: false,
+        error: error.message,
+      };
     }
   }
 
@@ -701,6 +822,28 @@ class Web3Manager {
     if (userScores.length === 0) return 0; // New player starts at 0
 
     return Math.max(...userScores.map((s) => s.score));
+  }
+
+  // Get high score from backend (more reliable)
+  async getHighScoreFromBackend() {
+    try {
+      if (!this.account) {
+        console.log("🎯 No account connected, returning 0 for high score");
+        return 0;
+      }
+
+      console.log("🎯 Fetching high score for account:", this.account);
+      const playerStats = await apiService.getPlayerStats(this.account);
+      const highScore = playerStats.stats?.highScore || 0;
+      console.log("🎯 High score from backend:", highScore);
+      return highScore;
+    } catch (error) {
+      console.warn(
+        "Failed to get high score from backend, using local:",
+        error
+      );
+      return this.getHighScore();
+    }
   }
 
   updateWalletUI() {
@@ -904,7 +1047,7 @@ class Web3Manager {
       return await this.web3.eth.estimateGas(transaction);
     } catch (error) {
       console.error("Failed to estimate gas:", error);
-      return 100000; // Default gas limit
+      return 1200000; // Default gas limit
     }
   }
 
@@ -924,6 +1067,19 @@ class Web3Manager {
 
     // Also trigger balance refresh
     this.triggerBalanceUpdate();
+  }
+
+  showAchievementNotifications(achievements) {
+    if (window.gameApp && window.gameApp.showAchievements) {
+      window.gameApp.showAchievements(achievements);
+    } else {
+      // Fallback notification
+      achievements.forEach((achievement) => {
+        console.log(
+          `🏆 ACHIEVEMENT UNLOCKED: ${achievement.name} - ${achievement.description}`
+        );
+      });
+    }
   }
 
   triggerBalanceUpdate() {
@@ -1010,7 +1166,7 @@ class Web3Manager {
 
       const approveTx = await ssdContract.methods
         .approve(CONFIG.CONTRACTS.GAME_SCORE, itemPrice)
-        .send({ from: this.account, gas: 100000 });
+        .send({ from: this.account, gas: 1200000 });
 
       console.log("✅ SSD approval successful:", approveTx.transactionHash);
 
@@ -1228,7 +1384,7 @@ class Web3Manager {
 
       const tx = await ssdContract.methods
         .transfer(CONFIG.CONTRACTS.GAME_SCORE, amountWei)
-        .send({ from: this.account, gas: 100000 });
+        .send({ from: this.account, gas: 1200000 });
 
       console.log("✅ Contract funded:", tx.transactionHash);
       return true;
@@ -1250,7 +1406,7 @@ class Web3Manager {
 
       const tx = await this.gameContract.methods
         .withdrawSSD(amountWei)
-        .send({ from: this.account, gas: 200000 });
+        .send({ from: this.account, gas: 1200000 });
 
       console.log("✅ Withdrawal successful:", tx.transactionHash);
       return true;
