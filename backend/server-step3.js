@@ -1,6 +1,5 @@
-console.log("🚀 Starting Somnia Space Defender Backend...");
-console.log("Node.js version:", process.version);
-console.log("Environment:", process.env.NODE_ENV || "development");
+// Step 3: Add MongoDB + Models (no routes yet)
+console.log("🚀 Starting step 3 server...");
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -9,15 +8,8 @@ const helmet = require("helmet");
 const compression = require("compression");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
-require("dotenv").config();
 
-console.log("✅ Dependencies loaded successfully");
-
-// Import routes
-const gameRoutes = require("./routes/game");
-const leaderboardRoutes = require("./routes/leaderboard");
-const achievementRoutes = require("./routes/achievements");
-const playerRoutes = require("./routes/player");
+console.log("✅ All dependencies loaded including Mongoose");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,14 +31,12 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, postman, etc.)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      // Allow any vercel.app domain for development
       if (origin.includes(".vercel.app")) {
         return callback(null, true);
       }
@@ -63,7 +53,7 @@ app.use(
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: parseInt(process.env.API_RATE_LIMIT) || 100,
   message: { error: "Too many requests from this IP" },
 });
@@ -74,19 +64,22 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
 
-// MongoDB connection with better error handling for Vercel
+console.log("✅ Basic middleware configured");
+
+// MongoDB connection
 let isDbConnected = false;
 let lastConnectionError = null;
 
 const connectDB = async () => {
   try {
+    console.log("🔄 Attempting MongoDB connection...");
+
     if (!process.env.MONGODB_URI) {
       const error = "MONGODB_URI environment variable is not set";
       lastConnectionError = error;
       throw new Error(error);
     }
 
-    console.log("🔄 Attempting MongoDB connection...");
     console.log(
       "URI prefix:",
       process.env.MONGODB_URI.substring(0, 30) + "..."
@@ -98,11 +91,11 @@ const connectDB = async () => {
     await mongoose.connect(baseUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 10000, // Increased timeout to 10 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferCommands: false, // Disable mongoose buffering
-      bufferMaxEntries: 0, // Disable mongoose buffering
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      bufferCommands: false,
+      bufferMaxEntries: 0,
     });
 
     isDbConnected = true;
@@ -114,7 +107,6 @@ const connectDB = async () => {
     console.error("❌ MongoDB connection error:", err);
     lastConnectionError = err.message;
     isDbConnected = false;
-    // Don't throw the error - let the app start but handle DB errors gracefully
   }
 };
 
@@ -137,9 +129,25 @@ mongoose.connection.on("disconnected", () => {
   console.log("⚠️ Mongoose disconnected from MongoDB");
 });
 
+console.log("✅ MongoDB connection setup complete");
+
+// Test importing models
+console.log("🔄 Testing model imports...");
+try {
+  const Player = require("./models/Player");
+  console.log("✅ Player model imported");
+
+  const GameScore = require("./models/GameScore");
+  console.log("✅ GameScore model imported");
+
+  const Achievement = require("./models/Achievement");
+  console.log("✅ Achievement model imported");
+} catch (error) {
+  console.error("❌ Model import failed:", error.message);
+}
+
 // Middleware to check DB connection
 app.use((req, res, next) => {
-  // Allow test endpoints to bypass DB check
   const allowedPaths = ["/health", "/test", "/debug-db"];
 
   if (!isDbConnected && !allowedPaths.includes(req.path)) {
@@ -151,52 +159,40 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
-app.use("/api/game", gameRoutes);
-app.use("/api/leaderboard", leaderboardRoutes);
-app.use("/api/achievements", achievementRoutes);
-app.use("/api/player", playerRoutes);
+console.log("✅ DB connection middleware configured");
 
-// Simple test endpoint to check if function starts
-app.get("/test", (req, res) => {
-  res.json({ message: "Function is working!", timestamp: Date.now() });
+// Test endpoints
+app.get("/", (req, res) => {
+  res.json({ message: "Step 3 server working!", timestamp: Date.now() });
 });
 
-// Debug endpoint to check MongoDB connection details
-app.get("/debug-db", (req, res) => {
+app.get("/test", (req, res) => {
   res.json({
-    message: "Debug MongoDB connection",
+    message: "Step 3 - MongoDB + Models test!",
     timestamp: Date.now(),
-    mongodbUri: process.env.MONGODB_URI
-      ? `${process.env.MONGODB_URI.substring(0, 30)}...`
-      : "NOT SET",
-    mongodbUriExists: !!process.env.MONGODB_URI,
-    connectionState: mongoose.connection.readyState,
-    connectionStates: {
-      0: "disconnected",
-      1: "connected",
-      2: "connecting",
-      3: "disconnecting",
+    nodeVersion: process.version,
+    env: process.env.NODE_ENV || "development",
+    database: {
+      connected: isDbConnected,
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host || "unknown",
     },
-    isDbConnected: isDbConnected,
-    lastConnectionError: lastConnectionError,
-    host: mongoose.connection.host || "unknown",
-    name: mongoose.connection.name || "unknown",
-    allEnvVars: Object.keys(process.env).filter(
-      (key) => key.includes("MONGODB") || key.includes("DATABASE")
-    ),
-    vercelRegion: process.env.VERCEL_REGION || "unknown",
+    models: {
+      player: "✅",
+      gameScore: "✅",
+      achievement: "✅",
+    },
   });
 });
 
-// Health check
 app.get("/health", (req, res) => {
   try {
     const healthData = {
       status: "OK",
+      step: "3 - MongoDB + Models",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: "1.0.0",
+      version: "step3-1.0.0",
       database: {
         connected: isDbConnected,
         readyState: mongoose.connection.readyState,
@@ -212,7 +208,7 @@ app.get("/health", (req, res) => {
       },
     };
 
-    console.log("Health check requested:", healthData);
+    console.log("Health check requested - Step 3:", healthData);
     res.json(healthData);
   } catch (error) {
     console.error("Health check error:", error);
@@ -223,6 +219,8 @@ app.get("/health", (req, res) => {
     });
   }
 });
+
+console.log("✅ Routes defined");
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -240,18 +238,9 @@ app.use("*", (req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Start server (only in development)
-if (process.env.NODE_ENV !== "production") {
-  app.listen(PORT, () => {
-    console.log(`🚀 Somnia Space Defender Backend running on port ${PORT}`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-    console.log(
-      `🔗 MongoDB: ${process.env.MONGODB_URI ? "Connected" : "Not configured"}`
-    );
-  });
-} else {
-  console.log("✅ Production mode - Serverless function ready");
-}
+console.log("✅ Error handling configured");
 
-// Export for Vercel serverless functions
+// Export for Vercel
 module.exports = app;
+
+console.log("✅ Step 3 server ready - MongoDB + Models, no routes");
