@@ -62,7 +62,6 @@ async function connectToDatabase() {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       bufferCommands: false,
-      bufferMaxEntries: 0,
       useNewUrlParser: true,
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,

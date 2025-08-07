@@ -74,81 +74,32 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
 
-// MongoDB connection with better error handling for Vercel
+// Import serverless database connection
+const connectToDatabase = require('./lib/db');
+
+// Database connection status for legacy compatibility
 let isDbConnected = false;
 let lastConnectionError = null;
 
-const connectDB = async () => {
+// Test database connection on startup (for health checks)
+const testConnection = async () => {
   try {
-    if (!process.env.MONGODB_URI) {
-      const error = "MONGODB_URI environment variable is not set";
-      lastConnectionError = error;
-      throw new Error(error);
-    }
-
-    console.log("🔄 Attempting MongoDB connection...");
-    console.log(
-      "URI prefix:",
-      process.env.MONGODB_URI.substring(0, 30) + "..."
-    );
-
-    // Remove database name from URI for initial connection
-    const baseUri = process.env.MONGODB_URI.replace(/\/[^/?]*\?/, "/?");
-
-    await mongoose.connect(baseUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 10000, // Increased timeout to 10 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferCommands: false, // Disable mongoose buffering
-    });
-
+    await connectToDatabase();
     isDbConnected = true;
     lastConnectionError = null;
-    console.log("✅ Connected to MongoDB successfully");
-    console.log("Database name:", mongoose.connection.name);
-    console.log("Host:", mongoose.connection.host);
+    console.log("✅ Database connection test successful");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err);
-    lastConnectionError = err.message;
+    console.error("❌ Database connection test failed:", err.message);
     isDbConnected = false;
-    // Don't throw the error - let the app start but handle DB errors gracefully
+    lastConnectionError = err.message;
   }
 };
 
-// Connect to database
-connectDB();
+// Test connection on startup (non-blocking)
+testConnection();
 
-// Handle MongoDB connection events
-mongoose.connection.on("connected", () => {
-  isDbConnected = true;
-  console.log("✅ Mongoose connected to MongoDB");
-});
-
-mongoose.connection.on("error", (err) => {
-  isDbConnected = false;
-  console.error("❌ Mongoose connection error:", err);
-});
-
-mongoose.connection.on("disconnected", () => {
-  isDbConnected = false;
-  console.log("⚠️ Mongoose disconnected from MongoDB");
-});
-
-// Middleware to check DB connection
-app.use((req, res, next) => {
-  // Allow test endpoints to bypass DB check
-  const allowedPaths = ["/health", "/test", "/debug-db"];
-
-  if (!isDbConnected && !allowedPaths.includes(req.path)) {
-    return res.status(503).json({
-      error: "Database temporarily unavailable",
-      retry: true,
-    });
-  }
-  next();
-});
+// Note: Removed global DB connection middleware for serverless compatibility
+// Each route will handle its own connection using connectToDatabase()
 
 // Routes
 app.use("/api/game", gameRoutes);

@@ -1,6 +1,7 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const connectToDatabase = require("../lib/db");
 
 const Player = require("../models/Player");
 const GameScore = require("../models/GameScore");
@@ -11,6 +12,9 @@ const GameScore = require("../models/GameScore");
  */
 router.get("/:address", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const { address } = req.params;
 
     // Validate address format (basic validation)
@@ -123,6 +127,9 @@ router.put(
   [body("twitterHandle").optional().isString().isLength({ max: 50 })],
   async (req, res) => {
     try {
+      // Connect to database
+      await connectToDatabase();
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -163,6 +170,9 @@ router.put(
  */
 router.get("/:address/games", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const { address } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -253,6 +263,9 @@ router.get("/:address/games", async (req, res) => {
  */
 router.get("/compare/:address1/:address2", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const { address1, address2 } = req.params;
 
     const [player1, player2] = await Promise.all([
