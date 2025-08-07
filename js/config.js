@@ -21,7 +21,7 @@ const CONFIG = {
 
   // Backend API Configuration
   API: {
-    BASE_URL: "http://localhost:3000/api", // Backend API endpoint
+    BASE_URL: "https://somnia-space-defender-backend.vercel.app/api",
     TIMEOUT: 10000,
     RETRY_ATTEMPTS: 3,
   },

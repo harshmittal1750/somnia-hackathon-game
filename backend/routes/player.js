@@ -1,6 +1,7 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const connectToDatabase = require("../lib/db");
 
 const Player = require("../models/Player");
 const GameScore = require("../models/GameScore");
@@ -11,11 +12,56 @@ const GameScore = require("../models/GameScore");
  */
 router.get("/:address", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const { address } = req.params;
+
+    // Validate address format (basic validation)
+    if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      return res.status(400).json({ error: "Invalid wallet address format" });
+    }
 
     const player = await Player.findOne({ address: address.toLowerCase() });
     if (!player) {
-      return res.status(404).json({ error: "Player not found" });
+      // Create a default player entry if not found
+      const newPlayer = new Player({
+        address: address.toLowerCase(),
+        highScore: 0,
+        totalGames: 0,
+        totalAliensKilled: 0,
+        maxLevelReached: 0,
+        totalPlayTime: 0,
+        ssdEarned: 0,
+        ssdSpent: 0,
+        achievementsUnlocked: [],
+      });
+
+      await newPlayer.save();
+
+      return res.json({
+        address: newPlayer.address,
+        stats: {
+          highScore: 0,
+          totalGames: 0,
+          totalAliensKilled: 0,
+          maxLevelReached: 0,
+          totalPlayTime: 0,
+          averageScore: 0,
+          averagePlayTime: 0,
+          killsPerGame: 0,
+          ssdEarned: 0,
+          ssdSpent: 0,
+          achievementsUnlocked: 0,
+        },
+        social: {
+          twitterHandle: null,
+          twitterVerified: false,
+        },
+        recentGames: [],
+        joinedAt: newPlayer.createdAt,
+        lastActive: newPlayer.updatedAt,
+      });
     }
 
     // Get recent games
@@ -81,6 +127,9 @@ router.put(
   [body("twitterHandle").optional().isString().isLength({ max: 50 })],
   async (req, res) => {
     try {
+      // Connect to database
+      await connectToDatabase();
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -121,6 +170,9 @@ router.put(
  */
 router.get("/:address/games", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const { address } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
@@ -211,6 +263,9 @@ router.get("/:address/games", async (req, res) => {
  */
 router.get("/compare/:address1/:address2", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const { address1, address2 } = req.params;
 
     const [player1, player2] = await Promise.all([

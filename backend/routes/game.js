@@ -1,6 +1,7 @@
 const express = require("express");
 const { body, validationResult } = require("express-validator");
 const router = express.Router();
+const connectToDatabase = require("../lib/db");
 
 const Player = require("../models/Player");
 const GameScore = require("../models/GameScore");
@@ -49,6 +50,9 @@ router.post(
   },
   async (req, res) => {
     try {
+      // Connect to database
+      await connectToDatabase();
+
       const {
         score,
         level,
@@ -225,6 +229,9 @@ router.post(
  */
 router.get("/stats", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const totalGames = await GameScore.countDocuments();
     const totalPlayers = await Player.countDocuments();
     const totalAliensKilled = await Player.aggregate([
@@ -252,6 +259,9 @@ router.get("/stats", async (req, res) => {
  */
 router.get("/history/:address", async (req, res) => {
   try {
+    // Connect to database
+    await connectToDatabase();
+
     const { address } = req.params;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
