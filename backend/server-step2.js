@@ -32,16 +32,17 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      
+
       if (origin.includes(".vercel.app")) {
         return callback(null, true);
       }
-      
-      const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+
+      const msg =
+        "The CORS policy for this site does not allow access from the specified Origin.";
       return callback(new Error(msg), false);
     },
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -71,7 +72,7 @@ let isDbConnected = false;
 const connectDB = async () => {
   try {
     console.log("🔄 Attempting MongoDB connection...");
-    
+
     if (!process.env.MONGODB_URI) {
       throw new Error("MONGODB_URI environment variable is not set");
     }
@@ -85,7 +86,7 @@ const connectDB = async () => {
       bufferCommands: false,
       bufferMaxEntries: 0,
     });
-    
+
     isDbConnected = true;
     console.log("✅ Connected to MongoDB successfully");
   } catch (err) {
@@ -148,12 +149,12 @@ app.get("/test", (req, res) => {
     dependencies: {
       express: "✅",
       mongoose: "✅",
-      cors: "✅", 
+      cors: "✅",
       helmet: "✅",
       compression: "✅",
       morgan: "✅",
       rateLimit: "✅",
-    }
+    },
   });
 });
 
@@ -177,9 +178,9 @@ app.get("/health", (req, res) => {
         SOMNIA_RPC_URL: !!process.env.SOMNIA_RPC_URL,
         CONTRACT_ADDRESS: !!process.env.CONTRACT_ADDRESS,
         SSD_TOKEN_ADDRESS: !!process.env.SSD_TOKEN_ADDRESS,
-      }
+      },
     };
-    
+
     console.log("Health check requested - Step 2:", healthData);
     res.json(healthData);
   } catch (error) {
@@ -198,7 +199,10 @@ console.log("✅ Routes defined");
 app.use((err, req, res, next) => {
   console.error("Error:", err);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message,
+    error:
+      process.env.NODE_ENV === "production"
+        ? "Internal server error"
+        : err.message,
   });
 });
 

@@ -76,27 +76,40 @@ app.use(morgan("combined"));
 
 // MongoDB connection with better error handling for Vercel
 let isDbConnected = false;
+let lastConnectionError = null;
 
 const connectDB = async () => {
   try {
     if (!process.env.MONGODB_URI) {
-      throw new Error("MONGODB_URI environment variable is not set");
+      const error = "MONGODB_URI environment variable is not set";
+      lastConnectionError = error;
+      throw new Error(error);
     }
+
+    console.log("🔄 Attempting MongoDB connection...");
+    console.log(
+      "URI prefix:",
+      process.env.MONGODB_URI.substring(0, 30) + "..."
+    );
 
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       maxPoolSize: 10, // Maintain up to 10 socket connections
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      serverSelectionTimeoutMS: 10000, // Increased timeout to 10 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
       bufferCommands: false, // Disable mongoose buffering
       bufferMaxEntries: 0, // Disable mongoose buffering
     });
 
     isDbConnected = true;
-    console.log("✅ Connected to MongoDB");
+    lastConnectionError = null;
+    console.log("✅ Connected to MongoDB successfully");
+    console.log("Database name:", mongoose.connection.name);
+    console.log("Host:", mongoose.connection.host);
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
+    lastConnectionError = err.message;
     isDbConnected = false;
     // Don't throw the error - let the app start but handle DB errors gracefully
   }
@@ -141,6 +154,33 @@ app.use("/api/player", playerRoutes);
 // Simple test endpoint to check if function starts
 app.get("/test", (req, res) => {
   res.json({ message: "Function is working!", timestamp: Date.now() });
+});
+
+// Debug endpoint to check MongoDB connection details
+app.get("/debug-db", (req, res) => {
+  res.json({
+    message: "Debug MongoDB connection",
+    timestamp: Date.now(),
+    mongodbUri: process.env.MONGODB_URI
+      ? `${process.env.MONGODB_URI.substring(0, 30)}...`
+      : "NOT SET",
+    mongodbUriExists: !!process.env.MONGODB_URI,
+    connectionState: mongoose.connection.readyState,
+    connectionStates: {
+      0: "disconnected",
+      1: "connected",
+      2: "connecting",
+      3: "disconnecting",
+    },
+    isDbConnected: isDbConnected,
+    lastConnectionError: lastConnectionError,
+    host: mongoose.connection.host || "unknown",
+    name: mongoose.connection.name || "unknown",
+    allEnvVars: Object.keys(process.env).filter(
+      (key) => key.includes("MONGODB") || key.includes("DATABASE")
+    ),
+    vercelRegion: process.env.VERCEL_REGION || "unknown",
+  });
 });
 
 // Health check
