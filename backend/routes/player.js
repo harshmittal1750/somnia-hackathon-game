@@ -13,9 +13,51 @@ router.get("/:address", async (req, res) => {
   try {
     const { address } = req.params;
 
+    // Validate address format (basic validation)
+    if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      return res.status(400).json({ error: "Invalid wallet address format" });
+    }
+
     const player = await Player.findOne({ address: address.toLowerCase() });
     if (!player) {
-      return res.status(404).json({ error: "Player not found" });
+      // Create a default player entry if not found
+      const newPlayer = new Player({
+        address: address.toLowerCase(),
+        highScore: 0,
+        totalGames: 0,
+        totalAliensKilled: 0,
+        maxLevelReached: 0,
+        totalPlayTime: 0,
+        ssdEarned: 0,
+        ssdSpent: 0,
+        achievementsUnlocked: [],
+      });
+
+      await newPlayer.save();
+
+      return res.json({
+        address: newPlayer.address,
+        stats: {
+          highScore: 0,
+          totalGames: 0,
+          totalAliensKilled: 0,
+          maxLevelReached: 0,
+          totalPlayTime: 0,
+          averageScore: 0,
+          averagePlayTime: 0,
+          killsPerGame: 0,
+          ssdEarned: 0,
+          ssdSpent: 0,
+          achievementsUnlocked: 0,
+        },
+        social: {
+          twitterHandle: null,
+          twitterVerified: false,
+        },
+        recentGames: [],
+        joinedAt: newPlayer.createdAt,
+        lastActive: newPlayer.updatedAt,
+      });
     }
 
     // Get recent games
