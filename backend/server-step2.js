@@ -274,6 +274,82 @@ app.get("/test-native-mongo", async (req, res) => {
   }
 });
 
+// Test URL encoding of MongoDB URI
+app.get("/test-encoding", async (req, res) => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({ error: "MONGODB_URI not set" });
+    }
+
+    const originalUri = process.env.MONGODB_URI;
+    
+    // Parse the URI to check for encoding issues
+    const uriParts = originalUri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@(.+)/);
+    
+    if (!uriParts) {
+      return res.status(500).json({ error: "Invalid URI format" });
+    }
+
+    const [, username, password, rest] = uriParts;
+    
+    // Create properly encoded URI
+    const encodedUsername = encodeURIComponent(username);
+    const encodedPassword = encodeURIComponent(password);
+    const encodedUri = `mongodb+srv://${encodedUsername}:${encodedPassword}@${rest}`;
+
+    // Test with original URI
+    let originalResult = "success";
+    try {
+      const { MongoClient } = require("mongodb");
+      const client1 = new MongoClient(originalUri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000,
+      });
+      await client1.connect();
+      await client1.db("admin").command({ ping: 1 });
+      await client1.close();
+    } catch (err) {
+      originalResult = err.message;
+    }
+
+    // Test with encoded URI
+    let encodedResult = "success";
+    try {
+      const { MongoClient } = require("mongodb");
+      const client2 = new MongoClient(encodedUri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true, 
+        serverSelectionTimeoutMS: 5000,
+      });
+      await client2.connect();
+      await client2.db("admin").command({ ping: 1 });
+      await client2.close();
+    } catch (err) {
+      encodedResult = err.message;
+    }
+
+    res.json({
+      originalUri: originalUri.substring(0, 50) + "...",
+      encodedUri: encodedUri.substring(0, 50) + "...",
+      username: username,
+      encodedUsername: encodedUsername,
+      password: password.substring(0, 5) + "***",
+      encodedPassword: encodedPassword.substring(0, 5) + "***",
+      originalResult: originalResult,
+      encodedResult: encodedResult,
+      recommendation: originalResult === "success" ? "Use original URI" : 
+                     encodedResult === "success" ? "Use encoded URI" : "Both failed",
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      timestamp: Date.now(),
+    });
+  }
+});
+
 app.get("/health", (req, res) => {
   try {
     const healthData = {
