@@ -6,6 +6,7 @@ class GameApp {
     this.isInitialized = false;
     this.loadingProgress = 0;
     this.audioLoaded = false;
+    this.cachedHighScore = 0; // Cache high score for when HUD is shown
 
     this.init();
   }
@@ -597,7 +598,7 @@ class GameApp {
 
   async onWalletConnected(account) {
     console.log("✅ Wallet connected:", account);
-    this.updateHighScore();
+    await this.updateHighScore(); // Load high score from backend
     this.showGameMenu();
 
     // Initialize SSD balance in HUD
@@ -666,17 +667,28 @@ class GameApp {
     }
   }
 
-  showGameMenu() {
+  async showGameMenu() {
     this.currentState = GAME_STATES.MENU;
     this.hideAllPanels();
     document.getElementById("gameMenu").classList.remove("hidden");
     this.updateLevelSelection();
+
+    // Update high score when showing game menu (ensures it's always current)
+    await this.updateHighScore();
   }
 
-  showGameUI() {
+  async showGameUI() {
     this.currentState = GAME_STATES.PLAYING;
     this.hideAllPanels();
     document.getElementById("gameUI").classList.remove("hidden");
+
+    // Immediately update HUD with cached high score (fast)
+    if (this.cachedHighScore > 0) {
+      this.updateHighScoreElements(this.cachedHighScore);
+    }
+
+    // Also fetch fresh high score from backend (ensures accuracy)
+    await this.updateHighScore();
   }
 
   hideAllPanels() {
@@ -742,19 +754,39 @@ class GameApp {
   }
 
   // Game Control
-  startGame() {
+  async startGame() {
     if (!this.isInitialized) {
       console.warn("Game not fully initialized yet");
       return;
     }
 
-    // Check if we can actually play the game (proper network and connection)
-    if (!web3Manager.canPlayGame()) {
-      console.warn("⚠️ Cannot start game: Wrong network or not connected");
-      alert("Please connect to the Somnia Testnet to play the game!");
-      this.showWalletPanel();
-      return;
+    // Enhanced game start check with network verification
+    const canPlay = web3Manager.canPlayGame();
+
+    if (!canPlay) {
+      console.warn("⚠️ Initial game check failed, verifying network...");
+
+      // Try to verify network connection one more time
+      try {
+        const networkVerified = await web3Manager.verifyNetworkConnection(2);
+        if (networkVerified && web3Manager.canPlayGame()) {
+          console.log("✅ Network verified on retry, proceeding with game");
+        } else {
+          console.warn("⚠️ Cannot start game: Wrong network or not connected");
+          alert("Please connect to the Somnia Testnet to play the game!");
+          this.showWalletPanel();
+          return;
+        }
+      } catch (error) {
+        console.error("Network verification failed:", error);
+        alert("Please connect to the Somnia Testnet to play the game!");
+        this.showWalletPanel();
+        return;
+      }
     }
+
+    // Ensure we have the latest high score before starting
+    await this.updateHighScore();
 
     // Reset session SSD counter
     this.updateSessionSSD(0);
@@ -798,12 +830,18 @@ class GameApp {
       '<div class="loading">Loading leaderboard...</div>';
 
     try {
-      const scores = await web3Manager.getLeaderboard();
-      this.renderLeaderboard(scores);
+      const result = await apiService.getLeaderboardCached("normal", 100);
+      this.renderLeaderboard(result.leaderboard || []);
     } catch (error) {
       console.error("Failed to load leaderboard:", error);
       leaderboardList.innerHTML =
-        '<div class="error">Failed to load leaderboard</div>';
+        '<div class="error">Failed to load leaderboard. Using cached data...</div>';
+
+      // Try to get cached data as fallback
+      const cached = apiService.getCachedData("leaderboard_normal_100");
+      if (cached && cached.leaderboard) {
+        this.renderLeaderboard(cached.leaderboard);
+      }
     }
   }
 
@@ -814,7 +852,7 @@ class GameApp {
   renderLeaderboard(scores) {
     const leaderboardList = document.getElementById("leaderboardList");
 
-    if (scores.length === 0) {
+    if (!scores || scores.length === 0) {
       leaderboardList.innerHTML =
         '<div class="no-scores">No scores yet. Be the first!</div>';
       return;
@@ -833,12 +871,24 @@ class GameApp {
                         <div class="address">${UTILS.formatAddress(
                           score.address
                         )}</div>
-                        <div class="level">Level ${score.level}</div>
+                        <div class="games">${score.totalGames} games</div>
+                        ${
+                          score.twitterHandle
+                            ? `<div class="twitter">@${score.twitterHandle}</div>`
+                            : ""
+                        }
                     </div>
-                    <div class="score">${UTILS.formatScore(score.score)}</div>
-                    <div class="date">${this.formatTimestamp(
-                      score.timestamp
+                    <div class="score">${UTILS.formatScore(
+                      score.highScore
                     )}</div>
+                    <div class="stats">
+                        <div class="aliens">${
+                          score.totalAliensKilled
+                        } aliens</div>
+                        <div class="date">${this.formatTimestamp(
+                          score.lastPlayed
+                        )}</div>
+                    </div>
                 </div>
             `;
     });
@@ -859,8 +909,12 @@ class GameApp {
 
       if (success) {
         saveBtn.textContent = "Saved! ✅";
+        // Hide the dialog after successful save and reset button
         setTimeout(() => {
           document.getElementById("newHighScore").classList.add("hidden");
+          // Reset button for next time
+          saveBtn.textContent = originalText;
+          saveBtn.disabled = false;
         }, 2000);
       } else {
         saveBtn.textContent = "Failed ❌";
@@ -879,12 +933,49 @@ class GameApp {
     }
   }
 
-  updateHighScore() {
-    const highScore = web3Manager.getHighScore();
+  async updateHighScore() {
+    // Get high score from backend (more reliable than local storage)
+    const highScore = await web3Manager.getHighScoreFromBackend();
+
+    // Cache the high score value
+    this.cachedHighScore = highScore;
+
     const highScoreElements = document.querySelectorAll("#highScore");
 
+    console.log("🎯 Updating high score:", {
+      highScore,
+      cached: this.cachedHighScore,
+      elementsFound: highScoreElements.length,
+      walletConnected: web3Manager.isConnected,
+      account: web3Manager.account,
+      gameUIVisible: !document
+        .getElementById("gameUI")
+        .classList.contains("hidden"),
+    });
+
+    // Update all high score elements immediately
+    this.updateHighScoreElements(highScore);
+
+    // Force update even if elements weren't found initially (timing issue)
+    if (highScoreElements.length === 0) {
+      console.log("🎯 No elements found, scheduling retry...");
+      setTimeout(() => {
+        this.updateHighScoreElements(this.cachedHighScore);
+      }, 1000);
+    }
+  }
+
+  // Helper method to update high score elements
+  updateHighScoreElements(highScore) {
+    const highScoreElements = document.querySelectorAll("#highScore");
     highScoreElements.forEach((element) => {
       element.textContent = UTILS.formatScore(highScore);
+      console.log(
+        "🎯 Updated element:",
+        element,
+        "to:",
+        UTILS.formatScore(highScore)
+      );
     });
   }
 
@@ -1440,6 +1531,31 @@ class GameApp {
     }, 3000);
 
     this.showNotification(`🛍️ Purchased ${itemName}!`, "success");
+  }
+
+  // Update game availability based on current connection state
+  updateGameAvailability() {
+    console.log("🔄 Updating game availability");
+    const canPlay = web3Manager.canPlayGame();
+
+    // Update UI elements that depend on network state
+    const playButtons = document.querySelectorAll(
+      ".play-button, .start-game-btn"
+    );
+    playButtons.forEach((button) => {
+      if (canPlay) {
+        button.disabled = false;
+        button.style.opacity = "1";
+        button.style.cursor = "pointer";
+      } else {
+        button.disabled = true;
+        button.style.opacity = "0.5";
+        button.style.cursor = "not-allowed";
+      }
+    });
+
+    // Update wallet status display
+    web3Manager.updateWalletUI();
   }
 
   // 🐦 TWITTER VERIFICATION FUNCTIONALITY

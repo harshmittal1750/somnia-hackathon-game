@@ -12,7 +12,7 @@ yarn-error.log*
 .env.production.local
 
 # Hardhat artifacts
-artifacts/
+# artifacts/
 cache/
 coverage/
 coverage.json
@@ -58,12 +58,12 @@ yarn.lock
 pnpm-lock.yaml
 
 # Audio files (too large for git - add manually)
-assets/audio/*.mp3
-assets/audio/*.wav
-assets/audio/*.ogg
+# assets/audio/*.mp3
+# assets/audio/*.wav
+# assets/audio/*.ogg
 
 # Images (add selectively)
-assets/images/*.png
-assets/images/*.jpg
-assets/images/*.gif
-!assets/images/favicon.ico
+# assets/images/*.png
+# assets/images/*.jpg
+# assets/images/*.gif
+# !assets/images/favicon.ico

@@ -27,6 +27,11 @@ class GameEngine {
     this.gameSession = null; // 🛡️ Track session for anti-cheat
     this.scoreMultiplier = 1; // 🛍️ SSD shop boost: 1x default, 2x with boost
 
+    // Additional tracking for backend
+    this.totalShots = 0;
+    this.totalHits = 0;
+    this.powerUpsCollected = 0;
+
     // Level management
     this.currentLevelConfig = null;
     this.alienSpawnTimer = 0;
@@ -330,7 +335,7 @@ class GameEngine {
     }
   }
 
-  gameLoop(currentTime = performance.now()) {
+  async gameLoop(currentTime = performance.now()) {
     // Calculate delta time
     const deltaTime = Math.min(currentTime - this.lastTime, 50); // Cap delta time
     this.lastTime = currentTime;
@@ -340,7 +345,7 @@ class GameEngine {
 
     // Only update game if playing
     if (this.gameState === GAME_STATES.PLAYING && !this.isPaused) {
-      this.update(deltaTime);
+      await this.update(deltaTime);
     }
 
     // Always render
@@ -351,11 +356,11 @@ class GameEngine {
       this.gameState === GAME_STATES.PLAYING ||
       this.gameState === GAME_STATES.PAUSED
     ) {
-      requestAnimationFrame((time) => this.gameLoop(time));
+      requestAnimationFrame(async (time) => await this.gameLoop(time));
     }
   }
 
-  update(deltaTime) {
+  async update(deltaTime) {
     // Handle input
     this.handlePlayerInput();
 
@@ -365,7 +370,7 @@ class GameEngine {
 
       // Check if player died
       if (this.player.health <= 0) {
-        this.handlePlayerDeath();
+        await this.handlePlayerDeath();
         return;
       }
     }
@@ -597,11 +602,11 @@ class GameEngine {
     this.powerUps.push(powerUp);
   }
 
-  handlePlayerDeath() {
+  async handlePlayerDeath() {
     this.lives--;
 
     if (this.lives <= 0) {
-      this.gameOver();
+      await this.gameOver();
     } else {
       // Respawn player
       this.player.health = CONFIG.GAME.PLAYER.MAX_HEALTH;
@@ -619,7 +624,7 @@ class GameEngine {
     }
   }
 
-  gameOver() {
+  async gameOver() {
     this.gameState = GAME_STATES.GAME_OVER;
 
     // Update mobile controls visibility
@@ -631,8 +636,8 @@ class GameEngine {
       this.audioManager.backgroundMusic.currentTime = 0;
     }
 
-    // Check for new high score (compared to previously saved blockchain scores)
-    const savedHighScore = web3Manager.getHighScore();
+    // Check for new high score (compared to backend saved scores)
+    const savedHighScore = await web3Manager.getHighScoreFromBackend();
     const isNewHighScore = this.score > savedHighScore;
 
     // Update local high score for display
@@ -640,11 +645,12 @@ class GameEngine {
       this.highScore = this.score;
     }
 
-    // Show game over screen with blockchain comparison
+    // Show game over screen with backend comparison
     this.showGameOverScreen(isNewHighScore);
 
     console.log(
-      `💀 Game Over! Score: ${this.score}, Level: ${this.level}, Aliens Killed: ${this.aliensKilled}`
+      `💀 Game Over! Score: ${this.score}, Level: ${this.level}, Aliens Killed: ${this.aliensKilled}`,
+      `Previous High Score: ${savedHighScore}, New High Score: ${isNewHighScore}`
     );
   }
 
@@ -1253,20 +1259,37 @@ class GameEngine {
     }
   }
 
-  // Save score to blockchain
+  // Save score to backend API
   async saveScore() {
-    const success = await web3Manager.saveScore(
+    const playTime =
+      this.gameStartTime > 0
+        ? Math.floor((Date.now() - this.gameStartTime) / 1000)
+        : 0;
+    const powerUpsCollected = this.powerUpsCollected || 0;
+    const accuracy = this.calculateAccuracy();
+
+    const result = await web3Manager.saveScore(
       this.score,
       this.level,
       this.aliensKilled,
       "normal",
-      this.gameSession // 🛡️ Pass session for validation
+      this.gameSession,
+      playTime,
+      powerUpsCollected,
+      accuracy
     );
-    if (success) {
-      console.log("💾 Score saved to Somnia blockchain!");
+
+    if (result && result.success) {
+      console.log("💾 Score saved successfully!", result);
       return true;
     }
     return false;
+  }
+
+  // Calculate shooting accuracy
+  calculateAccuracy() {
+    if (this.totalShots === 0) return 0;
+    return Math.round((this.totalHits / this.totalShots) * 100);
   }
 }
 

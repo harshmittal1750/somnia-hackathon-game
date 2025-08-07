@@ -15,9 +15,15 @@ const CONFIG = {
 
   // Smart Contract Addresses (Deployed on Somnia Testnet)
   CONTRACTS: {
-    GAME_SCORE: "0x923bb2cd9Be4168DB9112DC48dc13090C130929f", // 🛡️ NEW SSD-INTEGRATED CONTRACT!
-    LEADERBOARD: "0x923bb2cd9Be4168DB9112DC48dc13090C130929f", // Same contract handles both
-    SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SSD Token Contract ✅
+    GAME_SCORE: "0x4912aFEA272C0283FDe9804480422a8046EC1908", // 🛡️ MINIMAL SSD REWARDS CONTRACT!
+    SSD_TOKEN: "0xeDFd8C7E14f5D491Cf9063076a4FcE60737170dE", // SSD Token Contract ✅
+  },
+
+  // Backend API Configuration
+  API: {
+    BASE_URL: "http://localhost:3000/api", // Backend API endpoint
+    TIMEOUT: 10000,
+    RETRY_ATTEMPTS: 3,
   },
 
   // 🎮 SSD Token Integration
@@ -40,7 +46,7 @@ const CONFIG = {
       WIDTH: 48,
       HEIGHT: 48,
       SPEED: 0.5, // pixels per millisecond (much more reasonable)
-      MAX_HEALTH: 3,
+      MAX_HEALTH: 1,
       WEAPON_COOLDOWN: 100, // milliseconds (faster shooting)
       RESPAWN_IMMUNITY: 2000, // milliseconds
     },
