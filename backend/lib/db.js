@@ -1,20 +1,20 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 let cached = global.mongoose || { conn: null, promise: null };
 
 async function connectToDatabase() {
   if (cached.conn) {
-    console.log('✅ Using cached MongoDB connection');
+    console.log("✅ Using cached MongoDB connection");
     return cached.conn;
   }
 
   if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI not defined');
+    throw new Error("MONGODB_URI not defined");
   }
 
   if (!cached.promise) {
-    console.log('🔄 Creating new MongoDB connection...');
-    
+    console.log("🔄 Creating new MongoDB connection...");
+
     const opts = {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -24,18 +24,20 @@ async function connectToDatabase() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
-      console.log('✅ Connected to MongoDB (serverless)');
-      return mongoose;
-    });
+    cached.promise = mongoose
+      .connect(process.env.MONGODB_URI, opts)
+      .then((mongoose) => {
+        console.log("✅ Connected to MongoDB (serverless)");
+        return mongoose;
+      });
   }
 
   try {
     cached.conn = await cached.promise;
-    console.log('✅ MongoDB connection established');
+    console.log("✅ MongoDB connection established");
     return cached.conn;
   } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
+    console.error("❌ MongoDB connection failed:", error.message);
     cached.promise = null;
     throw error;
   }

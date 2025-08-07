@@ -75,7 +75,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
 
 // Import serverless database connection
-const connectToDatabase = require('./lib/db');
+const connectToDatabase = require("./lib/db");
 
 // Database connection status for legacy compatibility
 let isDbConnected = false;
