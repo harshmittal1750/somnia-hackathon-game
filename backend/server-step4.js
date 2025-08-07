@@ -32,16 +32,17 @@ app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      
+
       if (origin.includes(".vercel.app")) {
         return callback(null, true);
       }
-      
-      const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+
+      const msg =
+        "The CORS policy for this site does not allow access from the specified Origin.";
       return callback(new Error(msg), false);
     },
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -72,16 +73,19 @@ let lastConnectionError = null;
 const connectDB = async () => {
   try {
     console.log("🔄 Attempting MongoDB connection...");
-    
+
     if (!process.env.MONGODB_URI) {
       const error = "MONGODB_URI environment variable is not set";
       lastConnectionError = error;
       throw new Error(error);
     }
 
-    console.log("URI prefix:", process.env.MONGODB_URI.substring(0, 30) + "...");
+    console.log(
+      "URI prefix:",
+      process.env.MONGODB_URI.substring(0, 30) + "..."
+    );
 
-    // Remove database name from URI for initial connection 
+    // Remove database name from URI for initial connection
     const baseUri = process.env.MONGODB_URI.replace(/\/[^/?]*\?/, "/?");
 
     await mongoose.connect(baseUri, {
@@ -93,7 +97,7 @@ const connectDB = async () => {
       bufferCommands: false,
       bufferMaxEntries: 0,
     });
-    
+
     isDbConnected = true;
     lastConnectionError = null;
     console.log("✅ Connected to MongoDB successfully");
@@ -184,7 +188,7 @@ try {
 // Middleware to check DB connection
 app.use((req, res, next) => {
   const allowedPaths = ["/health", "/test", "/debug-routes"];
-  
+
   if (!isDbConnected && !allowedPaths.includes(req.path)) {
     return res.status(503).json({
       error: "Database temporarily unavailable",
@@ -212,7 +216,7 @@ app.get("/test", (req, res) => {
       readyState: mongoose.connection.readyState,
       host: mongoose.connection.host || "unknown",
     },
-    routeTests: routeTests
+    routeTests: routeTests,
   });
 });
 
@@ -224,9 +228,13 @@ app.get("/debug-routes", (req, res) => {
     routeTests: routeTests,
     summary: {
       total: Object.keys(routeTests).length,
-      successful: Object.values(routeTests).filter(result => result.includes("✅")).length,
-      failed: Object.values(routeTests).filter(result => result.includes("❌")).length
-    }
+      successful: Object.values(routeTests).filter((result) =>
+        result.includes("✅")
+      ).length,
+      failed: Object.values(routeTests).filter((result) =>
+        result.includes("❌")
+      ).length,
+    },
   });
 });
 
@@ -244,9 +252,9 @@ app.get("/health", (req, res) => {
         host: mongoose.connection.host || "unknown",
       },
       routeTests: routeTests,
-      environment: process.env.NODE_ENV || "development"
+      environment: process.env.NODE_ENV || "development",
     };
-    
+
     console.log("Health check requested - Step 4:", healthData);
     res.json(healthData);
   } catch (error) {
@@ -265,7 +273,10 @@ console.log("✅ Routes defined");
 app.use((err, req, res, next) => {
   console.error("Error:", err);
   res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === "production" ? "Internal server error" : err.message,
+    error:
+      process.env.NODE_ENV === "production"
+        ? "Internal server error"
+        : err.message,
   });
 });
 
