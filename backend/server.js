@@ -68,11 +68,63 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined"));
 
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+// MongoDB connection with better error handling for Vercel
+let isDbConnected = false;
+
+const connectDB = async () => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI environment variable is not set");
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+      bufferCommands: false, // Disable mongoose buffering
+      bufferMaxEntries: 0, // Disable mongoose buffering
+    });
+
+    isDbConnected = true;
+    console.log("✅ Connected to MongoDB");
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err);
+    isDbConnected = false;
+    // Don't throw the error - let the app start but handle DB errors gracefully
+  }
+};
+
+// Connect to database
+connectDB();
+
+// Handle MongoDB connection events
+mongoose.connection.on("connected", () => {
+  isDbConnected = true;
+  console.log("✅ Mongoose connected to MongoDB");
+});
+
+mongoose.connection.on("error", (err) => {
+  isDbConnected = false;
+  console.error("❌ Mongoose connection error:", err);
+});
+
+mongoose.connection.on("disconnected", () => {
+  isDbConnected = false;
+  console.log("⚠️ Mongoose disconnected from MongoDB");
+});
+
+// Middleware to check DB connection
+app.use((req, res, next) => {
+  if (!isDbConnected && req.path !== "/health") {
+    return res.status(503).json({
+      error: "Database temporarily unavailable",
+      retry: true,
+    });
+  }
+  next();
+});
 
 // Routes
 app.use("/api/game", gameRoutes);
@@ -87,6 +139,12 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: "1.0.0",
+    database: {
+      connected: isDbConnected,
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host || "unknown",
+    },
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
