@@ -92,7 +92,10 @@ const connectDB = async () => {
       process.env.MONGODB_URI.substring(0, 30) + "..."
     );
 
-    await mongoose.connect(process.env.MONGODB_URI, {
+    // Remove database name from URI for initial connection 
+    const baseUri = process.env.MONGODB_URI.replace(/\/[^/?]*\?/, '/?');
+    
+    await mongoose.connect(baseUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       maxPoolSize: 10, // Maintain up to 10 socket connections
@@ -136,7 +139,10 @@ mongoose.connection.on("disconnected", () => {
 
 // Middleware to check DB connection
 app.use((req, res, next) => {
-  if (!isDbConnected && req.path !== "/health") {
+  // Allow test endpoints to bypass DB check
+  const allowedPaths = ["/health", "/test", "/debug-db"];
+  
+  if (!isDbConnected && !allowedPaths.includes(req.path)) {
     return res.status(503).json({
       error: "Database temporarily unavailable",
       retry: true,
