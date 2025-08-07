@@ -68,29 +68,41 @@ console.log("✅ Basic middleware configured");
 
 // MongoDB connection with better error handling for Vercel
 let isDbConnected = false;
+let lastConnectionError = null;
 
 const connectDB = async () => {
   try {
     console.log("🔄 Attempting MongoDB connection...");
 
     if (!process.env.MONGODB_URI) {
-      throw new Error("MONGODB_URI environment variable is not set");
+      const error = "MONGODB_URI environment variable is not set";
+      lastConnectionError = error;
+      throw new Error(error);
     }
+
+    console.log(
+      "URI prefix:",
+      process.env.MONGODB_URI.substring(0, 30) + "..."
+    );
 
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000, // Increased timeout
       socketTimeoutMS: 45000,
       bufferCommands: false,
       bufferMaxEntries: 0,
     });
 
     isDbConnected = true;
+    lastConnectionError = null;
     console.log("✅ Connected to MongoDB successfully");
+    console.log("Database name:", mongoose.connection.name);
+    console.log("Host:", mongoose.connection.host);
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
+    lastConnectionError = err.message;
     isDbConnected = false;
     // Don't throw the error - let the app start but handle DB errors gracefully
   }
@@ -175,6 +187,7 @@ app.get("/debug-db", (req, res) => {
       3: "disconnecting",
     },
     isDbConnected: isDbConnected,
+    lastConnectionError: lastConnectionError,
     host: mongoose.connection.host || "unknown",
     name: mongoose.connection.name || "unknown",
     allEnvVars: Object.keys(process.env).filter(
@@ -182,6 +195,83 @@ app.get("/debug-db", (req, res) => {
     ),
     vercelRegion: process.env.VERCEL_REGION || "unknown",
   });
+});
+
+// Test MongoDB connection manually with Mongoose
+app.get("/test-mongo", async (req, res) => {
+  try {
+    console.log("Manual MongoDB connection test with Mongoose...");
+
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({ error: "MONGODB_URI not set" });
+    }
+
+    // Test connection
+    const testConnection = await mongoose.createConnection(
+      process.env.MONGODB_URI,
+      {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000,
+      }
+    );
+
+    await testConnection.close();
+
+    res.json({
+      success: true,
+      message: "MongoDB connection test successful with Mongoose!",
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error("Mongoose connection test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: error.code,
+      timestamp: Date.now(),
+    });
+  }
+});
+
+// Test with native MongoDB driver (like Atlas docs)
+app.get("/test-native-mongo", async (req, res) => {
+  try {
+    console.log("Testing with native MongoDB driver...");
+
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({ error: "MONGODB_URI not set" });
+    }
+
+    const { MongoClient } = require("mongodb");
+
+    const client = new MongoClient(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+    });
+
+    await client.connect();
+
+    // Test ping like in Atlas docs
+    await client.db("admin").command({ ping: 1 });
+
+    await client.close();
+
+    res.json({
+      success: true,
+      message: "Native MongoDB driver connection successful!",
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error("Native MongoDB driver test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: error.code,
+      timestamp: Date.now(),
+    });
+  }
 });
 
 app.get("/health", (req, res) => {
