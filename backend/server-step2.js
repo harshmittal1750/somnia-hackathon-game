@@ -158,6 +158,32 @@ app.get("/test", (req, res) => {
   });
 });
 
+// Debug endpoint to check MongoDB connection details
+app.get("/debug-db", (req, res) => {
+  res.json({
+    message: "Debug MongoDB connection",
+    timestamp: Date.now(),
+    mongodbUri: process.env.MONGODB_URI
+      ? `${process.env.MONGODB_URI.substring(0, 30)}...`
+      : "NOT SET",
+    mongodbUriExists: !!process.env.MONGODB_URI,
+    connectionState: mongoose.connection.readyState,
+    connectionStates: {
+      0: "disconnected",
+      1: "connected",
+      2: "connecting",
+      3: "disconnecting",
+    },
+    isDbConnected: isDbConnected,
+    host: mongoose.connection.host || "unknown",
+    name: mongoose.connection.name || "unknown",
+    allEnvVars: Object.keys(process.env).filter(
+      (key) => key.includes("MONGODB") || key.includes("DATABASE")
+    ),
+    vercelRegion: process.env.VERCEL_REGION || "unknown",
+  });
+});
+
 app.get("/health", (req, res) => {
   try {
     const healthData = {
