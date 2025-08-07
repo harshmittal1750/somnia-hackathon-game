@@ -1,3 +1,7 @@
+console.log("🚀 Starting Somnia Space Defender Backend...");
+console.log("Node.js version:", process.version);
+console.log("Environment:", process.env.NODE_ENV || "development");
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -6,6 +10,8 @@ const compression = require("compression");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 require("dotenv").config();
+
+console.log("✅ Dependencies loaded successfully");
 
 // Import routes
 const gameRoutes = require("./routes/game");
@@ -132,20 +138,44 @@ app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/player", playerRoutes);
 
+// Simple test endpoint to check if function starts
+app.get("/test", (req, res) => {
+  res.json({ message: "Function is working!", timestamp: Date.now() });
+});
+
 // Health check
 app.get("/health", (req, res) => {
-  res.json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: "1.0.0",
-    database: {
-      connected: isDbConnected,
-      readyState: mongoose.connection.readyState,
-      host: mongoose.connection.host || "unknown",
-    },
-    environment: process.env.NODE_ENV || "development",
-  });
+  try {
+    const healthData = {
+      status: "OK",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: "1.0.0",
+      database: {
+        connected: isDbConnected,
+        readyState: mongoose.connection.readyState,
+        host: mongoose.connection.host || "unknown",
+      },
+      environment: process.env.NODE_ENV || "development",
+      memory: process.memoryUsage(),
+      envVars: {
+        MONGODB_URI: !!process.env.MONGODB_URI,
+        SOMNIA_RPC_URL: !!process.env.SOMNIA_RPC_URL,
+        CONTRACT_ADDRESS: !!process.env.CONTRACT_ADDRESS,
+        SSD_TOKEN_ADDRESS: !!process.env.SSD_TOKEN_ADDRESS,
+      },
+    };
+
+    console.log("Health check requested:", healthData);
+    res.json(healthData);
+  } catch (error) {
+    console.error("Health check error:", error);
+    res.status(500).json({
+      error: "Health check failed",
+      message: error.message,
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Error handling middleware
@@ -164,9 +194,18 @@ app.use("*", (req, res) => {
   res.status(404).json({ error: "Route not found" });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Somnia Space Defender Backend running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🔗 MongoDB: ${process.env.MONGODB_URI}`);
-});
+// Start server (only in development)
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`🚀 Somnia Space Defender Backend running on port ${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV}`);
+    console.log(
+      `🔗 MongoDB: ${process.env.MONGODB_URI ? "Connected" : "Not configured"}`
+    );
+  });
+} else {
+  console.log("✅ Production mode - Serverless function ready");
+}
+
+// Export for Vercel serverless functions
+module.exports = app;
