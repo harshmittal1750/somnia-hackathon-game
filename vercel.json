@@ -2,16 +2,5 @@
     "buildCommand": null,
     "outputDirectory": ".",
     "devCommand": null,
-    "installCommand": null,
-    "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/backend/api/index.js"
-        }
-    ],
-    "functions": {
-        "backend/api/index.js": {
-            "maxDuration": 30
-        }
-    }
+    "installCommand": null
 }
