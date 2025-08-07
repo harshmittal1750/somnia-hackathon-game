@@ -2,26 +2,26 @@
     "version": 2,
     "builds": [
         {
-            "src": "server-step4.js",
+            "src": "server.js",
             "use": "@vercel/node"
         }
     ],
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "/server-step4.js"
+            "dest": "/server.js"
         },
         {
             "src": "/health",
-            "dest": "/server-step4.js"
+            "dest": "/server.js"
         },
         {
             "src": "/test",
-            "dest": "/server-step4.js"
+            "dest": "/server.js"
         },
         {
             "src": "/(.*)",
-            "dest": "/server-step4.js"
+            "dest": "/server.js"
         }
     ],
     "env": {

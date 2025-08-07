@@ -4,7 +4,32 @@ require("dotenv").config();
 class Web3Service {
   constructor() {
     this.provider = new ethers.JsonRpcProvider(process.env.SOMNIA_RPC_URL);
-    this.wallet = new ethers.Wallet(process.env.PRIVATE_KEY, this.provider);
+
+    // Check if private key is valid before creating wallet
+    if (
+      !process.env.PRIVATE_KEY ||
+      process.env.PRIVATE_KEY === "your_private_key_here"
+    ) {
+      console.warn(
+        "⚠️ PRIVATE_KEY not set or invalid - Web3 functionality will be disabled"
+      );
+      this.wallet = null;
+      this.contract = null;
+      this.isEnabled = false;
+      return;
+    }
+
+    try {
+      this.wallet = new ethers.Wallet(process.env.PRIVATE_KEY, this.provider);
+      this.isEnabled = true;
+    } catch (error) {
+      console.error("❌ Invalid PRIVATE_KEY format:", error.message);
+      this.wallet = null;
+      this.contract = null;
+      this.isEnabled = false;
+      return;
+    }
+
     this.contractAddress = process.env.CONTRACT_ADDRESS;
     this.ssdTokenAddress = process.env.SSD_TOKEN_ADDRESS;
 
@@ -18,11 +43,14 @@ class Web3Service {
       "event SSDRewardClaimed(address indexed player, uint256 aliensKilled, uint256 ssdAmount)",
     ];
 
-    this.contract = new ethers.Contract(
-      this.contractAddress,
-      this.contractABI,
-      this.wallet
-    );
+    if (this.wallet) {
+      this.contract = new ethers.Contract(
+        this.contractAddress,
+        this.contractABI,
+        this.wallet
+      );
+    }
+
     this.SSD_PER_KILL = ethers.parseEther("0.01"); // 0.01 SSD per kill
   }
 
@@ -31,6 +59,15 @@ class Web3Service {
    */
   async rewardSSD(playerAddress, aliensKilled) {
     try {
+      if (!this.isEnabled) {
+        console.warn("⚠️ Web3 service disabled - skipping SSD reward");
+        return {
+          success: false,
+          message: "Web3 service not configured",
+          txHash: null,
+        };
+      }
+
       if (!ethers.isAddress(playerAddress)) {
         throw new Error("Invalid player address");
       }
