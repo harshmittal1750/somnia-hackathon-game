@@ -282,16 +282,16 @@ app.get("/test-encoding", async (req, res) => {
     }
 
     const originalUri = process.env.MONGODB_URI;
-    
+
     // Parse the URI to check for encoding issues
     const uriParts = originalUri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@(.+)/);
-    
+
     if (!uriParts) {
       return res.status(500).json({ error: "Invalid URI format" });
     }
 
     const [, username, password, rest] = uriParts;
-    
+
     // Create properly encoded URI
     const encodedUsername = encodeURIComponent(username);
     const encodedPassword = encodeURIComponent(password);
@@ -319,7 +319,7 @@ app.get("/test-encoding", async (req, res) => {
       const { MongoClient } = require("mongodb");
       const client2 = new MongoClient(encodedUri, {
         useNewUrlParser: true,
-        useUnifiedTopology: true, 
+        useUnifiedTopology: true,
         serverSelectionTimeoutMS: 5000,
       });
       await client2.connect();
@@ -338,8 +338,135 @@ app.get("/test-encoding", async (req, res) => {
       encodedPassword: encodedPassword.substring(0, 5) + "***",
       originalResult: originalResult,
       encodedResult: encodedResult,
-      recommendation: originalResult === "success" ? "Use original URI" : 
-                     encodedResult === "success" ? "Use encoded URI" : "Both failed",
+      recommendation:
+        originalResult === "success"
+          ? "Use original URI"
+          : encodedResult === "success"
+          ? "Use encoded URI"
+          : "Both failed",
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      timestamp: Date.now(),
+    });
+  }
+});
+
+// Test Mongoose with Stable API (like docs)
+app.get("/test-stable-api", async (req, res) => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({ error: "MONGODB_URI not set" });
+    }
+
+    console.log("Testing Mongoose with Stable API...");
+
+    // Remove database name from URI (connect to default/admin)
+    const uriWithoutDb = process.env.MONGODB_URI.replace(/\/[^/?]+\?/, "/?");
+
+    const clientOptions = {
+      serverApi: {
+        version: "1",
+        strict: true,
+        deprecationErrors: true,
+      },
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000,
+    };
+
+    const connection = await mongoose.createConnection(
+      uriWithoutDb,
+      clientOptions
+    );
+
+    // Test ping like in docs
+    await connection.db.admin().command({ ping: 1 });
+
+    await connection.close();
+
+    res.json({
+      success: true,
+      message: "Mongoose Stable API connection successful!",
+      uriUsed: uriWithoutDb.substring(0, 50) + "...",
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error("Stable API test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      code: error.code,
+      timestamp: Date.now(),
+    });
+  }
+});
+
+// Test different database configurations
+app.get("/test-databases", async (req, res) => {
+  try {
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({ error: "MONGODB_URI not set" });
+    }
+
+    const { MongoClient } = require("mongodb");
+    const results = {};
+
+    // Test 1: Connect without specifying database
+    const baseUri = process.env.MONGODB_URI.replace(/\/[^/?]+\?/, "/?");
+
+    try {
+      const client1 = new MongoClient(baseUri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000,
+      });
+      await client1.connect();
+      await client1.db("admin").command({ ping: 1 });
+      await client1.close();
+      results.adminAccess = "success";
+    } catch (err) {
+      results.adminAccess = err.message;
+    }
+
+    // Test 2: Connect to specific database
+    const dbUri = process.env.MONGODB_URI;
+    try {
+      const client2 = new MongoClient(dbUri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000,
+      });
+      await client2.connect();
+      await client2.db("somnia-space-defender").command({ ping: 1 });
+      await client2.close();
+      results.customDbAccess = "success";
+    } catch (err) {
+      results.customDbAccess = err.message;
+    }
+
+    // Test 3: List available databases
+    try {
+      const client3 = new MongoClient(baseUri, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 5000,
+      });
+      await client3.connect();
+      const dbs = await client3.db().admin().listDatabases();
+      results.availableDatabases = dbs.databases.map((db) => db.name);
+      await client3.close();
+    } catch (err) {
+      results.availableDatabases = err.message;
+    }
+
+    res.json({
+      message: "Database access tests completed",
+      baseUri: baseUri.substring(0, 50) + "...",
+      customDbUri: dbUri.substring(0, 50) + "...",
+      results: results,
       timestamp: Date.now(),
     });
   } catch (error) {
