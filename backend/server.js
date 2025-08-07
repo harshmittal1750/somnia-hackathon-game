@@ -21,11 +21,37 @@ app.use(helmet());
 app.use(compression());
 
 // CORS configuration
+const allowedOrigins = [
+  "http://localhost:8000",
+  "http://localhost:3000",
+  "https://www.spacedefender.xyz/",
+  "https://somnia-space-defender.vercel.app/",
+  process.env.CORS_ORIGIN,
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:8000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, postman, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow any vercel.app domain for development
+      if (origin.includes(".vercel.app")) {
+        return callback(null, true);
+      }
+
+      const msg =
+        "The CORS policy for this site does not allow access from the specified Origin.";
+      return callback(new Error(msg), false);
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Player-Address"],
+    credentials: true,
   })
 );
 
