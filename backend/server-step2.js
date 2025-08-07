@@ -131,7 +131,20 @@ console.log("✅ MongoDB connection setup complete");
 
 // Middleware to check DB connection
 app.use((req, res, next) => {
-  if (!isDbConnected && req.path !== "/health") {
+  // Allow test endpoints to bypass DB check
+  const allowedPaths = [
+    "/health",
+    "/test",
+    "/debug-db",
+    "/test-mongo",
+    "/test-native-mongo",
+    "/test-encoding",
+    "/test-stable-api",
+    "/test-databases",
+    "/test-comprehensive",
+  ];
+
+  if (!isDbConnected && !allowedPaths.includes(req.path)) {
     return res.status(503).json({
       error: "Database temporarily unavailable",
       retry: true,
@@ -470,6 +483,81 @@ app.get("/test-databases", async (req, res) => {
       timestamp: Date.now(),
     });
   } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      timestamp: Date.now(),
+    });
+  }
+});
+
+// Comprehensive connection test
+app.get("/test-comprehensive", async (req, res) => {
+  try {
+    const { MongoClient } = require("mongodb");
+    const results = {};
+
+    if (!process.env.MONGODB_URI) {
+      return res.status(500).json({ error: "MONGODB_URI not set" });
+    }
+
+    // Parse the URI to get details
+    const uri = process.env.MONGODB_URI;
+    const uriMatch = uri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@([^/]+)/);
+
+    if (uriMatch) {
+      const [, username, password, cluster] = uriMatch;
+      results.connectionDetails = {
+        username: username,
+        cluster: cluster,
+        passwordLength: password.length,
+        hasSpecialChars: /[^a-zA-Z0-9]/.test(password),
+      };
+    }
+
+    // Test 1: Basic connection (no database specified)
+    const baseUri = uri.replace(/\/[^/?]*\?/, "/?");
+    console.log("Testing base URI:", baseUri.substring(0, 50) + "...");
+
+    try {
+      const client = new MongoClient(baseUri, {
+        serverSelectionTimeoutMS: 10000,
+      });
+
+      await client.connect();
+      console.log("✅ Basic connection successful");
+
+      // Test admin command
+      const adminResult = await client.db("admin").command({ ping: 1 });
+      results.adminPing = "success";
+      console.log("✅ Admin ping successful:", adminResult);
+
+      // List databases
+      const dbs = await client.db().admin().listDatabases();
+      results.availableDatabases = dbs.databases.map((db) => ({
+        name: db.name,
+        sizeOnDisk: db.sizeOnDisk,
+      }));
+      console.log("✅ Database list:", results.availableDatabases);
+
+      await client.close();
+      console.log("✅ Connection closed");
+    } catch (error) {
+      console.error("❌ Connection failed:", error.message);
+      results.connectionError = {
+        message: error.message,
+        code: error.code,
+        codeName: error.codeName,
+      };
+    }
+
+    res.json({
+      message: "Comprehensive connection test completed",
+      uriUsed: baseUri.substring(0, 50) + "...",
+      results: results,
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error("❌ Test failed:", error);
     res.status(500).json({
       error: error.message,
       timestamp: Date.now(),
