@@ -68,10 +68,19 @@ class Player extends Entity {
     this.rapidFireActive = false;
     this.multiShotActive = false;
 
-    // Visual effects
+    // Enhanced visual effects
     this.thrusterOffset = 0;
     this.shieldRadius = 30;
     this.shieldAlpha = 0.7;
+    this.thrusterTrail = new ThrusterTrail(x + this.width / 2, y + this.height);
+    this.enginesGlow = 0;
+    this.weaponHeat = 0;
+
+    // Animation properties
+    this.tiltAngle = 0;
+    this.targetTiltAngle = 0;
+    this.bobOffset = 0;
+    this.pulsePhase = 0;
 
     // Input state
     this.keys = {
@@ -102,10 +111,48 @@ class Player extends Entity {
       }
     }
 
-    // Update visual effects
-    this.thrusterOffset = Math.sin(Date.now() * 0.01) * 2;
+    // Update enhanced visual effects
+    this.updateVisualEffects(deltaTime);
 
     super.update(deltaTime);
+  }
+
+  updateVisualEffects(deltaTime) {
+    // Update thruster animation
+    this.thrusterOffset = Math.sin(Date.now() * 0.01) * 2;
+    this.pulsePhase += deltaTime * 0.01;
+    this.bobOffset = Math.sin(this.pulsePhase) * 0.5;
+
+    // Update ship tilt based on movement
+    if (this.keys.left) {
+      this.targetTiltAngle = -0.3;
+    } else if (this.keys.right) {
+      this.targetTiltAngle = 0.3;
+    } else {
+      this.targetTiltAngle = 0;
+    }
+
+    // Smoothly interpolate tilt angle
+    this.tiltAngle += (this.targetTiltAngle - this.tiltAngle) * 0.1;
+
+    // Update engine glow based on movement
+    const moving = this.vx !== 0 || this.vy !== 0;
+    this.enginesGlow += (moving ? 1 : 0 - this.enginesGlow) * 0.1;
+
+    // Update weapon heat (cools down over time)
+    this.weaponHeat = Math.max(0, this.weaponHeat - deltaTime * 0.003);
+
+    // Update thruster trail
+    if (moving) {
+      const intensity =
+        Math.max(Math.abs(this.vx), Math.abs(this.vy)) / this.speed;
+      this.thrusterTrail.emit(
+        this.x + this.width / 2,
+        this.y + this.height,
+        intensity
+      );
+    }
+    this.thrusterTrail.update(deltaTime);
   }
 
   handleMovement(deltaTime) {
@@ -169,6 +216,8 @@ class Player extends Entity {
     if (!this.canShoot()) return [];
 
     this.lastShot = Date.now();
+    this.weaponHeat = Math.min(1, this.weaponHeat + 0.2); // Add weapon heat
+
     const bullets = [];
     const centerX = this.x + this.width / 2;
     const topY = this.y;
@@ -242,8 +291,18 @@ class Player extends Entity {
   }
 
   render(ctx) {
+    ctx.save();
+
     const centerX = this.x + this.width / 2;
-    const centerY = this.y + this.height / 2;
+    const centerY = this.y + this.height / 2 + this.bobOffset;
+
+    // Apply ship tilt transformation
+    ctx.translate(centerX, centerY);
+    ctx.rotate(this.tiltAngle);
+    ctx.translate(-centerX, -centerY);
+
+    // Render thruster trail first (behind ship)
+    this.thrusterTrail.render(ctx);
 
     // Render shield
     if (this.shieldActive) {
@@ -255,42 +314,112 @@ class Player extends Entity {
       ctx.globalAlpha = 0.5;
     }
 
-    // Render thruster trail
+    // Render enhanced thruster
     this.renderThruster(ctx);
 
-    // Render player ship
+    // Render enhanced player ship
     this.renderShip(ctx, centerX, centerY);
 
     ctx.globalAlpha = 1;
+    ctx.restore();
 
-    // Render health bar
+    // Render health bar (not affected by transformations)
     this.renderHealthBar(ctx);
   }
 
   renderShip(ctx, centerX, centerY) {
     ctx.save();
 
-    // Ship body (triangle)
-    ctx.fillStyle = "#00aaff";
+    // Main ship body with gradient
+    const bodyGradient = ctx.createLinearGradient(
+      centerX,
+      this.y,
+      centerX,
+      this.y + this.height
+    );
+    bodyGradient.addColorStop(0, "#00ccff");
+    bodyGradient.addColorStop(0.5, "#0088cc");
+    bodyGradient.addColorStop(1, "#004466");
+
+    ctx.fillStyle = bodyGradient;
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 2;
 
+    // Enhanced ship shape
     ctx.beginPath();
     ctx.moveTo(centerX, this.y); // Top point
-    ctx.lineTo(this.x + 5, this.y + this.height); // Bottom left
-    ctx.lineTo(this.x + this.width - 5, this.y + this.height); // Bottom right
+    ctx.lineTo(this.x + 8, this.y + this.height * 0.7); // Left side
+    ctx.lineTo(this.x + 3, this.y + this.height); // Bottom left
+    ctx.lineTo(this.x + this.width - 3, this.y + this.height); // Bottom right
+    ctx.lineTo(this.x + this.width - 8, this.y + this.height * 0.7); // Right side
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Ship details
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(centerX - 2, this.y + 10, 4, 15);
+    // Cockpit window
+    const windowGradient = ctx.createRadialGradient(
+      centerX,
+      this.y + 8,
+      0,
+      centerX,
+      this.y + 8,
+      6
+    );
+    windowGradient.addColorStop(0, "#88ddff");
+    windowGradient.addColorStop(1, "#004477");
+    ctx.fillStyle = windowGradient;
+    ctx.beginPath();
+    ctx.arc(centerX, this.y + 8, 4, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Wing details
-    ctx.fillStyle = "#ff4400";
-    ctx.fillRect(this.x + 2, this.y + 20, 8, 4);
-    ctx.fillRect(this.x + this.width - 10, this.y + 20, 8, 4);
+    // Engine exhausts with glow
+    const engineIntensity = 0.5 + this.enginesGlow * 0.5;
+    const engineColor = `rgba(255, ${Math.floor(
+      100 + 155 * engineIntensity
+    )}, 0, ${engineIntensity})`;
+
+    ctx.fillStyle = engineColor;
+    if (this.enginesGlow > 0.1) {
+      ctx.shadowColor = engineColor;
+      ctx.shadowBlur = 8;
+    }
+
+    // Left engine
+    ctx.fillRect(this.x + 2, this.y + this.height - 8, 6, 8);
+    // Right engine
+    ctx.fillRect(this.x + this.width - 8, this.y + this.height - 8, 6, 8);
+
+    // Weapon barrels with heat glow
+    ctx.shadowBlur = 0;
+    if (this.weaponHeat > 0) {
+      const heatColor = `rgba(255, ${Math.floor(
+        50 + 205 * this.weaponHeat
+      )}, 0, ${this.weaponHeat})`;
+      ctx.fillStyle = heatColor;
+      ctx.shadowColor = heatColor;
+      ctx.shadowBlur = 5;
+    } else {
+      ctx.fillStyle = "#666666";
+    }
+
+    // Left weapon
+    ctx.fillRect(centerX - 8, this.y + 5, 2, 12);
+    // Right weapon
+    ctx.fillRect(centerX + 6, this.y + 5, 2, 12);
+
+    // Wing details with metallic look
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#888888";
+    ctx.strokeStyle = "#bbbbbb";
+    ctx.lineWidth = 1;
+
+    // Left wing
+    ctx.fillRect(this.x + 2, this.y + 18, 10, 3);
+    ctx.strokeRect(this.x + 2, this.y + 18, 10, 3);
+
+    // Right wing
+    ctx.fillRect(this.x + this.width - 12, this.y + 18, 10, 3);
+    ctx.strokeRect(this.x + this.width - 12, this.y + 18, 10, 3);
 
     ctx.restore();
   }
@@ -698,9 +827,9 @@ class PowerUp extends Entity {
   }
 }
 
-// Particle Class for visual effects
+// Enhanced Particle Class for visual effects
 class Particle extends Entity {
-  constructor(x, y, vx, vy, color, life) {
+  constructor(x, y, vx, vy, color, life, particleType = "default") {
     super(x, y, 2, 2);
     this.vx = vx;
     this.vy = vy;
@@ -708,10 +837,51 @@ class Particle extends Entity {
     this.life = life;
     this.maxLife = life;
     this.gravity = 0.1;
+    this.particleType = particleType;
+    this.rotation = Math.random() * Math.PI * 2;
+    this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+    this.scale = 1;
+    this.friction = 0.98;
+    this.glow = particleType === "spark" || particleType === "energy";
   }
 
   update(deltaTime) {
+    // Apply physics based on particle type
+    switch (this.particleType) {
+      case "thruster":
+        this.gravity = 0.05;
+        this.friction = 0.95;
+        break;
+      case "spark":
+        this.gravity = 0.2;
+        this.friction = 0.99;
+        break;
+      case "energy":
+        this.gravity = 0;
+        this.friction = 0.97;
+        break;
+      case "debris":
+        this.gravity = 0.15;
+        this.friction = 0.98;
+        break;
+      default:
+        this.gravity = 0.1;
+        this.friction = 0.98;
+    }
+
+    // Apply friction
+    this.vx *= this.friction;
+    this.vy *= this.friction;
+
+    // Apply gravity
     this.vy += this.gravity;
+
+    // Update rotation
+    this.rotation += this.rotationSpeed;
+
+    // Update scale based on life
+    this.scale = this.life / this.maxLife;
+
     this.life -= deltaTime;
 
     if (this.life <= 0) {
@@ -723,19 +893,131 @@ class Particle extends Entity {
 
   render(ctx) {
     const alpha = this.life / this.maxLife;
-    const size = (this.life / this.maxLife) * 4;
+    const size = this.scale * 4;
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, size, size);
+    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+    ctx.rotate(this.rotation);
+
+    // Add glow effect for certain particles
+    if (this.glow) {
+      ctx.shadowColor = this.color;
+      ctx.shadowBlur = 10;
+    }
+
+    // Render based on particle type
+    switch (this.particleType) {
+      case "spark":
+        this.renderSpark(ctx, size);
+        break;
+      case "energy":
+        this.renderEnergy(ctx, size);
+        break;
+      case "debris":
+        this.renderDebris(ctx, size);
+        break;
+      case "thruster":
+        this.renderThruster(ctx, size);
+        break;
+      default:
+        this.renderDefault(ctx, size);
+    }
+
     ctx.restore();
+  }
+
+  renderSpark(ctx, size) {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.moveTo(-size, 0);
+    ctx.lineTo(0, -size / 2);
+    ctx.lineTo(size, 0);
+    ctx.lineTo(0, size / 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  renderEnergy(ctx, size) {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Inner core
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  renderDebris(ctx, size) {
+    ctx.fillStyle = this.color;
+    ctx.fillRect(-size / 2, -size / 2, size, size);
+  }
+
+  renderThruster(ctx, size) {
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+    gradient.addColorStop(0, this.color);
+    gradient.addColorStop(1, "transparent");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  renderDefault(ctx, size) {
+    ctx.fillStyle = this.color;
+    ctx.fillRect(-size / 2, -size / 2, size, size);
   }
 }
 
-// Explosion effect generator
+// Thruster Trail Particle System
+class ThrusterTrail {
+  constructor(x, y) {
+    this.particles = [];
+    this.x = x;
+    this.y = y;
+    this.lastEmit = 0;
+  }
+
+  emit(x, y, intensity = 1) {
+    const now = Date.now();
+    if (now - this.lastEmit < 50 / intensity) return;
+
+    this.lastEmit = now;
+
+    // Emit multiple particles
+    for (let i = 0; i < 3 * intensity; i++) {
+      const vx = (Math.random() - 0.5) * 2;
+      const vy = Math.random() * 3 + 2;
+      const colors = ["#ff6600", "#ff9900", "#ffcc00", "#ff3300"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const life = 200 + Math.random() * 200;
+
+      this.particles.push(new Particle(x, y, vx, vy, color, life, "thruster"));
+    }
+  }
+
+  update(deltaTime) {
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      this.particles[i].update(deltaTime);
+      if (!this.particles[i].active) {
+        this.particles.splice(i, 1);
+      }
+    }
+  }
+
+  render(ctx) {
+    for (const particle of this.particles) {
+      particle.render(ctx);
+    }
+  }
+}
+
+// Enhanced Explosion effect generator
 class ExplosionEffect {
-  static create(x, y, type = "EXPLOSION") {
+  static create(x, y, type = "EXPLOSION", intensity = 1) {
     const config = CONFIG.GAME.PARTICLES[type];
 
     // Safety check: if particle type doesn't exist, use EXPLOSION as fallback
@@ -743,21 +1025,89 @@ class ExplosionEffect {
       console.warn(
         `⚠️ Particle type '${type}' not found, using EXPLOSION instead`
       );
-      return this.create(x, y, "EXPLOSION");
+      return this.create(x, y, "EXPLOSION", intensity);
     }
 
     const particles = [];
+    const particleCount = Math.floor(config.count * intensity);
 
-    for (let i = 0; i < config.count; i++) {
-      const angle = (Math.PI * 2 * i) / config.count;
-      const speed = UTILS.randomFloat(1, config.speed);
+    // Create main explosion particles
+    for (let i = 0; i < particleCount; i++) {
+      const angle =
+        (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
+      const speed = UTILS.randomFloat(1, config.speed * intensity);
       const vx = Math.cos(angle) * speed;
       const vy = Math.sin(angle) * speed;
       const color =
         config.colors[Math.floor(Math.random() * config.colors.length)];
-      const life = config.life + Math.random() * 10;
+      const life = config.life + Math.random() * 100;
 
-      particles.push(new Particle(x, y, vx, vy, color, life));
+      particles.push(new Particle(x, y, vx, vy, color, life, "spark"));
+    }
+
+    // Add some energy particles for bigger explosions
+    if (intensity > 1) {
+      for (let i = 0; i < 5; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = UTILS.randomFloat(2, 4);
+        const vx = Math.cos(angle) * speed;
+        const vy = Math.sin(angle) * speed;
+        const color = "#00ffff";
+        const life = 300 + Math.random() * 200;
+
+        particles.push(new Particle(x, y, vx, vy, color, life, "energy"));
+      }
+    }
+
+    // Add debris particles
+    for (let i = 0; i < Math.floor(particleCount * 0.3); i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = UTILS.randomFloat(0.5, 2);
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const colors = ["#666666", "#888888", "#555555"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const life = 400 + Math.random() * 300;
+
+      particles.push(new Particle(x, y, vx, vy, color, life, "debris"));
+    }
+
+    return particles;
+  }
+
+  // Create power-up collection effect
+  static createPowerUpEffect(x, y) {
+    const particles = [];
+
+    for (let i = 0; i < 15; i++) {
+      const angle = (Math.PI * 2 * i) / 15;
+      const speed = 2 + Math.random() * 3;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const colors = ["#00ff00", "#00ffff", "#ffff00", "#ff00ff"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const life = 300 + Math.random() * 200;
+
+      particles.push(new Particle(x, y, vx, vy, color, life, "energy"));
+    }
+
+    return particles;
+  }
+
+  // Create hit effect for when alien takes damage
+  static createHitEffect(x, y) {
+    const particles = [];
+
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1 + Math.random() * 2;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const colors = ["#ffff00", "#ff8800", "#ff0000"];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const life = 150 + Math.random() * 100;
+
+      particles.push(new Particle(x, y, vx, vy, color, life, "spark"));
     }
 
     return particles;
