@@ -31,7 +31,7 @@ class GameApp {
       this.setupEventListeners();
       this.updateLoadingProgress(85, "Finalizing UI...");
 
-      this.initializeUI();
+      await this.initializeUI();
       this.updateLoadingProgress(95, "Connecting to wallet...");
 
       // Check wallet connection status
@@ -369,7 +369,7 @@ class GameApp {
     }
   }
 
-  initializeUI() {
+  async initializeUI() {
     // Update level selection UI
     this.updateLevelSelection();
 

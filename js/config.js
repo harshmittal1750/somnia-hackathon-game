@@ -1,4 +1,8 @@
 // Somnia Space Defender - Configuration
+const GAME = {
+  BASE_WIDTH: 800,
+  BASE_HEIGHT: 600,
+};
 const CONFIG = {
   // Somnia Testnet Configuration
   NETWORK: {
@@ -22,6 +26,7 @@ const CONFIG = {
   // Backend API Configuration
   API: {
     BASE_URL: "https://somnia-space-defender-backend.vercel.app/api",
+
     TIMEOUT: 10000,
     RETRY_ATTEMPTS: 3,
   },
@@ -37,8 +42,8 @@ const CONFIG = {
 
   // Game Constants
   GAME: {
-    CANVAS_WIDTH: 800,
-    CANVAS_HEIGHT: 600,
+    CANVAS_WIDTH: window.innerWidth * 0.78 || GAME.BASE_WIDTH, // Fullscreen width
+    CANVAS_HEIGHT: window.innerHeight * 0.82 || GAME.BASE_HEIGHT, // Fullscreen height
     FPS: 60,
 
     // Player Ship Settings

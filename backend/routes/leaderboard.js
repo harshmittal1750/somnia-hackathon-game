@@ -19,6 +19,7 @@ router.get("/global", async (req, res) => {
       matchQuery.gameMode = gameMode;
     }
 
+    // First get the scores without lookup to avoid collection name issues
     const topScores = await GameScore.aggregate([
       { $match: matchQuery },
       {
@@ -33,28 +34,41 @@ router.get("/global", async (req, res) => {
       { $sort: { highScore: -1, lastPlayed: -1 } },
       { $limit: limit },
       {
-        $lookup: {
-          from: "players",
-          localField: "_id",
-          foreignField: "address",
-          as: "playerData",
-        },
-      },
-      {
         $project: {
           address: "$_id",
           highScore: 1,
           lastPlayed: 1,
           totalGames: 1,
           totalAliensKilled: 1,
-          twitterHandle: { $arrayElemAt: ["$playerData.twitterHandle", 0] },
-          twitterVerified: { $arrayElemAt: ["$playerData.twitterVerified", 0] },
         },
       },
     ]);
 
+    // Get player data separately to avoid collection name issues
+    const leaderboardWithPlayerData = [];
+    for (const score of topScores) {
+      try {
+        const player = await Player.findOne({ address: score.address });
+        leaderboardWithPlayerData.push({
+          ...score,
+          twitterHandle: player?.twitterHandle || null,
+          twitterVerified: player?.twitterVerified || false,
+        });
+      } catch (playerError) {
+        console.warn(
+          `Could not find player data for ${score.address}:`,
+          playerError.message
+        );
+        leaderboardWithPlayerData.push({
+          ...score,
+          twitterHandle: null,
+          twitterVerified: false,
+        });
+      }
+    }
+
     // Add rank to each player
-    const leaderboard = topScores.map((player, index) => ({
+    const leaderboard = leaderboardWithPlayerData.map((player, index) => ({
       ...player,
       rank: index + 1,
     }));
@@ -66,8 +80,17 @@ router.get("/global", async (req, res) => {
       lastUpdated: new Date(),
     });
   } catch (error) {
-    console.error("Leaderboard error:", error);
-    res.status(500).json({ error: "Failed to get leaderboard" });
+    console.error("Leaderboard error details:", {
+      message: error.message,
+      stack: error.stack,
+      gameMode,
+      limit,
+    });
+    res.status(500).json({
+      error: "Failed to get leaderboard",
+      details:
+        process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
   }
 });
 
@@ -98,21 +121,12 @@ router.get("/level/:level", async (req, res) => {
       { $sort: { bestScore: -1, bestTime: 1 } },
       { $limit: limit },
       {
-        $lookup: {
-          from: "players",
-          localField: "_id",
-          foreignField: "address",
-          as: "playerData",
-        },
-      },
-      {
         $project: {
           address: "$_id",
           bestScore: 1,
           bestTime: 1,
           attempts: 1,
           lastPlayed: 1,
-          twitterHandle: { $arrayElemAt: ["$playerData.twitterHandle", 0] },
         },
       },
     ]);
@@ -147,14 +161,32 @@ router.get("/rank/:address", async (req, res) => {
       return res.status(404).json({ error: "Player not found" });
     }
 
-    // Count players with higher scores
-    let matchQuery = { validated: true };
+    // Get player's highest score from GameScore collection
+    let matchQuery = { player: address.toLowerCase(), validated: true };
     if (gameMode !== "all") {
       matchQuery.gameMode = gameMode;
     }
 
-    const playersAbove = await GameScore.aggregate([
+    const playerHighScore = await GameScore.aggregate([
       { $match: matchQuery },
+      {
+        $group: {
+          _id: "$player",
+          highScore: { $max: "$score" },
+        },
+      },
+    ]);
+
+    const currentPlayerScore = playerHighScore[0]?.highScore || 0;
+
+    // Count players with higher scores
+    let globalMatchQuery = { validated: true };
+    if (gameMode !== "all") {
+      globalMatchQuery.gameMode = gameMode;
+    }
+
+    const playersAbove = await GameScore.aggregate([
+      { $match: globalMatchQuery },
       {
         $group: {
           _id: "$player",
@@ -163,20 +195,33 @@ router.get("/rank/:address", async (req, res) => {
       },
       {
         $match: {
-          highScore: { $gt: player.highScore },
+          highScore: { $gt: currentPlayerScore },
         },
       },
       { $count: "count" },
     ]);
 
     const rank = (playersAbove[0]?.count || 0) + 1;
-    const totalPlayers = await Player.countDocuments({ highScore: { $gt: 0 } });
+
+    // Get total number of players who have played
+    const totalPlayersResult = await GameScore.aggregate([
+      { $match: globalMatchQuery },
+      {
+        $group: {
+          _id: "$player",
+          highScore: { $max: "$score" },
+        },
+      },
+      { $count: "count" },
+    ]);
+
+    const totalPlayers = totalPlayersResult[0]?.count || 0;
 
     res.json({
       address: address.toLowerCase(),
       rank,
       totalPlayers,
-      highScore: player.highScore,
+      highScore: currentPlayerScore,
       percentile:
         totalPlayers > 0
           ? Math.round((1 - (rank - 1) / totalPlayers) * 100)
@@ -217,14 +262,6 @@ router.get("/weekly", async (req, res) => {
       { $sort: { bestScore: -1, totalScore: -1 } },
       { $limit: limit },
       {
-        $lookup: {
-          from: "players",
-          localField: "_id",
-          foreignField: "address",
-          as: "playerData",
-        },
-      },
-      {
         $project: {
           address: "$_id",
           bestScore: 1,
@@ -232,7 +269,6 @@ router.get("/weekly", async (req, res) => {
           gamesPlayed: 1,
           aliensKilled: 1,
           lastPlayed: 1,
-          twitterHandle: { $arrayElemAt: ["$playerData.twitterHandle", 0] },
         },
       },
     ]);

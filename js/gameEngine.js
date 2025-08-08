@@ -72,6 +72,12 @@ class GameEngine {
     this.screenShake = 0;
     this.backgroundOffset = 0;
 
+    // Visual effects for UI feedback
+    this.floatingTexts = [];
+    this.comboCounter = 0;
+    this.comboTimer = 0;
+    this.comboMultiplier = 1;
+
     this.init();
   }
 
@@ -104,6 +110,9 @@ class GameEngine {
   initAudio() {
     this.audioManager = {
       backgroundMusic: document.getElementById("backgroundMusic"),
+      waveMusic1: document.getElementById("waveMusic1"),
+      waveMusic2: document.getElementById("waveMusic2"),
+      waveMusic3: document.getElementById("waveMusic3"),
       shootSound: document.getElementById("shootSound"),
       explosionSound: document.getElementById("explosionSound"),
       powerupSound: document.getElementById("powerupSound"),
@@ -116,9 +125,22 @@ class GameEngine {
       }
     });
 
-    if (this.audioManager.backgroundMusic) {
-      this.audioManager.backgroundMusic.volume = CONFIG.GAME.AUDIO.MUSIC_VOLUME;
-    }
+    // Set music volume for all tracks
+    const musicTracks = [
+      "backgroundMusic",
+      "waveMusic1",
+      "waveMusic2",
+      "waveMusic3",
+    ];
+    musicTracks.forEach((trackName) => {
+      if (this.audioManager[trackName]) {
+        this.audioManager[trackName].volume = CONFIG.GAME.AUDIO.MUSIC_VOLUME;
+      }
+    });
+
+    // Initialize dynamic music system
+    this.currentMusicTrack = null;
+    this.musicIntensity = 0; // 0-3, determines which track to play
   }
 
   setupEventListeners() {
@@ -290,8 +312,8 @@ class GameEngine {
     this.lastTime = performance.now();
     this.gameLoop();
 
-    // Start background music
-    this.playSound("backgroundMusic", true);
+    // Start dynamic music system
+    this.switchMusicTrack(0); // Start with calm music
 
     // Update mobile controls visibility
     this.updateMobileControlsVisibility();
@@ -402,6 +424,13 @@ class GameEngine {
     // Update visual effects
     this.updateVisualEffects(deltaTime);
 
+    // Update floating texts and combo system
+    this.updateFloatingTexts(deltaTime);
+    this.updateComboSystem(deltaTime);
+
+    // Update dynamic music based on game intensity
+    this.updateDynamicMusic();
+
     // Update UI
     this.updateUI();
   }
@@ -494,11 +523,20 @@ class GameEngine {
           if (destroyed) {
             this.handleAlienDestroyed(alien);
           } else {
-            // Just damaged
-            this.addParticles(
+            // Just damaged - show hit effect
+            const hitParticles = ExplosionEffect.createHitEffect(
               alien.x + alien.width / 2,
-              alien.y + alien.height / 2,
-              "small"
+              alien.y + alien.height / 2
+            );
+            this.particles.push(...hitParticles);
+
+            // Show damage indicator
+            this.addFloatingText(
+              alien.x + alien.width / 2,
+              alien.y,
+              "-1",
+              "#ff4444",
+              800
             );
           }
 
@@ -538,11 +576,23 @@ class GameEngine {
           this.player.addPowerUp(powerUp.type, powerUp.config.duration);
           powerUp.active = false;
           this.playSound("powerupSound");
-          this.addParticles(
+
+          // Enhanced power-up collection effect
+          const collectParticles = ExplosionEffect.createPowerUpEffect(
             powerUp.x + powerUp.width / 2,
-            powerUp.y + powerUp.height / 2,
-            "TRAIL"
+            powerUp.y + powerUp.height / 2
           );
+          this.particles.push(...collectParticles);
+
+          // Show power-up name
+          this.addFloatingText(
+            powerUp.x + powerUp.width / 2,
+            powerUp.y - 10,
+            powerUp.config.effect.toUpperCase(),
+            powerUp.config.color,
+            1500
+          );
+
           break;
         }
       }
@@ -550,16 +600,45 @@ class GameEngine {
   }
 
   handleAlienDestroyed(alien) {
-    // Add score with multiplier boost
+    // Update combo system
+    this.comboCounter++;
+    this.comboTimer = 3000; // 3 seconds to maintain combo
+    this.comboMultiplier = Math.min(
+      5,
+      1 + Math.floor(this.comboCounter / 5) * 0.5
+    );
+
+    // Add score with multiplier boost and combo
     const baseScore = alien.points;
-    const multipliedScore = baseScore * this.scoreMultiplier;
-    this.score += multipliedScore;
+    const totalMultiplier = this.scoreMultiplier * this.comboMultiplier;
+    const finalScore = Math.floor(baseScore * totalMultiplier);
+    this.score += finalScore;
     this.aliensKilled++;
+
+    // Create floating score text
+    this.addFloatingText(
+      alien.x + alien.width / 2,
+      alien.y + alien.height / 2,
+      `+${finalScore}`,
+      "#ffff00",
+      1000
+    );
+
+    // Show combo multiplier if active
+    if (this.comboMultiplier > 1) {
+      this.addFloatingText(
+        alien.x + alien.width / 2,
+        alien.y + alien.height / 2 - 20,
+        `${this.comboCounter}x COMBO!`,
+        "#ff8800",
+        1500
+      );
+    }
 
     // Show score multiplier effect if active
     if (this.scoreMultiplier > 1) {
       console.log(
-        `🚀 Score boost! ${baseScore} x${this.scoreMultiplier} = ${multipliedScore}`
+        `🚀 Score boost! ${baseScore} x${totalMultiplier} = ${finalScore}`
       );
     }
 
@@ -572,14 +651,16 @@ class GameEngine {
       window.gameApp.updateSessionSSD(this.sessionSSDEarned);
     }
 
-    // Create explosion effect
+    // Create enhanced explosion effect
+    const intensity = alien.type === "BOSS" ? 2 : 1;
     this.addParticles(
       alien.x + alien.width / 2,
       alien.y + alien.height / 2,
-      "EXPLOSION"
+      "EXPLOSION",
+      intensity
     );
     this.playSound("explosionSound");
-    this.addScreenShake(5);
+    this.addScreenShake(alien.type === "BOSS" ? 15 : 5);
 
     // Chance to spawn power-up
     if (Math.random() < CONFIG.GAME.POWERUP.SPAWN_CHANCE) {
@@ -681,6 +762,133 @@ class GameEngine {
 
   addScreenShake(intensity) {
     this.screenShake = Math.max(this.screenShake, intensity);
+  }
+
+  addFloatingText(x, y, text, color, duration = 1000) {
+    this.floatingTexts.push({
+      x: x,
+      y: y,
+      text: text,
+      color: color,
+      life: duration,
+      maxLife: duration,
+      vx: (Math.random() - 0.5) * 2,
+      vy: -1 - Math.random(),
+    });
+  }
+
+  updateFloatingTexts(deltaTime) {
+    for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+      const text = this.floatingTexts[i];
+      text.life -= deltaTime;
+      text.x += text.vx * deltaTime * 0.1;
+      text.y += text.vy * deltaTime * 0.1;
+
+      if (text.life <= 0) {
+        this.floatingTexts.splice(i, 1);
+      }
+    }
+  }
+
+  updateComboSystem(deltaTime) {
+    if (this.comboTimer > 0) {
+      this.comboTimer -= deltaTime;
+      if (this.comboTimer <= 0) {
+        // Reset combo
+        this.comboCounter = 0;
+        this.comboMultiplier = 1;
+      }
+    }
+  }
+
+  updateDynamicMusic() {
+    if (!this.soundEnabled) return;
+
+    // Calculate music intensity based on game state
+    let newIntensity = 0;
+
+    // Base intensity on level
+    newIntensity += Math.min(this.level - 1, 1);
+
+    // Add intensity based on enemy count
+    if (this.aliens.length > 15) newIntensity += 1;
+    if (this.aliens.length > 25) newIntensity += 1;
+
+    // Add intensity based on combo
+    if (this.comboCounter > 10) newIntensity += 1;
+
+    // Cap at 3
+    newIntensity = Math.min(3, newIntensity);
+
+    if (newIntensity !== this.musicIntensity) {
+      this.switchMusicTrack(newIntensity);
+      this.musicIntensity = newIntensity;
+    }
+  }
+
+  switchMusicTrack(intensity) {
+    const trackNames = [
+      "backgroundMusic",
+      "waveMusic1",
+      "waveMusic2",
+      "waveMusic3",
+    ];
+    const newTrackName = trackNames[intensity];
+
+    if (newTrackName === this.currentMusicTrack) return;
+
+    // Fade out current track
+    if (this.currentMusicTrack && this.audioManager[this.currentMusicTrack]) {
+      this.fadeOutTrack(this.audioManager[this.currentMusicTrack]);
+    }
+
+    // Fade in new track
+    if (this.audioManager[newTrackName]) {
+      this.fadeInTrack(this.audioManager[newTrackName]);
+      this.currentMusicTrack = newTrackName;
+    }
+
+    console.log(`🎵 Music intensity changed to ${intensity}: ${newTrackName}`);
+  }
+
+  fadeOutTrack(audio) {
+    const originalVolume = CONFIG.GAME.AUDIO.MUSIC_VOLUME;
+    const fadeSteps = 20;
+    const stepTime = 50;
+    let currentStep = 0;
+
+    const fadeInterval = setInterval(() => {
+      currentStep++;
+      const newVolume = originalVolume * (1 - currentStep / fadeSteps);
+      audio.volume = Math.max(0, newVolume);
+
+      if (currentStep >= fadeSteps) {
+        clearInterval(fadeInterval);
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    }, stepTime);
+  }
+
+  fadeInTrack(audio) {
+    const targetVolume = CONFIG.GAME.AUDIO.MUSIC_VOLUME;
+    const fadeSteps = 20;
+    const stepTime = 50;
+    let currentStep = 0;
+
+    audio.volume = 0;
+    audio.currentTime = 0;
+    audio.play().catch((e) => console.warn("Audio play failed:", e));
+
+    const fadeInterval = setInterval(() => {
+      currentStep++;
+      const newVolume = targetVolume * (currentStep / fadeSteps);
+      audio.volume = Math.min(targetVolume, newVolume);
+
+      if (currentStep >= fadeSteps) {
+        clearInterval(fadeInterval);
+      }
+    }, stepTime);
   }
 
   updateVisualEffects(deltaTime) {
@@ -791,6 +999,72 @@ class GameEngine {
     if (this.player) {
       this.renderPowerUpIndicators();
     }
+
+    // Render floating texts
+    this.renderFloatingTexts();
+
+    // Render combo indicator
+    if (this.comboMultiplier > 1) {
+      this.renderComboIndicator();
+    }
+  }
+
+  renderFloatingTexts() {
+    this.ctx.save();
+    this.ctx.textAlign = "center";
+    this.ctx.font = "bold 16px Orbitron";
+    this.ctx.strokeStyle = "#000000";
+    this.ctx.lineWidth = 3;
+
+    for (const text of this.floatingTexts) {
+      const alpha = text.life / text.maxLife;
+      const scale = 0.5 + alpha * 0.5;
+
+      this.ctx.globalAlpha = alpha;
+      this.ctx.fillStyle = text.color;
+
+      this.ctx.save();
+      this.ctx.translate(text.x, text.y);
+      this.ctx.scale(scale, scale);
+
+      // Text outline
+      this.ctx.strokeText(text.text, 0, 0);
+      // Text fill
+      this.ctx.fillText(text.text, 0, 0);
+
+      this.ctx.restore();
+    }
+
+    this.ctx.restore();
+  }
+
+  renderComboIndicator() {
+    this.ctx.save();
+
+    const x = this.canvas.width - 150;
+    const y = 100;
+
+    // Background
+    this.ctx.fillStyle = "rgba(255, 136, 0, 0.8)";
+    this.ctx.fillRect(x, y, 120, 40);
+
+    // Border
+    this.ctx.strokeStyle = "#ff8800";
+    this.ctx.lineWidth = 2;
+    this.ctx.strokeRect(x, y, 120, 40);
+
+    // Text
+    this.ctx.fillStyle = "#ffffff";
+    this.ctx.font = "bold 14px Orbitron";
+    this.ctx.textAlign = "center";
+    this.ctx.fillText(`${this.comboCounter}x COMBO`, x + 60, y + 16);
+    this.ctx.fillText(
+      `${this.comboMultiplier.toFixed(1)}x SCORE`,
+      x + 60,
+      y + 32
+    );
+
+    this.ctx.restore();
   }
 
   renderPowerUpIndicators() {
@@ -1000,6 +1274,12 @@ class GameEngine {
       Object.values(this.audioManager).forEach((audio) => {
         if (audio) audio.pause();
       });
+      this.currentMusicTrack = null;
+    } else {
+      // Resume music if game is playing
+      if (this.gameState === GAME_STATES.PLAYING) {
+        this.switchMusicTrack(this.musicIntensity);
+      }
     }
 
     console.log(`🔊 Sound ${this.soundEnabled ? "enabled" : "disabled"}`);
