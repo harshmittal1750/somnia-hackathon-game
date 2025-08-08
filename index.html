@@ -226,7 +226,7 @@
             </button>
             <button id="openShop" class="btn btn-secondary">🛍️ SSD Shop</button>
             <button id="openTwitter" class="btn btn-secondary">
-              🐦 Twitter (5 SSD)
+              🐦 Twitter (1 SSD)
             </button>
             <button id="openFeatures" class="btn btn-secondary">
               🚀 Upcoming
@@ -328,23 +328,67 @@
         <div class="panel-content">
           <h2>🐦 Twitter Verification</h2>
           <p>
-            Connect your Twitter account to earn <strong>5 SSD tokens!</strong>
+            Verify your Twitter account to earn <strong>1 SSD token!</strong>
           </p>
-          <div id="twitterForm" class="twitter-form">
+
+          <!-- Step 1: Generate Code -->
+          <div id="twitterStepGenerate" class="twitter-step">
+            <h3>Step 1: Generate Verification Code</h3>
             <input
               type="text"
               id="twitterHandle"
               placeholder="@your_handle"
               maxlength="50"
             />
-            <button id="verifyTwitter" class="btn btn-primary">
-              Verify & Claim 5 SSD
+            <button id="generateCode" class="btn btn-primary">
+              Generate Verification Code
             </button>
           </div>
+
+          <!-- Step 2: Tweet Instructions -->
+          <div id="twitterStepTweet" class="twitter-step hidden">
+            <h3>Step 2: Post Verification Tweet</h3>
+            <p><strong>Post this exact tweet:</strong></p>
+            <div id="tweetTemplate" class="tweet-template">
+              <!-- Will be populated with tweet text -->
+            </div>
+            <p>
+              📋
+              <button id="copyTweet" class="btn btn-small">
+                Copy Tweet Text
+              </button>
+            </p>
+            <p>
+              <strong>Remember to mention @SomniaEco in your tweet!</strong>
+            </p>
+          </div>
+
+          <!-- Step 3: Submit Tweet URL -->
+          <div id="twitterStepSubmit" class="twitter-step hidden">
+            <h3>Step 3: Submit Tweet URL</h3>
+            <p>Copy your tweet URL and paste it below:</p>
+            <input
+              type="text"
+              id="tweetUrl"
+              placeholder="https://twitter.com/username/status/..."
+            />
+            <button id="verifyTweet" class="btn btn-primary">
+              Verify Tweet & Claim 1 SSD
+            </button>
+          </div>
+
+          <!-- Already Verified -->
           <div id="twitterVerified" class="twitter-verified hidden">
             <p>✅ Twitter Verified: <span id="verifiedHandle"></span></p>
-            <p>🎉 5 SSD tokens claimed!</p>
+            <p>🎉 1 SSD token claimed!</p>
+            <p>
+              <small>Verified on: <span id="verifiedDate"></span></small>
+            </p>
           </div>
+
+          <div id="twitterError" class="error-message hidden"></div>
+          <div id="twitterLoading" class="loading hidden">Verifying...</div>
+
           <button id="closeTwitter" class="btn btn-secondary">Close</button>
         </div>
       </div>

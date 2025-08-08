@@ -34,7 +34,7 @@ const CONFIG = {
   // 🎮 SSD Token Integration
   SSD: {
     REWARD_PER_KILL: "0.01", // SSD tokens per alien kill
-    TWITTER_REWARD: "5", // SSD tokens for Twitter verification
+    TWITTER_REWARD: "1", // SSD tokens for Twitter verification
     SYMBOL: "SSD",
     DECIMALS: 18,
     EUCLID_SWAP_URL: "https://testnet.euclidswap.io/pools/ssd.eucl-stt",
