@@ -18,6 +18,7 @@ const gameRoutes = require("./routes/game");
 const leaderboardRoutes = require("./routes/leaderboard");
 const achievementRoutes = require("./routes/achievements");
 const playerRoutes = require("./routes/player");
+const twitterRoutes = require("./routes/twitter");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -106,6 +107,7 @@ app.use("/api/game", gameRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/achievements", achievementRoutes);
 app.use("/api/player", playerRoutes);
+app.use("/api/twitter", twitterRoutes);
 
 // Simple test endpoint to check if function starts
 app.get("/test", (req, res) => {

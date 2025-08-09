@@ -92,7 +92,7 @@ contract SomniaSpaceDefender {
     // 📱 Social Media Integration
     mapping(address => bool) public twitterVerified;
     mapping(address => string) public twitterHandles;
-    uint256 public constant TWITTER_REWARD = 50000000000000000000; // 50 SSD
+    uint256 public constant TWITTER_REWARD = 1000000000000000000; // 1 SSD
 
     uint256 public constant MAX_LEADERBOARD_SIZE = 100;
     uint256 public achievementCount;

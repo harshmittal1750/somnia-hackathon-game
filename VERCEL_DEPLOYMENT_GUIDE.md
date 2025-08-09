@@ -18,7 +18,7 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/somnia-space-def
 # Web3 Configuration
 SOMNIA_RPC_URL=https://dream-rpc.somnia.network
 CONTRACT_ADDRESS=0x4912aFEA272C0283FDe9804480422a8046EC1908
-SSD_TOKEN_ADDRESS=0xeDFd8C7E14f5D491Cf9063076a4FcE60737170dE
+SSD_TOKEN_ADDRESS=0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F
 PRIVATE_KEY=your_private_key_here
 
 # Security

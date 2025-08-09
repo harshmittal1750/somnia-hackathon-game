@@ -36,11 +36,14 @@ class Web3Service {
     // Minimal contract ABI for SSD rewards
     this.contractABI = [
       "function claimSSDReward(address player, uint16 aliensKilled) external",
+      "function verifyTwitter(string memory _twitterHandle) external",
+      "function isTwitterVerified(address _player) external view returns (bool)",
       "function getPlayerSSDStats(address player) external view returns (uint256 earned, uint256 spent, uint256 balance)",
       "function fundContract(uint256 amount) external",
       "function withdrawSSD(uint256 amount) external",
       "function getContractInfo() external view returns (address contractOwner, bool isActive, address tokenAddress, uint256 contractBalance, string memory version)",
       "event SSDRewardClaimed(address indexed player, uint256 aliensKilled, uint256 ssdAmount)",
+      "event TwitterRewardClaimed(address indexed player, string twitterHandle, uint256 ssdAmount)",
     ];
 
     if (this.wallet) {
@@ -129,6 +132,62 @@ class Web3Service {
         success: false,
         error: error.message,
         amount: 0,
+      };
+    }
+  }
+
+  /**
+   * Verify Twitter account and reward SSD tokens
+   */
+  async verifyTwitter(playerAddress, twitterHandle) {
+    try {
+      if (!this.isEnabled) {
+        console.warn("⚠️ Web3 service disabled - skipping Twitter verification");
+        return {
+          success: false,
+          message: "Web3 service not configured",
+          txHash: null,
+        };
+      }
+
+      if (!ethers.isAddress(playerAddress)) {
+        throw new Error("Invalid player address");
+      }
+
+      if (!twitterHandle || twitterHandle.length === 0) {
+        throw new Error("Invalid Twitter handle");
+      }
+
+      console.log(
+        `🐦 Verifying Twitter for ${playerAddress} with handle: @${twitterHandle}`
+      );
+
+      // Execute the Twitter verification transaction
+      const tx = await this.contract.verifyTwitter(twitterHandle, {
+        gasLimit: 300000,
+      });
+
+      console.log(`⏳ Transaction submitted: ${tx.hash}`);
+      const receipt = await tx.wait();
+
+      if (receipt.status === 1) {
+        console.log(`✅ Twitter verification successful: ${tx.hash}`);
+        return {
+          success: true,
+          txHash: tx.hash,
+          message: "Twitter verification successful",
+        };
+      } else {
+        throw new Error("Transaction failed");
+      }
+    } catch (error) {
+      console.error("Twitter verification failed:", error);
+      
+      // Return graceful failure
+      return {
+        success: false,
+        error: error.message,
+        txHash: null,
       };
     }
   }

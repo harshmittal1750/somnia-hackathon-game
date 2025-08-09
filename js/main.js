@@ -297,8 +297,16 @@ class GameApp {
       this.hideTwitterPanel();
     });
 
-    document.getElementById("verifyTwitter")?.addEventListener("click", () => {
-      this.verifyTwitter();
+    document.getElementById("generateCode")?.addEventListener("click", () => {
+      this.generateTwitterCode();
+    });
+
+    document.getElementById("copyTweet")?.addEventListener("click", () => {
+      this.copyTweetText();
+    });
+
+    document.getElementById("verifyTweet")?.addEventListener("click", () => {
+      this.verifyTwitterTweet();
     });
 
     // Upcoming features event listeners
@@ -1209,7 +1217,7 @@ class GameApp {
           <div class="benefit-item">💰 Earn SSD</div>
           <div class="benefit-item">🏆 Save Scores</div>
           <div class="benefit-item">🛍️ Shop Items</div>
-          <div class="benefit-item">🐦 Verify Twitter</div>
+          <div class="benefit-item">🐦 Verify Twitter (1 SSD)</div>
         </div>
       </div>
     `;
@@ -1572,47 +1580,208 @@ class GameApp {
 
   async checkTwitterStatus() {
     try {
-      const isVerified = await web3Manager.isTwitterVerified();
-      const twitterForm = document.getElementById("twitterForm");
-      const twitterVerified = document.getElementById("twitterVerified");
-      const verifiedHandle = document.getElementById("verifiedHandle");
+      if (!web3Manager.account) {
+        this.showNotification("Please connect your wallet first", "warning");
+        return;
+      }
 
-      if (isVerified) {
-        const handle = await web3Manager.getTwitterHandle();
-        twitterForm.classList.add("hidden");
-        twitterVerified.classList.remove("hidden");
-        verifiedHandle.textContent = handle;
+      const response = await fetch(
+        `${CONFIG.API.BASE_URL}/twitter/status/${web3Manager.account}`
+      );
+      const data = await response.json();
+
+      if (data.isVerified) {
+        this.showTwitterVerified(data.twitterHandle, data.verifiedAt);
       } else {
-        twitterForm.classList.remove("hidden");
-        twitterVerified.classList.add("hidden");
+        this.showTwitterStepGenerate();
       }
     } catch (error) {
       console.error("Failed to check Twitter status:", error);
+      this.showTwitterStepGenerate();
     }
   }
 
-  async verifyTwitter() {
-    const twitterHandle = document.getElementById("twitterHandle").value.trim();
+  showTwitterStepGenerate() {
+    document.getElementById("twitterStepGenerate").classList.remove("hidden");
+    document.getElementById("twitterStepTweet").classList.add("hidden");
+    document.getElementById("twitterStepSubmit").classList.add("hidden");
+    document.getElementById("twitterVerified").classList.add("hidden");
+    this.hideTwitterMessages();
+  }
 
-    if (!twitterHandle) {
-      this.showNotification("Please enter your Twitter handle", "warning");
-      return;
+  showTwitterStepTweet(verificationCode, requiredTweet) {
+    document.getElementById("twitterStepGenerate").classList.add("hidden");
+    document.getElementById("twitterStepTweet").classList.remove("hidden");
+    document.getElementById("twitterStepSubmit").classList.remove("hidden");
+    document.getElementById("twitterVerified").classList.add("hidden");
+
+    // Store tweet text for copying
+    this.currentTweetText = requiredTweet;
+
+    document.getElementById("tweetTemplate").innerHTML = `
+      <div style="font-size: 16px; line-height: 1.4;">
+        "${requiredTweet}"
+      </div>
+    `;
+
+    this.hideTwitterMessages();
+  }
+
+  showTwitterVerified(handle, verifiedAt) {
+    document.getElementById("twitterStepGenerate").classList.add("hidden");
+    document.getElementById("twitterStepTweet").classList.add("hidden");
+    document.getElementById("twitterStepSubmit").classList.add("hidden");
+    document.getElementById("twitterVerified").classList.remove("hidden");
+
+    document.getElementById("verifiedHandle").textContent = `@${handle}`;
+    if (verifiedAt) {
+      document.getElementById("verifiedDate").textContent = new Date(
+        verifiedAt
+      ).toLocaleDateString();
     }
 
-    // Remove @ if user included it
-    const cleanHandle = twitterHandle.replace("@", "");
+    this.hideTwitterMessages();
+  }
 
+  hideTwitterMessages() {
+    document.getElementById("twitterError").classList.add("hidden");
+    document.getElementById("twitterLoading").classList.add("hidden");
+  }
+
+  showTwitterError(message) {
+    document.getElementById("twitterError").textContent = message;
+    document.getElementById("twitterError").classList.remove("hidden");
+    document.getElementById("twitterLoading").classList.add("hidden");
+  }
+
+  showTwitterLoading() {
+    document.getElementById("twitterLoading").classList.remove("hidden");
+    document.getElementById("twitterError").classList.add("hidden");
+  }
+
+  async generateTwitterCode() {
     try {
-      const success = await web3Manager.verifyTwitter(cleanHandle);
-      if (success) {
-        this.showNotification("Twitter verified! 5 SSD claimed!", "success");
-        this.checkTwitterStatus(); // Refresh status
+      if (!web3Manager.account) {
+        this.showNotification("Please connect your wallet first", "warning");
+        return;
+      }
+
+      const twitterHandle = document
+        .getElementById("twitterHandle")
+        .value.trim();
+      if (!twitterHandle) {
+        this.showTwitterError("Please enter your Twitter handle");
+        return;
+      }
+
+      this.showTwitterLoading();
+
+      const response = await fetch(
+        `${CONFIG.API.BASE_URL}/twitter/generate-code`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            walletAddress: web3Manager.account,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        this.showTwitterStepTweet(data.verificationCode, data.requiredTweet);
       } else {
-        this.showNotification("Twitter verification failed", "error");
+        this.showTwitterError(
+          data.error || "Failed to generate verification code"
+        );
       }
     } catch (error) {
-      console.error("Failed to verify Twitter:", error);
-      this.showNotification("Verification failed: " + error.message, "error");
+      console.error("Failed to generate code:", error);
+      this.showTwitterError("Failed to generate verification code");
+    }
+  }
+
+  copyTweetText() {
+    if (this.currentTweetText) {
+      navigator.clipboard
+        .writeText(this.currentTweetText)
+        .then(() => {
+          this.showNotification("Tweet text copied to clipboard!", "success");
+        })
+        .catch(() => {
+          // Fallback for older browsers
+          const textArea = document.createElement("textarea");
+          textArea.value = this.currentTweetText;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+          this.showNotification("Tweet text copied to clipboard!", "success");
+        });
+    }
+  }
+
+  async verifyTwitterTweet() {
+    try {
+      if (!web3Manager.account) {
+        this.showNotification("Please connect your wallet first", "warning");
+        return;
+      }
+
+      const tweetUrl = document.getElementById("tweetUrl").value.trim();
+      const twitterHandle = document
+        .getElementById("twitterHandle")
+        .value.trim();
+
+      if (!tweetUrl) {
+        this.showTwitterError("Please enter your tweet URL");
+        return;
+      }
+
+      if (!twitterHandle) {
+        this.showTwitterError("Please enter your Twitter handle");
+        return;
+      }
+
+      this.showTwitterLoading();
+
+      const response = await fetch(`${CONFIG.API.BASE_URL}/twitter/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          walletAddress: web3Manager.account,
+          tweetUrl: tweetUrl,
+          twitterHandle: twitterHandle,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        this.showNotification(
+          "Twitter verified! 1 SSD token credited to your account!",
+          "success"
+        );
+        this.showTwitterVerified(
+          data.player.twitterHandle,
+          data.verification.verifiedAt
+        );
+
+        // Refresh SSD balance
+        if (this.refreshSSDBalances) {
+          this.refreshSSDBalances();
+        }
+      } else {
+        this.showTwitterError(data.error || "Verification failed");
+      }
+    } catch (error) {
+      console.error("Failed to verify tweet:", error);
+      this.showTwitterError("Failed to verify tweet. Please try again.");
     }
   }
 

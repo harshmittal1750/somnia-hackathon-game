@@ -20,7 +20,7 @@ const CONFIG = {
   // Smart Contract Addresses (Deployed on Somnia Testnet)
   CONTRACTS: {
     GAME_SCORE: "0x4912aFEA272C0283FDe9804480422a8046EC1908", // 🛡️ MINIMAL SSD REWARDS CONTRACT!
-    SSD_TOKEN: "0xeDFd8C7E14f5D491Cf9063076a4FcE60737170dE", // SSD Token Contract ✅
+    SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SSD Token Contract ✅
   },
 
   // Backend API Configuration
@@ -34,7 +34,7 @@ const CONFIG = {
   // 🎮 SSD Token Integration
   SSD: {
     REWARD_PER_KILL: "0.01", // SSD tokens per alien kill
-    TWITTER_REWARD: "5", // SSD tokens for Twitter verification
+    TWITTER_REWARD: "1", // SSD tokens for Twitter verification
     SYMBOL: "SSD",
     DECIMALS: 18,
     EUCLID_SWAP_URL: "https://testnet.euclidswap.io/pools/ssd.eucl-stt",

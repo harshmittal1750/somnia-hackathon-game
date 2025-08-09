@@ -9,7 +9,7 @@ async function main() {
   );
 
   // SSD Token address on Somnia testnet
-  const ssdTokenAddress = "0xeDFd8C7E14f5D491Cf9063076a4FcE60737170dE";
+  const ssdTokenAddress = "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F";
 
   console.log("📄 Deploying with SSD Token address:", ssdTokenAddress);
 

@@ -41,7 +41,7 @@ contract SomniaSpaceDefenderMinimal {
     // 🎮 SSD Token Integration
     IERC20 public ssdToken;
     uint256 public constant SSD_PER_KILL = 10000000000000000; // 0.01 SSD (18 decimals)
-    uint256 public constant TWITTER_REWARD = 50000000000000000000; // 50 SSD
+    uint256 public constant TWITTER_REWARD = 1000000000000000000; // 1 SSD
 
     // Track rewards and spending
     mapping(address => uint256) public ssdEarned;

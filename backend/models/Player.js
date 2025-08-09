@@ -54,6 +54,14 @@ const playerSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  twitterVerifiedAt: {
+    type: Date,
+    default: null,
+  },
+  twitterVerificationTweetUrl: {
+    type: String,
+    default: null,
+  },
   lastSubmissionTime: {
     type: Date,
     default: null,
