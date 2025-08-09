@@ -42,6 +42,11 @@ class Entity {
     return UTILS.checkCollision(this.getBounds(), other.getBounds());
   }
 
+  // Enhanced collision for better gameplay (used for bullets vs aliens)
+  collidesWithEnhanced(other, padding = 4) {
+    return UTILS.checkEnhancedCollision(this.getBounds(), other.getBounds(), padding);
+  }
+
   isOffScreen(canvasWidth, canvasHeight, margin = 50) {
     return (
       this.x < -margin ||
@@ -532,12 +537,21 @@ class Bullet extends Entity {
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(this.x, this.y, this.width, this.height);
 
-    // Glowing effect
+    // Enhanced glowing effect to show wider hit area
     ctx.save();
-    ctx.shadowColor = "#ffffff";
-    ctx.shadowBlur = 5;
+    ctx.shadowColor = "#4fc3f7";
+    ctx.shadowBlur = 8; // Increased glow to hint at larger hit area
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.restore();
+
+    // Subtle outer glow to indicate collision area
+    ctx.save();
+    ctx.globalAlpha = 0.3;
+    ctx.shadowColor = "#4fc3f7";
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = "#4fc3f7";
+    ctx.fillRect(this.x - 2, this.y, this.width + 4, this.height);
     ctx.restore();
   }
 }

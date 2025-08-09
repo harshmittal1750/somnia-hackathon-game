@@ -515,7 +515,7 @@ class GameEngine {
         const alien = this.aliens[j];
         if (!alien.active) continue;
 
-        if (bullet.collidesWith(alien)) {
+        if (bullet.collidesWithEnhanced(alien, CONFIG.GAME.BULLET.COLLISION_PADDING)) {
           // Damage alien
           const destroyed = alien.takeDamage(bullet.damage);
           bullet.active = false;

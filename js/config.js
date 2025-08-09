@@ -60,10 +60,11 @@ const CONFIG = {
 
     // Bullet Settings
     BULLET: {
-      WIDTH: 4,
+      WIDTH: 8, // Increased from 4 to 8 for easier hitting
       HEIGHT: 12,
       SPEED: 12, // faster bullets
       DAMAGE: 1,
+      COLLISION_PADDING: 6, // Extra pixels for forgiving hit detection
     },
 
     // Alien Settings
@@ -302,6 +303,16 @@ const UTILS = {
       rect1.x + rect1.width > rect2.x &&
       rect1.y < rect2.y + rect2.height &&
       rect1.y + rect1.height > rect2.y
+    );
+  },
+
+  // Enhanced collision detection with padding for better gameplay
+  checkEnhancedCollision: (rect1, rect2, padding = 4) => {
+    return (
+      rect1.x < rect2.x + rect2.width + padding &&
+      rect1.x + rect1.width > rect2.x - padding &&
+      rect1.y < rect2.y + rect2.height + padding &&
+      rect1.y + rect1.height > rect2.y - padding
     );
   },
 
