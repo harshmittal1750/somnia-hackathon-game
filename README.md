@@ -13,13 +13,17 @@ Somnia Space Defender is a modern take on classic space shooter games like "Chic
 
 ### ✨ Key Features
 
-- **10 Difficulty Levels**: From Rookie to INSANE
+- **10 Difficulty Levels**: From Rookie to INSANE with unique challenges
 - **Web3 Integration**: Connect wallet and save scores on Somnia testnet
-- **Smooth Gameplay**: 60 FPS optimized performance
-- **Power-up System**: Rapid fire, shields, multi-shot, and health boosts
+- **Smooth Gameplay**: 60 FPS optimized performance with visual effects
+- **Advanced Weapon System**: 6 unique bullet types with special effects
+- **Dynamic Enemy AI**: 9 alien types with unique behaviors and abilities
+- **Space Transition Effects**: Cinematic level changes with themed environments
 - **Achievement System**: Unlock achievements and track statistics
 - **Global Leaderboard**: Compete with players worldwide
+- **SSD Token Economy**: Play-to-earn with blockchain rewards
 - **Responsive Design**: Works on desktop and mobile devices
+- **Built-in Faucet Access**: Easy token acquisition through in-game panel
 
 ### 💰 SSD Token Integration
 
@@ -43,8 +47,26 @@ Spend your earned SSD tokens on game-changing boosts:
 
 #### 📱 Social Features
 
-- **Twitter Verification**: Connect your Twitter for 5 SSD reward bonus
+- **Twitter Verification**: Connect your Twitter for 1 SSD reward bonus
 - **Community Engagement**: Follow development and participate in events
+- **Built-in Faucet Access**: Get test tokens easily through in-game panel
+<!--
+
+#### 🚰 Faucet Integration
+
+**Easy Token Access:**
+
+- **In-Game Faucet Panel**: Click "🚰 Get Test Tokens" from main menu
+- **Multiple Faucet Sources**: Access to 3 different faucet providers
+- **One-Click Network Setup**: Automatic Somnia network addition to wallet
+- **Step-by-Step Guide**: Built-in instructions for new users
+
+**Available Features:**
+
+- Direct links to Official Somnia, Gas.zip, and Faucet.trade
+- Network configuration details display
+- Automatic wallet integration
+- Mobile-friendly faucet access -->
 
 #### 💎 Trading & Liquidity
 
@@ -54,33 +76,142 @@ Spend your earned SSD tokens on game-changing boosts:
 
 ## 🎯 How to Play
 
-### Controls
+### 🎮 Controls
+
+**🖥️ Desktop Controls:**
 
 - **Movement**: WASD or Arrow Keys
-- **Shoot**: SPACE or J
-- **Pause**: ESC or Pause button
+- **Shoot**: SPACE or J key
+- **Pause**: ESC or click Pause button
+- **Auto-fire**: Hold SPACE for continuous shooting
 
-### Objective
+**📱 Mobile/Touch Controls:**
 
-1. **Survive**: Avoid alien contact to preserve your health
-2. **Shoot**: Destroy aliens to earn points
-3. **Collect**: Grab power-ups for special abilities
-4. **Progress**: Advance through 10 challenging levels
-5. **Compete**: Set high scores on the blockchain leaderboard
+- **Movement**: Virtual joystick (bottom-left)
+- **Shoot**: Fire button (bottom-right)
+- **Pause**: Mobile pause button (top-right)
+- **Responsive**: Automatic mobile detection and optimization
 
-### Power-ups
+### 🎯 Game Objectives
 
-- ⚡ **Rapid Fire**: Increased firing rate
-- 🛡️ **Energy Shield**: Temporary invincibility
-- 💥 **Multi-Shot**: Fire multiple bullets
-- - **Health Boost**: Restore health
+1. **Survive**: Avoid alien contact to preserve your health (1 HP system)
+2. **Shoot**: Destroy aliens to earn points and SSD tokens
+3. **Collect**: Grab power-ups for special weapons and abilities
+4. **Progress**: Advance through 10 increasingly difficult levels
+5. **Explore**: Experience unique space regions with transition effects
+6. **Compete**: Set high scores on the blockchain leaderboard
+7. **Earn**: Accumulate SSD tokens through gameplay achievements
 
-### Scoring
+### 🎲 Gameplay Mechanics
 
-- Basic Alien: 10 points
-- Fast Alien: 20 points
-- Tank Alien: 30 points
-- Boss Alien: 100 points
+**🔄 Level Progression:**
+
+- Complete levels by killing required number of aliens (Level × 10)
+- Each level introduces new alien types and increased difficulty
+- Experience cinematic space transitions between regions
+
+<!-- **⚡ Combat System:**
+
+- Collision-based combat with enhanced hit detection
+- Weapon heat system prevents spam-clicking
+- Power-ups provide temporary but powerful advantages
+
+**🛡️ Survival Strategy:**
+
+- Single health point - avoid all enemy contact
+- Use power-ups strategically for difficult situations
+- Shield power-ups provide temporary invincibility -->
+
+**💰 Token Economy:**
+
+- Earn 0.01 SSD per alien killed
+- Bonus SSD through Twitter verification (1 SSD)
+- Spend SSD tokens in the in-game shop for upgrades
+<!--
+
+### Power-ups & Weapons
+
+**🔧 Basic Power-ups:**
+
+- ⚡ **Rapid Fire**: Increased firing rate (5 seconds)
+- 🛡️ **Energy Shield**: Temporary invincibility (8 seconds)
+- 💥 **Multi-Shot**: Fire 3 bullets in spread pattern (6 seconds)
+- ❤️ **Health Boost**: Restore health instantly
+
+**🔫 Advanced Weapon Systems:**
+
+- ⚡ **Lightning Bullets**: Chain between enemies, piercing damage (8 seconds)
+- 🔥 **Fire Bullets**: Burn enemies over time with splash damage (8 seconds)
+- 🌊 **Wave Bullets**: Oscillating projectiles with high piercing damage (8 seconds)
+- ⚛️ **Plasma Cannon**: Energy burst with massive area damage (10 seconds)
+- ❄️ **Ice Blaster**: Freeze and slow enemies with crystal shards (8 seconds)
+
+**✨ Weapon Effects:**
+
+- **Lightning**: Chains up to 3 nearby enemies per shot
+- **Fire**: Burns enemies for 3 seconds, splash damage in 40px radius
+- **Wave**: Oscillating movement pattern, pierces through multiple enemies
+- **Plasma**: Explosive energy bursts with 60px splash radius
+- **Ice**: Slows enemies by 50% for 2 seconds, 35px splash radius
+
+### Enemy Types & Scoring
+
+**🛸 Basic Alien Types:**
+
+- **Basic Alien**: 10 points - Standard enemy with basic movement
+- **Fast Alien**: 20 points - Quick zigzag movement, dodging abilities
+- **Tank Alien**: 30 points - Heavy armor, high health, slow movement
+- **Boss Alien**: 100 points - Circular patterns, regeneration abilities
+
+**👾 Advanced Alien Varieties:**
+
+- **Swarm Aliens**: 15 points - Spawn in groups of 3, group behavior
+- **Stealth Aliens**: 40 points - Phase in/out of visibility, teleportation
+- **Berserker Aliens**: 50 points - Charge attacks when damaged, rage mode
+- **Shielded Aliens**: 35 points - Energy shields that regenerate over time
+- **Splitter Aliens**: 25 points - Split into smaller aliens when destroyed
+- **Bomber Aliens**: 30 points - Explode on death, area damage
+- **Healer Aliens**: 60 points - Heal nearby aliens, support abilities
+- **Mega Boss**: 500 points - Multi-phase boss with minion spawning
+
+**🎯 Special Abilities:**
+
+- **Dodge**: Evade incoming bullets
+- **Armor**: Reduced damage from attacks
+- **Regenerate**: Slowly heal over time
+- **Stealth**: Become invisible temporarily
+- **Phase**: Teleport to new positions
+- **Rage**: Increased speed/damage when low health
+- **Energy Shield**: Absorbs damage before affecting health
+- **Split on Death**: Creates multiple smaller enemies
+- **Explosive Death**: Area damage when destroyed
+- **Heal Others**: Restore health to nearby allies
+
+### 🌌 Space Transition Effects
+
+**Cinematic Level Changes:**
+Experience immersive space travel as you progress through different cosmic regions:
+
+- **Warp Transitions**: High-speed particle streams with accelerating effects
+- **Fold Transitions**: Space-time ripples with pulsing energy waves
+- **Rift Transitions**: Dimensional tears with swirling cosmic vortexes
+- **Quantum Transitions**: Particle dissolution and reformation effects
+- **Fade Transitions**: Smooth atmospheric changes between regions
+
+**🌟 Themed Space Environments:**
+
+- **Nebula Regions**: Colorful gas clouds with floating debris
+- **Asteroid Fields**: Rocky environments with scattered minerals
+- **Deep Space**: Dark cosmic void with distant stars
+- **Void Sectors**: Mysterious dark matter regions
+- **Galaxy Centers**: Bright stellar formations with cosmic energy
+
+**⚡ Enhanced Gameplay During Transitions:**
+
+- Slowed gameplay for better visual appreciation (5-second duration)
+- Floating level notifications with space region names
+- Ambient particle effects matching each environment theme
+- Smooth audio transitions with dynamic background music -->
 
 ## 🚀 Quick Start
 
@@ -125,21 +256,30 @@ http://localhost:8000
 
 ```
 somnia-hackathon-game/
-├── index.html              # Main game page
+├── index.html              # Main game page with faucet panel
 ├── styles/
-│   └── main.css            # Game styling
+│   └── main.css            # Enhanced styling with transition effects
 ├── js/
-│   ├── config.js           # Game configuration
+│   ├── config.js           # Game configuration (weapons, aliens, effects)
 │   ├── web3Manager.js      # Web3 wallet integration
-│   ├── entities.js         # Game objects (Player, Aliens, etc.)
-│   ├── gameEngine.js       # Core game logic
-│   ├── levels.js           # Level management
-│   └── main.js             # Application controller
+│   ├── hybridWeb3Manager.js # Enhanced Web3 management
+│   ├── wagmiManager.js     # Alternative Web3 connection system
+│   ├── entities.js         # Enhanced game objects with new weapons
+│   ├── gameEngine.js       # Core game logic with space transitions
+│   ├── levels.js           # Level management system
+│   ├── main.js             # Application controller with faucet integration
+│   └── services/
+│       └── apiService.js   # Backend API communication
 ├── contracts/
-│   └── SomniaSpaceDefender.sol  # Smart contract
+│   ├── SomniaSpaceDefender.sol        # Full smart contract
+│   └── SomniaSpaceDefenderMinimal.sol # Minimal SSD rewards contract
+├── backend/                # Express.js backend server
+│   ├── api/               # API endpoints
+│   ├── models/            # Database models
+│   ├── routes/            # Route handlers
+│   └── services/          # Business logic services
 ├── assets/
-│   ├── audio/              # Sound effects (add your own)
-│   └── images/             # Sprites (add your own)
+│   └── audio/             # Dynamic background music system
 └── README.md
 ```
 
@@ -193,16 +333,30 @@ CONTRACTS: {
 ### Add Somnia Network to MetaMask
 
 - **Network Name**: Somnia Testnet
-- **RPC URL**: `https://dream-rpc.somnia.network/rpc`
-- **Chain ID**: `31337` (0x7A69)
-- **Currency Symbol**: SOM
-- **Block Explorer**: `https://testnet.somniaexplorer.com`
+- **RPC URL**: `https://dream-rpc.somnia.network`
+- **Chain ID**: `50312` (0xc488)
+- **Currency Symbol**: STT
+- **Block Explorer**: `https://shannon-explorer.somnia.network/`
 
-### Get Test Tokens
+### Get Test Tokens (Multiple Faucets Available)
 
-1. Visit the Somnia testnet faucet
-2. Enter your wallet address
-3. Request SOM tokens for gas fees
+**🚰 In-Game Faucet Access:**
+
+- Click **"🚰 Get Test Tokens"** button in the main game menu
+- One-click network addition to MetaMask
+- Direct links to all available faucets
+
+**📍 Available Faucets:**
+
+1. **Official Somnia Testnet**: https://testnet.somnia.network
+2. **Gas.zip Faucet**: https://www.gas.zip/faucet/somnia
+3. **Faucet.trade**: https://faucet.trade/somnia-shannon-stt-faucet
+
+**📱 Easy Setup:**
+
+- The game automatically prompts to add Somnia network
+- Built-in faucet panel with step-by-step instructions
+- No manual network configuration needed
 
 ## 🎨 Customization
 
@@ -237,56 +391,84 @@ LEVELS: {
 
 ### Frontend
 
-- **HTML5 Canvas**: Smooth 2D rendering
-- **Vanilla JavaScript**: No framework dependencies
-- **Web3.js**: Blockchain integration
-- **CSS3**: Modern UI with space theme
+- **HTML5 Canvas**: Advanced 2D rendering with particle effects
+- **Vanilla JavaScript ES6+**: No framework dependencies, optimized performance
+- **Multiple Web3 Integrations**: Web3.js, Wagmi, and hybrid management
+- **CSS3**: Modern UI with space theme and responsive design
+- **Dynamic Audio System**: Background music with intensity-based switching
+- **Mobile Optimization**: Touch controls and responsive scaling
+
+### Enhanced Game Engine
+
+- **Advanced Particle Systems**: Weapon effects, explosions, space transitions
+- **Entity Component System**: Modular game object architecture
+- **Collision Detection**: Enhanced algorithms with padding for better UX
+- **Visual Effects Pipeline**: Screen shake, transitions, floating text
+- **Audio Management**: Dynamic music system with track switching
+- **Performance Monitoring**: FPS tracking and optimization modes
 
 ### Backend/Blockchain
 
-- **Solidity Smart Contract**: Score storage and leaderboards
-- **Somnia Testnet**: High-performance blockchain
-- **IPFS** (optional): Decentralized asset storage
+- **Express.js Backend**: RESTful API with anti-cheat verification
+- **Dual Smart Contracts**: Full featured + minimal SSD rewards
+- **Somnia Testnet**: High-performance blockchain integration
+- **Database Integration**: Player statistics and leaderboards
+- **Twitter API**: Social verification system
+
+<!-- ### New Technical Features
+
+- **Space Transition System**: Cinematic level changes with 5 effect types
+- **Advanced Weapon System**: 6 bullet types with unique behaviors
+- **Enhanced Enemy AI**: 9 alien types with special abilities
+- **Faucet Integration**: In-game token acquisition interface
+- **Mobile Touch Controls**: Virtual joystick and responsive UI
+- **Dynamic Theming**: Environment-based visual changes -->
 
 ### Performance Optimizations
 
-- Entity pooling for bullets and particles
-- Efficient collision detection algorithms
-- Frame rate limiting and delta time calculations
-- Responsive canvas scaling
-- Lazy loading of assets
+- **Entity Pooling**: Efficient memory management for bullets/particles
+- **Collision Optimization**: Spatial partitioning and early exits
+- **Frame Rate Management**: Delta time calculations and performance scaling
+- **Canvas Optimization**: Responsive scaling and efficient rendering
+- **Asset Management**: Lazy loading and caching strategies
+- **Mobile Performance**: Touch event optimization and battery efficiency
 
 ## 🏆 Competition Criteria
 
 ### ✅ Creativity & Originality
 
-- Modern take on classic space shooter genre
-- Unique 10-level progression system
-- Innovative Web3 integration with achievements
+- **Enhanced Space Shooter**: Modern take with 6 unique weapon types and advanced enemy AI
+- **Cinematic Transitions**: Immersive space travel between themed environments
+- **10-Level Progression**: Each level introduces new challenges and visual themes
+- **Innovative Web3 Integration**: Seamless blockchain features with built-in faucet access
 
 ### ✅ Technical Excellence
 
-- Deployed on Somnia testnet with smart contract
-- Production-ready code with error handling
-- Optimized performance for smooth gameplay
+- **Dual Smart Contracts**: Deployed on Somnia testnet with optimized SSD rewards
+- **Production-Ready Architecture**: Express.js backend with anti-cheat verification
+- **Advanced Game Engine**: Particle systems, collision optimization, and 60 FPS performance
+- **Multiple Web3 Integrations**: Web3.js, Wagmi, and hybrid connection management
 
 ### ✅ User Experience
 
-- Intuitive controls and clear objectives
-- Responsive design for all devices
-- Professional UI with space-themed aesthetics
+- **Intuitive Controls**: Desktop (WASD/Arrow keys) and mobile (virtual joystick) support
+- **Responsive Design**: Optimized for all devices with automatic mobile detection
+- **Professional UI**: Space-themed aesthetics with smooth animations and transitions
+- **Accessibility Features**: Built-in faucet panel and step-by-step wallet setup
 
 ### ✅ On-chain Impact
 
-- Scores and achievements stored on blockchain
-- Global leaderboard with transparent ranking
-- Minimal off-chain dependencies
+- **Blockchain Gaming**: Scores, achievements, and SSD tokens stored on Somnia
+- **Play-to-Earn Economy**: 0.01 SSD per alien kill + social verification rewards
+- **Transparent Leaderboards**: Global rankings with verifiable blockchain data
+- **Token Integration**: SSD shop, trading, and liquidity features
 
-### ✅ Community Fit
+<!-- ### ✅ Community Fit
 
-- Easy to learn, hard to master gameplay
-- Competitive leaderboard system
-- Achievement system encourages replay
+- **Easy Onboarding**: Built-in faucet access removes barriers for new users
+- **Competitive Elements**: Global leaderboards and achievement system
+- **Social Features**: Twitter verification and community engagement
+- **Scalable Architecture**: Backend supports tournaments and future multiplayer features -->
 
 ## 🚀 Deployment
 
@@ -339,6 +521,62 @@ vercel --prod
 - Check browser auto-play policies
 - Verify audio files are in correct format
 - Enable audio in game settings
+
+## 🆕 Recent Updates & Enhancements
+
+### ✨ Latest Features (v2.0)
+
+<!--
+**🔫 Advanced Weapon System:**
+
+- 6 unique bullet types: Standard, Lightning, Fire, Wave, Plasma, Ice
+- Special effects: Chaining, burning, freezing, piercing, splash damage
+- Visual enhancements: Particle trails, energy effects, crystal formations
+- Weapon power-ups: Temporary special ammunition types -->
+
+**👾 Enhanced Enemy AI:**
+
+- 9 total alien types with unique behaviors and abilities
+- Special abilities: Dodge, armor, regeneration, stealth, rage, healing
+- Advanced patterns: Swarm behavior, teleportation, explosive deaths
+- Mega boss encounters with multi-phase attacks
+
+**🌌 Space Transition Effects:**
+
+- Cinematic level changes with 5 different transition types
+- Themed space environments: Nebula, asteroid, deep space, void, galaxy
+- Slowed gameplay during transitions for better visual appreciation
+- Floating level notifications and ambient particle effects
+
+**🚰 Built-in Faucet System:**
+
+- In-game faucet panel accessible from main menu
+- Multiple faucet sources: Official Somnia, Gas.zip, Faucet.trade
+- One-click Somnia network addition to MetaMask
+- Step-by-step instructions for new users
+
+**📱 Mobile & UX Improvements:**
+
+- Enhanced touch controls with virtual joystick
+- Responsive design optimization for all screen sizes
+- Improved collision detection with enhanced hit boxes
+- Dynamic audio system with background music transitions
+
+<!-- **🔧 Technical Improvements:**
+
+- Performance optimizations for smooth 60 FPS gameplay
+- Enhanced particle systems for visual effects
+- Improved Web3 integration with multiple connection methods
+- Backend API with anti-cheat verification
+- Mobile-first responsive design -->
+
+<!-- ### 🛠️ Bug Fixes & Stability
+
+- **Fixed**: Game restart functionality now works seamlessly
+- **Fixed**: Background music plays correctly after restart
+- **Improved**: Collision detection accuracy with padding system
+- **Enhanced**: Mobile touch response and control precision
+- **Optimized**: Performance on lower-end devices -->
 
 ## 📈 Future Enhancements
 
@@ -398,9 +636,9 @@ We welcome contributions! Please:
 - Test on multiple browsers
 - Optimize for performance
 
-## 📄 License
+<!-- ## 📄 License
 
-MIT License - see LICENSE file for details
+MIT License - see LICENSE file for details -->
 
 ## 🙏 Acknowledgments
 
@@ -410,7 +648,7 @@ MIT License - see LICENSE file for details
 
 ## 📞 Contact
 
-- **X/Twitter**: [@SomniaEco](https://x.com/SomniaEco)
+- **X/Twitter**: [@chainalphaai](https://x.com/chainalphaai)
 - **Documentation**: [docs.somnia.network](https://docs.somnia.network/)
 - **Support**: [Join Somnia Discord](https://discord.gg/somnia)
 
@@ -420,4 +658,4 @@ MIT License - see LICENSE file for details
 
 **[PLAY NOW](DEPLOYMENT_URL)** | **[View Contract](CONTRACT_EXPLORER_URL)** | **[Join Leaderboard](LEADERBOARD_URL)**
 
-_Built with ❤️ for the Somnia Hackathon_
+_Built with ❤️ by https://x.com/chainalphaai for the Somnia Hackathon_
