@@ -51,7 +51,9 @@ ${twitterVerificationService.YOUR_TWITTER_HANDLE} ${twitterVerificationService.A
 Play now: ${twitterVerificationService.GAME_URL}`;
 
       // URL encode for Twitter intent
-      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(requiredTweet)}`;
+      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        requiredTweet
+      )}`;
 
       res.json({
         success: true,
@@ -158,7 +160,10 @@ router.post(
       try {
         if (web3Service.isEnabled) {
           // Call the contract's verifyTwitter function with 1 SSD reward
-          const rewardResult = await web3Service.verifyTwitter(walletAddress, updateData.twitterHandle);
+          const rewardResult = await web3Service.verifyTwitter(
+            walletAddress,
+            updateData.twitterHandle
+          );
           if (rewardResult.success) {
             txHash = rewardResult.txHash;
             blockchainRewardSuccess = true;
@@ -254,11 +259,11 @@ router.get("/instructions", (req, res) => {
         description:
           "Click 'Generate Code' to get your unique verification code",
       },
-              {
-          step: 2,
-          title: "Post Tweet",
-          description: `Click "Post Tweet" button to open Twitter with pre-filled message including mentions of ${twitterVerificationService.YOUR_TWITTER_HANDLE} and ${twitterVerificationService.ADDITIONAL_MENTION}`,
-        },
+      {
+        step: 2,
+        title: "Post Tweet",
+        description: `Click "Post Tweet" button to open Twitter with pre-filled message including mentions of ${twitterVerificationService.YOUR_TWITTER_HANDLE} and ${twitterVerificationService.ADDITIONAL_MENTION}`,
+      },
       {
         step: 3,
         title: "Submit Tweet URL",

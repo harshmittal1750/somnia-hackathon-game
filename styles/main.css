@@ -835,6 +835,47 @@ body::before {
   margin: 1rem 0;
 }
 
+.panel-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid #4fc3f7;
+  color: #4fc3f7;
+  transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+  background: #4fc3f7;
+  color: #000;
+  transform: translateY(-2px);
+}
+
+.support-link {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #aaa;
+  text-align: center;
+}
+
+.support-link-text {
+  color: #4fc3f7;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.support-link-text:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
 /* Features List Styles */
 .features-list {
   max-height: 400px;

@@ -182,7 +182,13 @@ class TwitterVerificationService {
     const hasChainAlphaMention = htmlContent.includes(this.ADDITIONAL_MENTION);
     const hasGameUrl = htmlContent.includes(this.GAME_URL);
 
-    return hasCode && hasPhrase && hasSomniaMention && hasChainAlphaMention && hasGameUrl;
+    return (
+      hasCode &&
+      hasPhrase &&
+      hasSomniaMention &&
+      hasChainAlphaMention &&
+      hasGameUrl
+    );
   }
 
   /**
@@ -244,11 +250,21 @@ class TwitterVerificationService {
           // Check if tweet content contains required elements
           const hasCode = htmlContent.includes(verificationCode);
           const hasPhrase = htmlContent.includes(this.REQUIRED_PHRASE);
-          const hasSomniaMention = htmlContent.includes(this.YOUR_TWITTER_HANDLE);
-          const hasChainAlphaMention = htmlContent.includes(this.ADDITIONAL_MENTION);
+          const hasSomniaMention = htmlContent.includes(
+            this.YOUR_TWITTER_HANDLE
+          );
+          const hasChainAlphaMention = htmlContent.includes(
+            this.ADDITIONAL_MENTION
+          );
           const hasGameUrl = htmlContent.includes(this.GAME_URL);
 
-          if (hasCode && hasPhrase && hasSomniaMention && hasChainAlphaMention && hasGameUrl) {
+          if (
+            hasCode &&
+            hasPhrase &&
+            hasSomniaMention &&
+            hasChainAlphaMention &&
+            hasGameUrl
+          ) {
             return {
               success: true,
               username: tweetInfo.username,

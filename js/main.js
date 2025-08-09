@@ -313,6 +313,15 @@ class GameApp {
       this.verifyTwitterTweet();
     });
 
+    // Support contact event listeners
+    document.getElementById("contactSupport")?.addEventListener("click", () => {
+      this.openSupportContact();
+    });
+
+    document.getElementById("twitterSupport")?.addEventListener("click", () => {
+      this.openSupportContact();
+    });
+
     // Upcoming features event listeners
     document.getElementById("openFeatures")?.addEventListener("click", () => {
       this.showUpcomingFeatures();
@@ -1721,7 +1730,11 @@ ${requiredTweet}
       const data = await response.json();
 
       if (data.success) {
-        this.showTwitterStepTweet(data.verificationCode, data.requiredTweet, data.tweetUrl);
+        this.showTwitterStepTweet(
+          data.verificationCode,
+          data.requiredTweet,
+          data.tweetUrl
+        );
       } else {
         this.showTwitterError(
           data.error || "Failed to generate verification code"
@@ -1742,11 +1755,24 @@ ${requiredTweet}
 
   openTwitterPost() {
     if (this.currentTweetUrl) {
-      window.open(this.currentTweetUrl, '_blank');
-      this.showNotification("Opening Twitter to post your verification tweet!", "info");
+      window.open(this.currentTweetUrl, "_blank");
+      this.showNotification(
+        "Opening Twitter to post your verification tweet!",
+        "info"
+      );
     } else {
       this.showNotification("Tweet URL not available", "error");
     }
+  }
+
+  openSupportContact() {
+    // Open the @chainalphaai Twitter profile where users can click DM
+    const supportUrl = "https://x.com/chainalphaai";
+    window.open(supportUrl, "_blank");
+    this.showNotification(
+      "Opening @chainalphaai Twitter profile. Click 'Message' to send a DM for support!",
+      "info"
+    );
   }
 
   copyTweetText() {
