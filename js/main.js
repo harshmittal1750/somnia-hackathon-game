@@ -1676,6 +1676,10 @@ class GameApp {
 
       this.showTwitterLoading();
 
+      console.log("🐦 Generating Twitter verification code...");
+      console.log("API URL:", `${CONFIG.API.BASE_URL}/twitter/generate-code`);
+      console.log("Wallet Address:", web3Manager.account);
+
       const response = await fetch(
         `${CONFIG.API.BASE_URL}/twitter/generate-code`,
         {
@@ -1689,6 +1693,9 @@ class GameApp {
         }
       );
 
+      console.log("📡 Response status:", response.status);
+      console.log("📡 Response headers:", response.headers);
+
       const data = await response.json();
 
       if (data.success) {
@@ -1700,7 +1707,12 @@ class GameApp {
       }
     } catch (error) {
       console.error("Failed to generate code:", error);
-      this.showTwitterError("Failed to generate verification code");
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      this.showTwitterError(`Failed to generate verification code: ${error.message}`);
     }
   }
 
