@@ -185,6 +185,38 @@ class GameApp {
       this.showWalletDownloadOptions();
     });
 
+    // Advanced connection options
+    document
+      .getElementById("showAdvancedConnect")
+      ?.addEventListener("click", () => {
+        this.showAdvancedConnectOptions();
+      });
+
+    // Specific connection methods
+    document
+      .getElementById("connectMetaMask")
+      ?.addEventListener("click", () => {
+        this.connectSpecificWallet("metamask");
+      });
+
+    document
+      .getElementById("connectWalletConnect")
+      ?.addEventListener("click", () => {
+        this.connectSpecificWallet("walletconnect");
+      });
+
+    document
+      .getElementById("connectCoinbase")
+      ?.addEventListener("click", () => {
+        this.connectSpecificWallet("coinbase");
+      });
+
+    document
+      .getElementById("connectInjected")
+      ?.addEventListener("click", () => {
+        this.connectSpecificWallet("injected");
+      });
+
     // Back to connect (from download options)
     document.getElementById("backToConnect")?.addEventListener("click", () => {
       this.hideWalletDownloadOptions();
@@ -296,6 +328,21 @@ class GameApp {
     document.getElementById("closeTwitter")?.addEventListener("click", () => {
       this.hideTwitterPanel();
     });
+
+    // Faucet panel event listeners
+    document.getElementById("openFaucets")?.addEventListener("click", () => {
+      this.showFaucetPanel();
+    });
+
+    document.getElementById("closeFaucets")?.addEventListener("click", () => {
+      this.hideFaucetPanel();
+    });
+
+    document
+      .getElementById("addSomniaNetwork")
+      ?.addEventListener("click", () => {
+        this.addSomniaNetworkToWallet();
+      });
 
     document.getElementById("generateCode")?.addEventListener("click", () => {
       this.generateTwitterCode();
@@ -531,7 +578,8 @@ class GameApp {
   // Wallet Management
   async connectWallet() {
     try {
-      const success = await web3Manager.connectWallet();
+      const manager = this.getActiveWeb3Manager();
+      const success = await manager.connectWallet();
       if (success) {
         this.showGameMenu();
       }
@@ -544,9 +592,74 @@ class GameApp {
     }
   }
 
+  async connectSpecificWallet(method) {
+    console.log(`🔗 Attempting connection with ${method}...`);
+
+    try {
+      const manager = this.getActiveWeb3Manager();
+      let success = false;
+
+      // Try the hybrid manager first if available
+      if (
+        manager.connectWagmi &&
+        (method === "walletconnect" ||
+          method === "coinbase" ||
+          method === "injected")
+      ) {
+        success = await manager.connectWagmi(method);
+      } else if (manager.connectMetaMask && method === "metamask") {
+        success = await manager.connectMetaMask();
+      } else {
+        // Fallback to generic connect
+        success = await manager.connectWallet(method);
+      }
+
+      if (success) {
+        console.log(`✅ ${method} connected successfully`);
+        this.showNotification(`${method} connected successfully!`, "success");
+        this.hideAdvancedConnectOptions();
+        this.showGameMenu();
+      } else {
+        console.warn(`⚠️ ${method} connection failed`);
+        this.showNotification(`Failed to connect with ${method}`, "error");
+      }
+    } catch (error) {
+      console.error(`❌ ${method} connection error:`, error);
+      this.showNotification(
+        `${method} connection error: ${error.message}`,
+        "error"
+      );
+    }
+  }
+
+  showAdvancedConnectOptions() {
+    const advancedOptions = document.getElementById("advancedConnectOptions");
+    const connectWallet = document.getElementById("connectWallet");
+    const showAdvanced = document.getElementById("showAdvancedConnect");
+
+    if (advancedOptions && connectWallet && showAdvanced) {
+      advancedOptions.classList.remove("hidden");
+      connectWallet.classList.add("hidden");
+      showAdvanced.classList.add("hidden");
+    }
+  }
+
+  hideAdvancedConnectOptions() {
+    const advancedOptions = document.getElementById("advancedConnectOptions");
+    const connectWallet = document.getElementById("connectWallet");
+    const showAdvanced = document.getElementById("showAdvanced");
+
+    if (advancedOptions && connectWallet && showAdvanced) {
+      advancedOptions.classList.add("hidden");
+      connectWallet.classList.remove("hidden");
+      showAdvanced.classList.remove("hidden");
+    }
+  }
+
   async disconnectWallet() {
     try {
-      await web3Manager.disconnectWallet();
+      const manager = this.getActiveWeb3Manager();
+      await manager.disconnectWallet();
       // Stay on wallet panel to show disconnected state
       this.showWalletPanel();
     } catch (error) {
@@ -559,15 +672,24 @@ class GameApp {
   }
 
   showWalletDownloadOptions() {
-    web3Manager.showWalletDownloadOptions();
+    const manager = this.getActiveWeb3Manager();
+    if (manager.showWalletDownloadOptions) {
+      manager.showWalletDownloadOptions();
+    }
   }
 
   hideWalletDownloadOptions() {
-    web3Manager.hideWalletDownloadOptions();
+    const manager = this.getActiveWeb3Manager();
+    if (manager.hideWalletDownloadOptions) {
+      manager.hideWalletDownloadOptions();
+    }
   }
 
   downloadWallet(walletType) {
-    web3Manager.redirectToWalletDownload(walletType);
+    const manager = this.getActiveWeb3Manager();
+    if (manager.redirectToWalletDownload) {
+      manager.redirectToWalletDownload(walletType);
+    }
   }
 
   toggleSomniaDropdown() {
@@ -598,15 +720,23 @@ class GameApp {
   async checkWalletConnection() {
     console.log("🔍 Checking wallet connection status...");
 
+    // Use hybrid manager if available, otherwise fallback to original
+    const manager = this.getActiveWeb3Manager();
+    console.log("🔧 Using manager:", manager.constructor.name);
+
+    if (manager.getConnectionInfo) {
+      console.log("📊 Connection info:", manager.getConnectionInfo());
+    }
+
     // Refresh the Web3 connection state
-    await web3Manager.refreshConnection();
+    await manager.refreshConnection();
 
     // Check if we can actually play the game
-    if (web3Manager.canPlayGame()) {
-      this.onWalletConnected(web3Manager.account);
+    if (manager.canPlayGame()) {
+      this.onWalletConnected(manager.account);
     } else if (
-      web3Manager.isConnected &&
-      web3Manager.networkId !== CONFIG.NETWORK.chainId
+      manager.isConnected &&
+      manager.networkId !== CONFIG.NETWORK.chainId
     ) {
       // Connected but wrong network
       console.warn("⚠️ Connected to wrong network");
@@ -614,6 +744,38 @@ class GameApp {
     } else {
       // Not connected or other issues
       this.onWalletDisconnected();
+    }
+  }
+
+  // Helper method to get the active Web3 manager
+  getActiveWeb3Manager() {
+    // Try hybrid manager first
+    if (
+      typeof hybridWeb3Manager !== "undefined" &&
+      hybridWeb3Manager.primaryProvider
+    ) {
+      console.log("🔗 Using HybridWeb3Manager");
+      return hybridWeb3Manager;
+    }
+    // Fallback to original web3Manager
+    else if (typeof web3Manager !== "undefined") {
+      console.log("🔗 Using fallback Web3Manager");
+      return web3Manager;
+    }
+    // If neither is available, show helpful error
+    else {
+      console.error("❌ No Web3 manager available", {
+        hybridWeb3Manager: typeof hybridWeb3Manager,
+        web3Manager: typeof web3Manager,
+        ethereum: typeof window.ethereum,
+        wagmiConfig: typeof window.wagmiConfig,
+      });
+      this.showNotification(
+        "Web3 connection system not available. Please refresh the page.",
+        "error",
+        5000
+      );
+      throw new Error("No Web3 manager available");
     }
   }
 
@@ -662,6 +824,17 @@ class GameApp {
     this.currentState = GAME_STATES.CONNECTING;
     this.hideAllPanels();
     document.getElementById("web3Panel").classList.remove("hidden");
+
+    // Update wallet UI to show proper buttons
+    try {
+      const manager = this.getActiveWeb3Manager();
+      if (manager && manager.updateWalletUI) {
+        console.log("🔄 Updating wallet UI from showWalletPanel");
+        manager.updateWalletUI();
+      }
+    } catch (error) {
+      console.warn("Failed to update wallet UI:", error);
+    }
 
     // Check if tutorial should be shown for new users
     this.checkTutorialForNewUsers();
@@ -723,6 +896,7 @@ class GameApp {
       "loadingScreen",
       "ssdShop",
       "twitterPanel",
+      "faucetPanel",
       "upcomingFeatures",
       "adminPanel",
       "tutorialPanel",
@@ -1853,6 +2027,62 @@ ${requiredTweet}
     } catch (error) {
       console.error("Failed to verify tweet:", error);
       this.showTwitterError("Failed to verify tweet. Please try again.");
+    }
+  }
+
+  // 🚰 FAUCET PANEL FUNCTIONALITY
+
+  showFaucetPanel() {
+    this.hideAllPanels();
+    document.getElementById("faucetPanel").classList.remove("hidden");
+  }
+
+  hideFaucetPanel() {
+    this.showGameMenu();
+  }
+
+  async addSomniaNetworkToWallet() {
+    try {
+      if (!window.ethereum) {
+        this.showNotification(
+          "MetaMask or compatible wallet required",
+          "error"
+        );
+        return;
+      }
+
+      // Somnia testnet network configuration
+      const somniaNetwork = {
+        chainId: "0xc488", // 50312 in hex
+        chainName: "Somnia Testnet",
+        rpcUrls: ["https://dream-rpc.somnia.network"],
+        nativeCurrency: {
+          name: "STT",
+          symbol: "STT",
+          decimals: 18,
+        },
+        blockExplorerUrls: ["https://shannon-explorer.somnia.network/"],
+      };
+
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [somniaNetwork],
+      });
+
+      this.showNotification(
+        "✅ Somnia network added to your wallet!",
+        "success"
+      );
+    } catch (error) {
+      console.error("Failed to add Somnia network:", error);
+      if (error.code === 4001) {
+        this.showNotification("Network addition was cancelled", "warning");
+      } else {
+        this.showNotification(
+          "Failed to add network. Please add manually.",
+          "error"
+        );
+      }
     }
   }
 

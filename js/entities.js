@@ -44,7 +44,11 @@ class Entity {
 
   // Enhanced collision for better gameplay (used for bullets vs aliens)
   collidesWithEnhanced(other, padding = 4) {
-    return UTILS.checkEnhancedCollision(this.getBounds(), other.getBounds(), padding);
+    return UTILS.checkEnhancedCollision(
+      this.getBounds(),
+      other.getBounds(),
+      padding
+    );
   }
 
   isOffScreen(canvasWidth, canvasHeight, margin = 50) {
@@ -211,10 +215,23 @@ class Player extends Entity {
     this.weaponCooldown = this.rapidFireActive
       ? CONFIG.GAME.PLAYER.WEAPON_COOLDOWN * 0.3
       : CONFIG.GAME.PLAYER.WEAPON_COOLDOWN;
+
+    // 🔫 Update weapon type from power-ups
+    this.currentWeaponType = this.getCurrentWeaponType();
   }
 
   canShoot() {
     return Date.now() - this.lastShot >= this.weaponCooldown;
+  }
+
+  getCurrentWeaponType() {
+    // Check for weapon power-ups in priority order (strongest first)
+    if (this.powerUps.has("plasma_weapon")) return "PLASMA";
+    if (this.powerUps.has("lightning_weapon")) return "LIGHTNING";
+    if (this.powerUps.has("wave_weapon")) return "WAVE";
+    if (this.powerUps.has("fire_weapon")) return "FIRE";
+    if (this.powerUps.has("ice_weapon")) return "ICE";
+    return "STANDARD";
   }
 
   shoot() {
@@ -226,22 +243,29 @@ class Player extends Entity {
     const bullets = [];
     const centerX = this.x + this.width / 2;
     const topY = this.y;
+    const weaponType = this.currentWeaponType || "STANDARD";
 
-    // 🐛 DEBUG: Check multi-shot status
-    console.log(`🔫 SHOOTING - multiShotActive: ${this.multiShotActive}`);
+    // 🔫 Enhanced shooting with weapon types
+    console.log(
+      `🔫 SHOOTING - weapon: ${weaponType}, multiShot: ${this.multiShotActive}`
+    );
 
     if (this.multiShotActive) {
       // Multi-shot: 3 bullets in a spread pattern
-      console.log("🔫 Creating 3 bullets (multi-shot)");
-      bullets.push(new Bullet(centerX - 2, topY, 0, -CONFIG.GAME.BULLET.SPEED));
       bullets.push(
-        new Bullet(centerX - 8, topY, -1, -CONFIG.GAME.BULLET.SPEED)
+        new Bullet(centerX - 2, topY, 0, -CONFIG.GAME.BULLET.SPEED, weaponType)
       );
-      bullets.push(new Bullet(centerX + 6, topY, 1, -CONFIG.GAME.BULLET.SPEED));
+      bullets.push(
+        new Bullet(centerX - 8, topY, -1, -CONFIG.GAME.BULLET.SPEED, weaponType)
+      );
+      bullets.push(
+        new Bullet(centerX + 6, topY, 1, -CONFIG.GAME.BULLET.SPEED, weaponType)
+      );
     } else {
-      // Single shot
-      console.log("🔫 Creating 1 bullet (single shot)");
-      bullets.push(new Bullet(centerX - 2, topY, 0, -CONFIG.GAME.BULLET.SPEED));
+      // Single shot with current weapon type
+      bullets.push(
+        new Bullet(centerX - 2, topY, 0, -CONFIG.GAME.BULLET.SPEED, weaponType)
+      );
     }
 
     console.log(`🔫 Total bullets created: ${bullets.length}`);
@@ -496,15 +520,63 @@ class Player extends Entity {
   }
 }
 
-// Bullet Class
+// Enhanced Bullet Class with Multiple Types
 class Bullet extends Entity {
-  constructor(x, y, vx, vy, damage = CONFIG.GAME.BULLET.DAMAGE) {
+  constructor(x, y, vx, vy, bulletType = "STANDARD") {
     super(x, y, CONFIG.GAME.BULLET.WIDTH, CONFIG.GAME.BULLET.HEIGHT);
-    this.vx = vx;
-    this.vy = vy;
-    this.damage = damage;
+
+    // Get bullet configuration
+    this.bulletConfig =
+      CONFIG.GAME.BULLET_TYPES[bulletType] || CONFIG.GAME.BULLET_TYPES.STANDARD;
+    this.type = this.bulletConfig.type;
+
+    // Base movement
+    const speed = this.bulletConfig.speed;
+    this.baseVx = vx;
+    this.baseVy = vy;
+    this.vx = (vx / Math.abs(vy)) * speed;
+    this.vy = (vy / Math.abs(vy)) * speed;
+
+    // Bullet properties
+    this.damage = this.bulletConfig.damage;
+    this.piercing = this.bulletConfig.piercing;
+    this.splash = this.bulletConfig.splash;
+    this.effect = this.bulletConfig.effect;
+
+    // Visual properties
+    this.color = this.bulletConfig.color;
+    this.trailColor = this.bulletConfig.trailColor;
     this.trail = [];
-    this.maxTrailLength = 5;
+    this.maxTrailLength = 8;
+
+    // Special effect properties
+    this.startTime = Date.now();
+    this.originalX = x;
+    this.targetsHit = new Set(); // For piercing bullets
+
+    // Type-specific initialization
+    this.initializeSpecialEffects();
+  }
+
+  initializeSpecialEffects() {
+    switch (this.type) {
+      case "wave":
+        this.waveOffset = 0;
+        break;
+      case "lightning":
+        this.chainTargets = [];
+        this.hasChained = false;
+        break;
+      case "fire":
+        this.burnTargets = new Map(); // Track burn effects
+        break;
+      case "ice":
+        this.freezeTargets = new Map(); // Track freeze effects
+        break;
+      case "plasma":
+        this.pulsePhase = 0;
+        break;
+    }
   }
 
   update(deltaTime) {
@@ -514,6 +586,9 @@ class Bullet extends Entity {
       this.trail.shift();
     }
 
+    // Apply special movement patterns
+    this.updateSpecialMovement(deltaTime);
+
     super.update(deltaTime);
 
     // Deactivate if off screen
@@ -522,37 +597,171 @@ class Bullet extends Entity {
     }
   }
 
+  updateSpecialMovement(deltaTime) {
+    switch (this.type) {
+      case "wave":
+        // Wave bullet oscillates left and right
+        this.waveOffset += this.bulletConfig.frequency * deltaTime;
+        const waveX = Math.sin(this.waveOffset) * this.bulletConfig.amplitude;
+        this.x =
+          this.originalX + waveX + this.baseVx * (Date.now() - this.startTime);
+        break;
+
+      case "plasma":
+        // Plasma bullet pulses
+        this.pulsePhase += deltaTime * 0.01;
+        break;
+
+      // Other bullet types use standard movement
+    }
+  }
+
   render(ctx) {
-    // Render trail
+    // Render trail with bullet-specific color
     ctx.save();
     for (let i = 0; i < this.trail.length; i++) {
       const alpha = ((i + 1) / this.trail.length) * 0.5;
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = "#4444ff";
+      ctx.fillStyle = this.trailColor;
       ctx.fillRect(this.trail[i].x, this.trail[i].y, this.width, this.height);
     }
     ctx.restore();
 
-    // Render bullet
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    // Render bullet based on type
+    this.renderBulletType(ctx);
+  }
 
-    // Enhanced glowing effect to show wider hit area
+  renderBulletType(ctx) {
+    const centerX = this.x + this.width / 2;
+    const centerY = this.y + this.height / 2;
+
     ctx.save();
-    ctx.shadowColor = "#4fc3f7";
-    ctx.shadowBlur = 8; // Increased glow to hint at larger hit area
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    switch (this.type) {
+      case "lightning":
+        this.renderLightningBullet(ctx, centerX, centerY);
+        break;
+      case "fire":
+        this.renderFireBullet(ctx, centerX, centerY);
+        break;
+      case "wave":
+        this.renderWaveBullet(ctx, centerX, centerY);
+        break;
+      case "plasma":
+        this.renderPlasmaBullet(ctx, centerX, centerY);
+        break;
+      case "ice":
+        this.renderIceBullet(ctx, centerX, centerY);
+        break;
+      default:
+        this.renderStandardBullet(ctx, centerX, centerY);
+        break;
+    }
+
     ctx.restore();
+  }
 
-    // Subtle outer glow to indicate collision area
-    ctx.save();
-    ctx.globalAlpha = 0.3;
-    ctx.shadowColor = "#4fc3f7";
+  renderStandardBullet(ctx, centerX, centerY) {
+    // Standard bullet with glow
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+
+  renderLightningBullet(ctx, centerX, centerY) {
+    // Electric crackling effect
+    ctx.shadowColor = this.color;
     ctx.shadowBlur = 12;
-    ctx.fillStyle = "#4fc3f7";
-    ctx.fillRect(this.x - 2, this.y, this.width + 4, this.height);
-    ctx.restore();
+    ctx.fillStyle = this.color;
+
+    // Main bolt
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+
+    // Electric arcs
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      const angle = (Math.PI * 2 * i) / 3 + Date.now() * 0.01;
+      const arcX = centerX + Math.cos(angle) * 8;
+      const arcY = centerY + Math.sin(angle) * 8;
+      ctx.lineTo(arcX, arcY);
+      ctx.stroke();
+    }
+  }
+
+  renderFireBullet(ctx, centerX, centerY) {
+    // Fire effect with flickering
+    const flicker = Math.sin(Date.now() * 0.02) * 0.3 + 0.7;
+    ctx.shadowColor = "#ff4444";
+    ctx.shadowBlur = 15;
+    ctx.globalAlpha = flicker;
+
+    // Core
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+
+    // Outer flame
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+
+  renderWaveBullet(ctx, centerX, centerY) {
+    // Oscillating energy bullet
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 10;
+
+    // Pulsing size
+    const pulse = Math.sin(Date.now() * 0.01) * 0.2 + 1;
+    const size = Math.max(this.width, this.height) * pulse;
+
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  renderPlasmaBullet(ctx, centerX, centerY) {
+    // Plasma energy ball
+    const pulse = Math.sin(this.pulsePhase) * 0.3 + 1;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 20 * pulse;
+
+    // Core
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, (this.width / 4) * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Plasma shell
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, (this.width / 2) * pulse, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  renderIceBullet(ctx, centerX, centerY) {
+    // Ice crystal effect
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = this.color;
+
+    // Crystal shape
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - this.height / 2);
+    ctx.lineTo(centerX + this.width / 2, centerY);
+    ctx.lineTo(centerX, centerY + this.height / 2);
+    ctx.lineTo(centerX - this.width / 2, centerY);
+    ctx.closePath();
+    ctx.fill();
+
+    // Ice sparkles
+    ctx.fillStyle = "#ffffff";
+    ctx.globalAlpha = 0.8;
+    ctx.fillRect(centerX - 1, centerY - 1, 2, 2);
   }
 }
 

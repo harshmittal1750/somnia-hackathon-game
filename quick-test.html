@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Quick Wallet Test</title>
+    <style>
+      body {
+        font-family: Arial;
+        background: #222;
+        color: white;
+        padding: 20px;
+      }
+      button {
+        margin: 10px;
+        padding: 15px;
+        font-size: 16px;
+      }
+      .result {
+        margin: 10px 0;
+        padding: 10px;
+        background: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔧 Quick Wallet Connection Test</h1>
+
+    <div class="result" id="results">
+      <p>Loading...</p>
+    </div>
+
+    <script>
+      // Simple test to check if everything is working
+      function addResult(message, isSuccess = true) {
+        const div = document.getElementById("results");
+        const p = document.createElement("p");
+        p.style.color = isSuccess ? "#0f0" : "#f00";
+        p.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+        div.appendChild(p);
+        console.log(message);
+      }
+
+      // Check MetaMask
+      if (typeof window.ethereum !== "undefined") {
+        addResult("✅ MetaMask detected");
+      } else {
+        addResult("❌ MetaMask not detected", false);
+      }
+
+      // Add a simple connect button test
+      const button = document.createElement("button");
+      button.textContent = "🦊 Test MetaMask Connection";
+      button.onclick = async () => {
+        try {
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          addResult(`✅ Connected: ${accounts[0]}`);
+        } catch (error) {
+          addResult(`❌ Connection failed: ${error.message}`, false);
+        }
+      };
+      document.body.appendChild(button);
+
+      addResult("🚀 Test page loaded. Try the MetaMask button above.");
+    </script>
+  </body>
+</html>
+

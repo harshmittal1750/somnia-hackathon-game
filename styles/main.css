@@ -1145,6 +1145,103 @@ body::before {
   border-left: 4px solid #ff0000;
 }
 
+/* 🚰 Faucet Panel Styles */
+.faucet-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.faucet-btn {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  background: linear-gradient(145deg, #2a2a3a, #3a3a4a);
+  border: 2px solid #4a9eff;
+  border-radius: 10px;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.faucet-btn:hover {
+  background: linear-gradient(145deg, #3a3a4a, #4a4a5a);
+  border-color: #6bb6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+}
+
+.faucet-desc {
+  font-size: 0.9em;
+  color: #aaaaaa;
+  margin-top: 5px;
+}
+
+.faucet-info {
+  background: rgba(74, 158, 255, 0.1);
+  border: 1px solid rgba(74, 158, 255, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.faucet-info h3 {
+  color: #4a9eff;
+  margin-bottom: 15px;
+}
+
+.faucet-info ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.faucet-info li {
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.faucet-network-info {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.faucet-network-info h3 {
+  color: #ffd700;
+  margin-bottom: 15px;
+}
+
+.network-details {
+  display: grid;
+  gap: 10px;
+}
+
+.network-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.network-item:last-child {
+  border-bottom: none;
+}
+
+.network-item strong {
+  color: #ffd700;
+  min-width: 120px;
+}
+
+@media (min-width: 768px) {
+  .faucet-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
 /* Responsive Design Updates */
 @media (max-width: 768px) {
   .shop-grid {
@@ -1512,6 +1609,72 @@ body::before {
   flex-direction: column;
   gap: 10px;
   margin: 20px 0;
+}
+
+/* Advanced Connection Options */
+.advanced-connect-options {
+  margin: 15px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.connection-methods {
+  margin-bottom: 15px;
+}
+
+.connection-methods h4 {
+  margin-bottom: 15px;
+  color: #00ffff;
+  text-align: center;
+}
+
+.btn-connector {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 12px;
+  background: linear-gradient(145deg, #2a2a4a, #1a1a3a);
+  border: 2px solid rgba(0, 255, 255, 0.5);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-family: "Orbitron", monospace;
+  font-weight: 600;
+}
+
+.btn-connector:hover {
+  background: linear-gradient(145deg, #3a3a5a, #2a2a4a);
+  border-color: #00ffff;
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-connector:active {
+  transform: translateY(0);
+}
+
+.connection-note {
+  font-size: 0.9em;
+  color: #cccccc;
+  text-align: center;
+  margin-top: 10px;
+  font-style: italic;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid rgba(0, 255, 255, 0.5);
+  color: #00ffff;
+}
+
+.btn-outline:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: #00ffff;
+  color: #fff;
 }
 
 .wallet-download-options {

@@ -72,6 +72,14 @@ class GameEngine {
     this.screenShake = 0;
     this.backgroundOffset = 0;
 
+    // 🌌 Space Transition Effects
+    this.isTransitioning = false;
+    this.transitionProgress = 0;
+    this.transitionType = "none";
+    this.spaceAmbientParticles = [];
+    this.levelTheme = "nebula"; // nebula, asteroid, deep_space, void, galaxy
+    this.transitionCallback = null;
+
     // Visual effects for UI feedback
     this.floatingTexts = [];
     this.comboCounter = 0;
@@ -98,11 +106,15 @@ class GameEngine {
     this.setupEventListeners();
 
     // Load high score - use cached value from GameApp if available
-    this.highScore = window.gameApp?.cachedHighScore || web3Manager.getHighScore();
+    this.highScore =
+      window.gameApp?.cachedHighScore || web3Manager.getHighScore();
     this.updateUI();
 
     // Initialize first level
     this.initLevel(1);
+
+    // 🌌 Initialize space theme for level 1
+    this.levelTheme = this.getLevelTheme(1);
 
     console.log("✅ Game Engine Initialized");
   }
@@ -273,6 +285,7 @@ class GameEngine {
 
   startGame(startLevel = 1) {
     this.gameState = GAME_STATES.PLAYING;
+    this.isPaused = false; // 🔧 Fix: Ensure game is not paused when restarting
     this.gameStartTime = Date.now();
 
     // 🛡️ Initialize game session for anti-cheat
@@ -312,8 +325,14 @@ class GameEngine {
     this.lastTime = performance.now();
     this.gameLoop();
 
-    // Start dynamic music system
+    // Reset and start dynamic music system
+    this.currentMusicTrack = null; // 🔧 Fix: Reset music track to ensure it plays after restart
+    this.musicIntensity = 0;
     this.switchMusicTrack(0); // Start with calm music
+
+    // 🌌 Initialize space ambience for the starting level
+    this.levelTheme = this.getLevelTheme(startLevel);
+    this.generateAmbientParticles();
 
     // Update mobile controls visibility
     this.updateMobileControlsVisibility();
@@ -383,12 +402,16 @@ class GameEngine {
   }
 
   async update(deltaTime) {
+    // 🌌 Slow down game during space transitions for better visibility
+    const transitionSlowDown = this.isTransitioning ? 0.3 : 1.0;
+    const adjustedDeltaTime = deltaTime * transitionSlowDown;
+
     // Handle input
     this.handlePlayerInput();
 
     // Update player
     if (this.player) {
-      this.player.update(deltaTime);
+      this.player.update(adjustedDeltaTime);
 
       // Check if player died
       if (this.player.health <= 0) {
@@ -398,16 +421,22 @@ class GameEngine {
     }
 
     // Update bullets
-    this.updateBullets(deltaTime);
+    this.updateBullets(adjustedDeltaTime);
 
     // Update aliens
-    this.updateAliens(deltaTime);
+    this.updateAliens(adjustedDeltaTime);
 
     // Update power-ups
-    this.updatePowerUps(deltaTime);
+    this.updatePowerUps(adjustedDeltaTime);
 
     // Update particles
-    this.updateParticles(deltaTime);
+    this.updateParticles(adjustedDeltaTime);
+
+    // 🌌 Update space transition effects (use original deltaTime)
+    this.updateSpaceTransition(deltaTime);
+
+    // Update floating texts (use original deltaTime)
+    this.updateFloatingTexts(deltaTime);
 
     // Spawn aliens
     this.updateAlienSpawning(deltaTime);
@@ -515,32 +544,19 @@ class GameEngine {
         const alien = this.aliens[j];
         if (!alien.active) continue;
 
-        if (bullet.collidesWithEnhanced(alien, CONFIG.GAME.BULLET.COLLISION_PADDING)) {
-          // Damage alien
-          const destroyed = alien.takeDamage(bullet.damage);
-          bullet.active = false;
+        if (
+          bullet.collidesWithEnhanced(
+            alien,
+            CONFIG.GAME.BULLET.COLLISION_PADDING
+          )
+        ) {
+          // Handle special bullet effects
+          this.handleBulletHit(bullet, alien, i, j);
 
-          if (destroyed) {
-            this.handleAlienDestroyed(alien);
-          } else {
-            // Just damaged - show hit effect
-            const hitParticles = ExplosionEffect.createHitEffect(
-              alien.x + alien.width / 2,
-              alien.y + alien.height / 2
-            );
-            this.particles.push(...hitParticles);
-
-            // Show damage indicator
-            this.addFloatingText(
-              alien.x + alien.width / 2,
-              alien.y,
-              "-1",
-              "#ff4444",
-              800
-            );
+          // For non-piercing bullets, break after first hit
+          if (!bullet.piercing) {
+            break;
           }
-
-          break;
         }
       }
     }
@@ -597,6 +613,213 @@ class GameEngine {
         }
       }
     }
+  }
+
+  // 🔫 Enhanced Bullet Hit Handling
+  handleBulletHit(bullet, alien, bulletIndex, alienIndex) {
+    // Skip if already hit by this bullet (for piercing bullets)
+    if (bullet.targetsHit && bullet.targetsHit.has(alien)) {
+      return;
+    }
+
+    // Mark alien as hit by this bullet
+    if (bullet.targetsHit) {
+      bullet.targetsHit.add(alien);
+    }
+
+    // Apply damage
+    const destroyed = alien.takeDamage(bullet.damage);
+
+    // Handle special bullet effects
+    this.applyBulletEffect(bullet, alien);
+
+    // Deactivate bullet if not piercing
+    if (!bullet.piercing) {
+      bullet.active = false;
+    }
+
+    if (destroyed) {
+      this.handleAlienDestroyed(alien);
+    } else {
+      // Show hit effect
+      const hitParticles = ExplosionEffect.createHitEffect(
+        alien.x + alien.width / 2,
+        alien.y + alien.height / 2
+      );
+      this.particles.push(...hitParticles);
+
+      // Show damage indicator
+      this.addFloatingText(
+        alien.x + alien.width / 2,
+        alien.y,
+        `-${bullet.damage}`,
+        bullet.color,
+        800
+      );
+    }
+  }
+
+  applyBulletEffect(bullet, hitAlien) {
+    switch (bullet.effect) {
+      case "chain":
+        this.handleLightningChain(bullet, hitAlien);
+        break;
+      case "burn":
+        this.applyBurnEffect(hitAlien, bullet);
+        break;
+      case "freeze":
+        this.applyFreezeEffect(hitAlien, bullet);
+        break;
+      case "plasma":
+        this.applyPlasmaExplosion(bullet, hitAlien);
+        break;
+      case "none":
+      default:
+        // Standard bullet, no special effect
+        break;
+    }
+
+    // Handle splash damage
+    if (bullet.splash) {
+      this.applySplashDamage(bullet, hitAlien);
+    }
+  }
+
+  handleLightningChain(bullet, startAlien) {
+    if (bullet.hasChained) return;
+
+    bullet.hasChained = true;
+    const chainRange = bullet.bulletConfig.chainRange || 80;
+    const maxChains = bullet.bulletConfig.maxChains || 3;
+    let chainCount = 0;
+    let currentTarget = startAlien;
+
+    const chainedTargets = new Set([startAlien]);
+
+    while (chainCount < maxChains) {
+      let nearestAlien = null;
+      let nearestDistance = chainRange;
+
+      // Find nearest unchained alien
+      for (const alien of this.aliens) {
+        if (!alien.active || chainedTargets.has(alien)) continue;
+
+        const distance = UTILS.distance(
+          currentTarget.x + currentTarget.width / 2,
+          currentTarget.y + currentTarget.height / 2,
+          alien.x + alien.width / 2,
+          alien.y + alien.height / 2
+        );
+
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestAlien = alien;
+        }
+      }
+
+      if (!nearestAlien) break;
+
+      // Create lightning arc effect
+      this.createLightningArc(currentTarget, nearestAlien);
+
+      // Damage chained alien
+      const destroyed = nearestAlien.takeDamage(bullet.damage);
+      chainedTargets.add(nearestAlien);
+
+      if (destroyed) {
+        this.handleAlienDestroyed(nearestAlien);
+      }
+
+      currentTarget = nearestAlien;
+      chainCount++;
+    }
+  }
+
+  createLightningArc(fromAlien, toAlien) {
+    // Create visual lightning effect between aliens
+    const arcParticles = ExplosionEffect.create(
+      (fromAlien.x + toAlien.x) / 2,
+      (fromAlien.y + toAlien.y) / 2,
+      "LIGHTNING_ARC"
+    );
+    this.particles.push(...arcParticles);
+  }
+
+  applyBurnEffect(alien, bullet) {
+    // Apply damage over time effect
+    if (!alien.statusEffects) alien.statusEffects = {};
+
+    alien.statusEffects.burn = {
+      damage: bullet.bulletConfig.burnDamage || 0.5,
+      duration: bullet.bulletConfig.burnDuration || 3000,
+      interval: 500, // Damage every 500ms
+      lastTick: Date.now(),
+    };
+  }
+
+  applyFreezeEffect(alien, bullet) {
+    // Apply slow effect
+    if (!alien.statusEffects) alien.statusEffects = {};
+
+    alien.statusEffects.freeze = {
+      slowFactor: bullet.bulletConfig.slowFactor || 0.5,
+      duration: bullet.bulletConfig.slowDuration || 2000,
+      startTime: Date.now(),
+    };
+  }
+
+  applyPlasmaExplosion(bullet, hitAlien) {
+    // Create energy pulse explosion
+    const pulseParticles = ExplosionEffect.create(
+      hitAlien.x + hitAlien.width / 2,
+      hitAlien.y + hitAlien.height / 2,
+      "PLASMA_EXPLOSION"
+    );
+    this.particles.push(...pulseParticles);
+    this.addScreenShake(8);
+  }
+
+  applySplashDamage(bullet, centerAlien) {
+    const splashRadius = bullet.bulletConfig.splashRadius || 40;
+    const centerX = centerAlien.x + centerAlien.width / 2;
+    const centerY = centerAlien.y + centerAlien.height / 2;
+
+    for (const alien of this.aliens) {
+      if (!alien.active || alien === centerAlien) continue;
+
+      const distance = UTILS.distance(
+        centerX,
+        centerY,
+        alien.x + alien.width / 2,
+        alien.y + alien.height / 2
+      );
+
+      if (distance <= splashRadius) {
+        const splashDamage = Math.max(1, Math.floor(bullet.damage * 0.5));
+        const destroyed = alien.takeDamage(splashDamage);
+
+        // Visual splash effect
+        this.addFloatingText(
+          alien.x + alien.width / 2,
+          alien.y,
+          `-${splashDamage}`,
+          bullet.color,
+          600
+        );
+
+        if (destroyed) {
+          this.handleAlienDestroyed(alien);
+        }
+      }
+    }
+
+    // Create splash explosion effect
+    const splashParticles = ExplosionEffect.create(
+      centerX,
+      centerY,
+      "SPLASH_EXPLOSION"
+    );
+    this.particles.push(...splashParticles);
   }
 
   handleAlienDestroyed(alien) {
@@ -744,10 +967,12 @@ class GameEngine {
     const aliensNeededForNextLevel = this.level * 10;
     if (this.aliensKilled >= aliensNeededForNextLevel && this.level < 10) {
       this.level++;
-      this.initLevel(this.level);
 
-      // Show level up notification
-      this.showLevelUpNotification();
+      // 🌌 Start space transition effect
+      this.startSpaceTransition(() => {
+        this.initLevel(this.level);
+        this.showLevelUpNotification();
+      });
     }
   }
 
@@ -935,11 +1160,20 @@ class GameEngine {
     // Render background
     this.renderBackground();
 
+    // 🌌 Render space ambient effects
+    this.renderSpaceAmbience();
+
+    // 🌌 Render space transition effects
+    this.renderSpaceTransition();
+
     // Render game entities
     this.renderEntities();
 
     // Render UI overlays
     this.renderGameUI();
+
+    // 🌌 Render floating texts (on top of everything)
+    this.renderFloatingTexts();
 
     // Restore screen shake
     if (this.screenShake > 0) {
@@ -953,19 +1187,39 @@ class GameEngine {
   }
 
   renderBackground() {
-    // Space background with moving stars
-    this.ctx.fillStyle = "rgba(0, 5, 20, 0.1)";
+    // Dynamic space background based on level theme
+    const themeColors = {
+      nebula: "rgba(25, 5, 40, 0.1)", // Purple nebula
+      asteroid: "rgba(40, 25, 5, 0.1)", // Brown asteroid field
+      deep_space: "rgba(0, 5, 20, 0.1)", // Deep blue space
+      void: "rgba(5, 0, 10, 0.1)", // Dark void
+      galaxy: "rgba(20, 10, 30, 0.1)", // Galaxy purple
+    };
+
+    this.ctx.fillStyle =
+      themeColors[this.levelTheme] || themeColors["deep_space"];
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Moving star field
-    this.ctx.fillStyle = "#ffffff";
+    // Moving star field with theme-appropriate colors
+    const starColors = {
+      nebula: ["#FFB6C1", "#DDA0DD", "#98FB98"],
+      asteroid: ["#F4A460", "#CD853F", "#DEB887"],
+      deep_space: ["#FFFFFF", "#87CEEB", "#B0C4DE"],
+      void: ["#8A2BE2", "#4B0082", "#483D8B"],
+      galaxy: ["#FFD700", "#FFA500", "#FF6347"],
+    };
+
+    const colors = starColors[this.levelTheme] || starColors["deep_space"];
+
     for (let i = 0; i < 50; i++) {
       const x = (i * 37) % this.canvas.width;
       const y =
         (i * 23 + this.backgroundOffset * (1 + (i % 3))) % this.canvas.height;
       const alpha = 0.3 + (i % 3) * 0.3;
+      const colorIndex = i % colors.length;
 
       this.ctx.globalAlpha = alpha;
+      this.ctx.fillStyle = colors[colorIndex];
       this.ctx.fillRect(x, y, 1, 1);
     }
     this.ctx.globalAlpha = 1;
@@ -1121,6 +1375,208 @@ class GameEngine {
     );
   }
 
+  // 🌌 Space Ambience Rendering
+  renderSpaceAmbience() {
+    // Render ambient space particles
+    this.spaceAmbientParticles.forEach((particle) => {
+      if (particle.life <= 0) return;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = particle.alpha;
+      this.ctx.fillStyle = particle.color;
+
+      // Add twinkling effect for ambient particles
+      if (particle.twinkle !== undefined) {
+        particle.twinkle += 0.05;
+        const twinkleAlpha = (Math.sin(particle.twinkle) + 1) * 0.5;
+        this.ctx.globalAlpha *= twinkleAlpha;
+      }
+
+      // Scale particle if needed
+      if (particle.scale !== 1) {
+        this.ctx.translate(particle.x, particle.y);
+        this.ctx.scale(particle.scale, particle.scale);
+        this.ctx.translate(-particle.x, -particle.y);
+      }
+
+      // Render as a glowing dot
+      this.ctx.beginPath();
+      this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Add glow effect for larger particles
+      if (particle.size > 2) {
+        this.ctx.globalAlpha *= 0.3;
+        this.ctx.beginPath();
+        this.ctx.arc(particle.x, particle.y, particle.size * 2, 0, Math.PI * 2);
+        this.ctx.fill();
+      }
+
+      this.ctx.restore();
+    });
+  }
+
+  renderSpaceTransition() {
+    if (!this.isTransitioning) return;
+
+    // Render transition overlay
+    this.ctx.save();
+
+    // Create transition effect based on type
+    if (this.transitionType === "warp") {
+      this.renderWarpTransition();
+    } else if (this.transitionType === "fold") {
+      this.renderFoldTransition();
+    } else if (this.transitionType === "rift") {
+      this.renderRiftTransition();
+    } else if (this.transitionType === "quantum") {
+      this.renderQuantumTransition();
+    } else {
+      this.renderFadeTransition();
+    }
+
+    this.ctx.restore();
+  }
+
+  renderWarpTransition() {
+    // Warp speed effect with streaking particles
+    this.spaceAmbientParticles.forEach((particle) => {
+      if (particle.life <= 0) return;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = particle.alpha * 0.8;
+      this.ctx.strokeStyle = particle.color;
+      this.ctx.lineWidth = particle.size;
+
+      // Draw motion trails
+      this.ctx.beginPath();
+      this.ctx.moveTo(particle.x, particle.y);
+      this.ctx.lineTo(
+        particle.x - particle.vx * 20,
+        particle.y - particle.vy * 20
+      );
+      this.ctx.stroke();
+
+      this.ctx.restore();
+    });
+  }
+
+  renderFoldTransition() {
+    // Space folding effect with ripples
+    const centerX = CONFIG.GAME.CANVAS_WIDTH / 2;
+    const centerY = CONFIG.GAME.CANVAS_HEIGHT / 2;
+    const maxRadius = Math.max(
+      CONFIG.GAME.CANVAS_WIDTH,
+      CONFIG.GAME.CANVAS_HEIGHT
+    );
+
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.3;
+    this.ctx.strokeStyle = this.getTransitionColor();
+    this.ctx.lineWidth = 2;
+
+    // Draw concentric ripples
+    for (let i = 0; i < 8; i++) {
+      const radius = (this.transitionProgress * maxRadius + i * 80) % maxRadius;
+      const alpha = 1 - radius / maxRadius;
+      this.ctx.globalAlpha = alpha * 0.5; // Fade out as ripples expand
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+  }
+
+  renderRiftTransition() {
+    // Dimensional rift effect
+    const centerX = CONFIG.GAME.CANVAS_WIDTH / 2;
+    const centerY = CONFIG.GAME.CANVAS_HEIGHT / 2;
+
+    this.ctx.save();
+    this.ctx.globalAlpha = 0.6;
+
+    // Create jagged rift
+    this.ctx.strokeStyle = this.getTransitionColor();
+    this.ctx.lineWidth = 3;
+    this.ctx.beginPath();
+
+    const riftLength = this.transitionProgress * CONFIG.GAME.CANVAS_HEIGHT;
+    const segments = 10;
+
+    for (let i = 0; i <= segments; i++) {
+      const y = centerY - riftLength / 2 + (i / segments) * riftLength;
+      const x = centerX + Math.sin(i * 0.5 + this.transitionProgress * 10) * 20;
+
+      if (i === 0) {
+        this.ctx.moveTo(x, y);
+      } else {
+        this.ctx.lineTo(x, y);
+      }
+    }
+
+    this.ctx.stroke();
+    this.ctx.restore();
+  }
+
+  renderQuantumTransition() {
+    // Quantum tunnel effect
+    const centerX = CONFIG.GAME.CANVAS_WIDTH / 2;
+    const centerY = CONFIG.GAME.CANVAS_HEIGHT / 2;
+
+    this.ctx.save();
+
+    // Create tunnel effect with multiple circles
+    for (let i = 0; i < 8; i++) {
+      const progress = (this.transitionProgress + i * 0.1) % 1;
+      const radius = progress * 200;
+      const alpha = (1 - progress) * 0.5;
+
+      this.ctx.globalAlpha = alpha;
+      this.ctx.strokeStyle = this.getTransitionColor();
+      this.ctx.lineWidth = 2;
+      this.ctx.beginPath();
+      this.ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+  }
+
+  renderFadeTransition() {
+    // Simple fade effect
+    this.ctx.save();
+    this.ctx.globalAlpha = Math.sin(this.transitionProgress * Math.PI) * 0.3;
+    this.ctx.fillStyle = this.getTransitionColor();
+    this.ctx.fillRect(
+      0,
+      0,
+      CONFIG.GAME.CANVAS_WIDTH,
+      CONFIG.GAME.CANVAS_HEIGHT
+    );
+    this.ctx.restore();
+  }
+
+  renderFloatingTexts() {
+    this.floatingTexts.forEach((text) => {
+      if (text.life <= 0) return;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = text.alpha;
+      this.ctx.fillStyle = text.color;
+      this.ctx.font = "bold 24px Arial";
+      this.ctx.textAlign = "center";
+      this.ctx.textBaseline = "middle";
+
+      // Add glow effect
+      this.ctx.shadowColor = text.color;
+      this.ctx.shadowBlur = 10;
+
+      this.ctx.fillText(text.text, text.x, text.y);
+      this.ctx.restore();
+    });
+  }
+
   updateFPS(deltaTime) {
     this.frameCount++;
     this.fpsUpdateTime += deltaTime;
@@ -1149,7 +1605,7 @@ class GameEngine {
         gameEngineHighScore: this.highScore,
         cachedHighScore: window.gameApp?.cachedHighScore,
         finalDisplayed: currentHighScore,
-        formatted: UTILS.formatScore(currentHighScore)
+        formatted: UTILS.formatScore(currentHighScore),
       });
     }
   }
@@ -1264,8 +1720,212 @@ class GameEngine {
   }
 
   showLevelUpNotification() {
-    // You can implement a toast notification here
+    // Enhanced level up notification with space theme
+    const spaceRegionName = this.getSpaceRegionName(this.level);
     console.log(`🎉 Level Up! Welcome to ${this.currentLevelConfig.name}`);
+    console.log(`🌌 Entering ${spaceRegionName}`);
+
+    // Add floating text effect with longer duration
+    this.addFloatingText(
+      CONFIG.GAME.CANVAS_WIDTH / 2,
+      CONFIG.GAME.CANVAS_HEIGHT / 2 - 50,
+      `LEVEL ${this.level}: ${this.currentLevelConfig.name}`,
+      "#FFD700",
+      4000 // Increased from 2000ms to 4000ms
+    );
+
+    this.addFloatingText(
+      CONFIG.GAME.CANVAS_WIDTH / 2,
+      CONFIG.GAME.CANVAS_HEIGHT / 2 - 20,
+      `Entering ${spaceRegionName}`,
+      "#87CEEB",
+      3500 // Increased from 1500ms to 3500ms
+    );
+  }
+
+  // 🌌 Space Transition Effects
+  startSpaceTransition(callback) {
+    if (this.isTransitioning) return;
+
+    this.isTransitioning = true;
+    this.transitionProgress = 0;
+    this.transitionType = this.getTransitionType(this.level);
+    this.transitionCallback = callback;
+    this.levelTheme = this.getLevelTheme(this.level);
+
+    // Generate transition particles
+    this.generateTransitionParticles();
+
+    console.log(
+      `🌌 Starting ${this.transitionType} transition to ${this.levelTheme} space`
+    );
+    console.log("⏱️ Transition will last ~5 seconds with slowed gameplay");
+  }
+
+  updateSpaceTransition(deltaTime) {
+    if (!this.isTransitioning) return;
+
+    this.transitionProgress += deltaTime * 0.0008; // 5 second transition (slower for visibility)
+
+    // Update transition particles
+    this.spaceAmbientParticles.forEach((particle) => {
+      particle.x += particle.vx * deltaTime;
+      particle.y += particle.vy * deltaTime;
+      particle.life -= deltaTime;
+      particle.alpha = Math.max(0, particle.life / particle.maxLife);
+
+      // Apply transition-specific effects
+      if (this.transitionType === "warp") {
+        particle.vx *= 1.05; // Slower acceleration for warp effect
+        particle.vy *= 1.05;
+      } else if (this.transitionType === "fold") {
+        particle.scale = 1 + Math.sin(particle.life * 0.005) * 0.3; // Slower pulsing
+      }
+    });
+
+    // Remove dead particles
+    this.spaceAmbientParticles = this.spaceAmbientParticles.filter(
+      (p) => p.life > 0
+    );
+
+    // Complete transition
+    if (this.transitionProgress >= 1) {
+      this.completeSpaceTransition();
+    }
+  }
+
+  completeSpaceTransition() {
+    this.isTransitioning = false;
+    this.transitionProgress = 0;
+
+    // Execute callback (level initialization)
+    if (this.transitionCallback) {
+      this.transitionCallback();
+      this.transitionCallback = null;
+    }
+
+    // Generate ambient particles for new space region
+    this.generateAmbientParticles();
+  }
+
+  generateTransitionParticles() {
+    this.spaceAmbientParticles = [];
+    const particleCount = 50;
+
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.PI * 2 * i) / particleCount;
+      const distance = UTILS.randomFloat(100, 300);
+      const speed = UTILS.randomFloat(0.5, 2);
+
+      this.spaceAmbientParticles.push({
+        x: CONFIG.GAME.CANVAS_WIDTH / 2 + Math.cos(angle) * distance,
+        y: CONFIG.GAME.CANVAS_HEIGHT / 2 + Math.sin(angle) * distance,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 5000, // Extended for longer visibility
+        maxLife: 5000,
+        alpha: 1,
+        color: this.getTransitionColor(),
+        size: UTILS.randomFloat(2, 6),
+        scale: 1,
+      });
+    }
+  }
+
+  generateAmbientParticles() {
+    // Add fewer, longer-lasting ambient particles for atmosphere
+    const ambientCount = 20;
+
+    for (let i = 0; i < ambientCount; i++) {
+      this.spaceAmbientParticles.push({
+        x: UTILS.randomFloat(0, CONFIG.GAME.CANVAS_WIDTH),
+        y: UTILS.randomFloat(0, CONFIG.GAME.CANVAS_HEIGHT),
+        vx: UTILS.randomFloat(-0.2, 0.2),
+        vy: UTILS.randomFloat(-0.2, 0.2),
+        life: UTILS.randomFloat(5000, 10000),
+        maxLife: UTILS.randomFloat(5000, 10000),
+        alpha: UTILS.randomFloat(0.3, 0.7),
+        color: this.getAmbientColor(),
+        size: UTILS.randomFloat(1, 3),
+        scale: 1,
+        twinkle: UTILS.randomFloat(0, Math.PI * 2),
+      });
+    }
+  }
+
+  getTransitionType(level) {
+    if (level <= 2) return "fade";
+    if (level <= 4) return "warp";
+    if (level <= 6) return "fold";
+    if (level <= 8) return "rift";
+    return "quantum";
+  }
+
+  getLevelTheme(level) {
+    if (level <= 2) return "nebula";
+    if (level <= 4) return "asteroid";
+    if (level <= 6) return "deep_space";
+    if (level <= 8) return "void";
+    return "galaxy";
+  }
+
+  getSpaceRegionName(level) {
+    const themes = {
+      nebula: "Stellar Nursery",
+      asteroid: "Asteroid Fields",
+      deep_space: "Deep Space Sector",
+      void: "The Dark Void",
+      galaxy: "Galactic Core",
+    };
+    return themes[this.getLevelTheme(level)] || "Unknown Space";
+  }
+
+  getTransitionColor() {
+    const colors = {
+      fade: "#87CEEB",
+      warp: "#00FFFF",
+      fold: "#9370DB",
+      rift: "#FF6347",
+      quantum: "#FFD700",
+    };
+    return colors[this.transitionType] || "#FFFFFF";
+  }
+
+  getAmbientColor() {
+    const colors = {
+      nebula: "#FF69B4",
+      asteroid: "#CD853F",
+      deep_space: "#191970",
+      void: "#4B0082",
+      galaxy: "#FFD700",
+    };
+    return colors[this.levelTheme] || "#FFFFFF";
+  }
+
+  addFloatingText(x, y, text, color = "#FFFFFF", duration = 1000) {
+    this.floatingTexts.push({
+      x,
+      y,
+      text,
+      color,
+      life: duration,
+      maxLife: duration,
+      alpha: 1,
+      vx: 0,
+      vy: -0.2, // Slower upward drift for better readability
+    });
+  }
+
+  updateFloatingTexts(deltaTime) {
+    this.floatingTexts.forEach((text) => {
+      text.x += text.vx * deltaTime;
+      text.y += text.vy * deltaTime;
+      text.life -= deltaTime;
+      text.alpha = Math.max(0, text.life / text.maxLife);
+    });
+
+    // Remove expired texts
+    this.floatingTexts = this.floatingTexts.filter((text) => text.life > 0);
   }
 
   // Audio methods

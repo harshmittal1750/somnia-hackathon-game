@@ -193,7 +193,7 @@ CONTRACTS: {
 ### Add Somnia Network to MetaMask
 
 - **Network Name**: Somnia Testnet
-- **RPC URL**: `https://testnet.somnia.network/rpc`
+- **RPC URL**: `https://dream-rpc.somnia.network/rpc`
 - **Chain ID**: `31337` (0x7A69)
 - **Currency Symbol**: SOM
 - **Block Explorer**: `https://testnet.somniaexplorer.com`
