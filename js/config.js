@@ -19,7 +19,7 @@ const CONFIG = {
 
   // Smart Contract Addresses (Deployed on Somnia Testnet)
   CONTRACTS: {
-    GAME_SCORE: "0x4912aFEA272C0283FDe9804480422a8046EC1908", // 🛡️ MINIMAL SSD REWARDS CONTRACT!
+    GAME_SCORE: "0x4AB51147CB615DF6630BD91b3a6dCfe5BbEe1041", // 🛡️ MINIMAL SSD REWARDS CONTRACT!
     SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SSD Token Contract ✅
   },
 
@@ -60,10 +60,11 @@ const CONFIG = {
 
     // Bullet Settings
     BULLET: {
-      WIDTH: 4,
+      WIDTH: 8, // Increased from 4 to 8 for easier hitting
       HEIGHT: 12,
       SPEED: 12, // faster bullets
       DAMAGE: 1,
+      COLLISION_PADDING: 6, // Extra pixels for forgiving hit detection
     },
 
     // Alien Settings
@@ -159,7 +160,7 @@ const CONFIG = {
       },
     },
 
-    // Alien Types
+    // Alien Types - Enhanced with More Varieties
     ALIEN_TYPES: {
       BASIC: {
         speed: 0.1,
@@ -167,6 +168,7 @@ const CONFIG = {
         points: 10,
         color: "#ff4444",
         pattern: "straight",
+        abilities: [],
       },
       FAST: {
         speed: 2,
@@ -174,6 +176,7 @@ const CONFIG = {
         points: 20,
         color: "#44ff44",
         pattern: "zigzag",
+        abilities: ["dodge"],
       },
       TANK: {
         speed: 0.5,
@@ -181,6 +184,7 @@ const CONFIG = {
         points: 30,
         color: "#4444ff",
         pattern: "straight",
+        abilities: ["armor"],
       },
       BOSS: {
         speed: 0.8,
@@ -188,10 +192,168 @@ const CONFIG = {
         points: 100,
         color: "#ff44ff",
         pattern: "circle",
+        abilities: ["regenerate"],
+      },
+      // 👾 New Alien Types
+      SWARM: {
+        speed: 1.5,
+        health: 1,
+        points: 15,
+        color: "#ffff44",
+        pattern: "swarm", // Moves in groups
+        abilities: ["group_behavior"],
+        spawnCount: 3, // Spawns in groups of 3
+      },
+      STEALTH: {
+        speed: 1.2,
+        health: 2,
+        points: 40,
+        color: "#8844ff",
+        pattern: "phase", // Phases in/out of visibility
+        abilities: ["stealth", "phase"],
+        stealthCooldown: 3000,
+        stealthDuration: 1500,
+      },
+      BERSERKER: {
+        speed: 0.3,
+        health: 4,
+        points: 50,
+        color: "#ff8844",
+        pattern: "charge", // Accelerates when damaged
+        abilities: ["rage", "charge"],
+        rageMultiplier: 1.5,
+        chargeThreshold: 0.5, // Charges when <50% health
+      },
+      SHIELDED: {
+        speed: 0.7,
+        health: 2,
+        points: 35,
+        color: "#44ffff",
+        pattern: "defensive",
+        abilities: ["energy_shield"],
+        shieldHealth: 2,
+        shieldRegenDelay: 4000,
+      },
+      SPLITTER: {
+        speed: 0.8,
+        health: 2,
+        points: 25,
+        color: "#ff44aa",
+        pattern: "split", // Splits into smaller aliens when killed
+        abilities: ["split_on_death"],
+        splitCount: 2,
+        splitType: "BASIC",
+      },
+      BOMBER: {
+        speed: 1.0,
+        health: 1,
+        points: 30,
+        color: "#ffaa44",
+        pattern: "kamikaze", // Explodes when reaching player
+        abilities: ["explosive_death"],
+        explosionRadius: 50,
+        explosionDamage: 2,
+      },
+      HEALER: {
+        speed: 0.6,
+        health: 3,
+        points: 60,
+        color: "#44ff88",
+        pattern: "support", // Heals nearby aliens
+        abilities: ["heal_others"],
+        healRange: 80,
+        healAmount: 1,
+        healCooldown: 2000,
+      },
+      MEGA_BOSS: {
+        speed: 0.4,
+        health: 15,
+        points: 500,
+        color: "#ff0088",
+        pattern: "mega", // Multiple attack patterns
+        abilities: ["multi_phase", "spawn_minions", "area_attack"],
+        phases: 3,
+        minionSpawnRate: 5000,
       },
     },
 
-    // Power-up Types
+    // Bullet Types - Enhanced Weapon System
+    BULLET_TYPES: {
+      STANDARD: {
+        type: "standard",
+        color: "#ffffff",
+        trailColor: "#4444ff",
+        damage: 1,
+        speed: 12,
+        piercing: false,
+        splash: false,
+        effect: "none",
+      },
+      LIGHTNING: {
+        type: "lightning",
+        color: "#00ffff",
+        trailColor: "#8888ff",
+        damage: 2,
+        speed: 15,
+        piercing: true, // Can hit multiple enemies
+        splash: false,
+        effect: "chain", // Chains between nearby enemies
+        chainRange: 80,
+        maxChains: 3,
+      },
+      FIRE: {
+        type: "fire",
+        color: "#ff4444",
+        trailColor: "#ff8844",
+        damage: 1,
+        speed: 10,
+        piercing: false,
+        splash: true, // Area damage
+        effect: "burn", // Damage over time
+        splashRadius: 40,
+        burnDuration: 3000,
+        burnDamage: 0.5,
+      },
+      WAVE: {
+        type: "wave",
+        color: "#44ff44",
+        trailColor: "#88ff88",
+        damage: 3,
+        speed: 8,
+        piercing: true,
+        splash: false,
+        effect: "wave", // Oscillating movement
+        amplitude: 30,
+        frequency: 0.01,
+      },
+      PLASMA: {
+        type: "plasma",
+        color: "#ff44ff",
+        trailColor: "#ff88ff",
+        damage: 4,
+        speed: 14,
+        piercing: false,
+        splash: true,
+        effect: "plasma", // Energy burst
+        splashRadius: 60,
+        energyPulse: true,
+      },
+      ICE: {
+        type: "ice",
+        color: "#88ffff",
+        trailColor: "#bbffff",
+        damage: 1,
+        speed: 9,
+        piercing: false,
+        splash: true,
+        effect: "freeze", // Slows enemies
+        splashRadius: 35,
+        slowDuration: 2000,
+        slowFactor: 0.5,
+      },
+    },
+
+    // Power-up Types - Enhanced with Weapon Upgrades
     POWERUP_TYPES: {
       RAPID_FIRE: {
         type: "rapid_fire",
@@ -217,9 +379,40 @@ const CONFIG = {
         effect: "Health Boost",
         duration: 0, // Instant effect
       },
+      // 🔫 New Weapon Power-ups
+      LIGHTNING_WEAPON: {
+        type: "lightning_weapon",
+        color: "#00ffff",
+        effect: "Lightning Bullets",
+        duration: 8000,
+      },
+      FIRE_WEAPON: {
+        type: "fire_weapon",
+        color: "#ff4444",
+        effect: "Fire Bullets",
+        duration: 8000,
+      },
+      WAVE_WEAPON: {
+        type: "wave_weapon",
+        color: "#44ff44",
+        effect: "Wave Bullets",
+        duration: 8000,
+      },
+      PLASMA_WEAPON: {
+        type: "plasma_weapon",
+        color: "#ff44ff",
+        effect: "Plasma Cannon",
+        duration: 10000,
+      },
+      ICE_WEAPON: {
+        type: "ice_weapon",
+        color: "#88ffff",
+        effect: "Ice Blaster",
+        duration: 8000,
+      },
     },
 
-    // Particle Effects
+    // Enhanced Particle Effects
     PARTICLES: {
       EXPLOSION: {
         count: 15,
@@ -238,6 +431,37 @@ const CONFIG = {
         speed: 2,
         life: 20,
         colors: ["#ffaa44", "#ff6644"],
+      },
+      // 🔫 New Weapon Effects
+      LIGHTNING_ARC: {
+        count: 8,
+        speed: 2,
+        life: 15,
+        colors: ["#00ffff", "#8888ff", "#ffffff"],
+      },
+      PLASMA_EXPLOSION: {
+        count: 20,
+        speed: 4,
+        life: 25,
+        colors: ["#ff44ff", "#ff88ff", "#ffffff"],
+      },
+      SPLASH_EXPLOSION: {
+        count: 12,
+        speed: 2.5,
+        life: 20,
+        colors: ["#ff4444", "#ff8844", "#ffaa44"],
+      },
+      FIRE_TRAIL: {
+        count: 6,
+        speed: 1.5,
+        life: 25,
+        colors: ["#ff4444", "#ff8844", "#ffaa44"],
+      },
+      ICE_SHARDS: {
+        count: 10,
+        speed: 3,
+        life: 30,
+        colors: ["#88ffff", "#bbffff", "#ffffff"],
       },
     },
 
@@ -302,6 +526,16 @@ const UTILS = {
       rect1.x + rect1.width > rect2.x &&
       rect1.y < rect2.y + rect2.height &&
       rect1.y + rect1.height > rect2.y
+    );
+  },
+
+  // Enhanced collision detection with padding for better gameplay
+  checkEnhancedCollision: (rect1, rect2, padding = 4) => {
+    return (
+      rect1.x < rect2.x + rect2.width + padding &&
+      rect1.x + rect1.width > rect2.x - padding &&
+      rect1.y < rect2.y + rect2.height + padding &&
+      rect1.y + rect1.height > rect2.y - padding
     );
   },
 
