@@ -149,10 +149,8 @@ router.post(
 
       try {
         if (web3Service.isEnabled) {
-          // For Twitter verification, we'll call the contract's verifyTwitter function
-          // But since we need to modify the contract to give 1 SSD instead of 5,
-          // let's use the claimSSDReward function with 100 aliens killed (100 * 0.01 = 1 SSD)
-          const rewardResult = await web3Service.rewardSSD(walletAddress, 100);
+          // Call the contract's verifyTwitter function with 1 SSD reward
+          const rewardResult = await web3Service.verifyTwitter(walletAddress, updateData.twitterHandle);
           if (rewardResult.success) {
             txHash = rewardResult.txHash;
             blockchainRewardSuccess = true;
