@@ -6,7 +6,9 @@ class TwitterVerificationService {
     // Generate random codes for verification
     this.verificationCodes = new Map();
     this.REQUIRED_PHRASE = "I just joined Somnia Space Defender #SSDGame";
-    this.YOUR_TWITTER_HANDLE = "@SomniaEco"; // Replace with your actual Twitter handle
+    this.YOUR_TWITTER_HANDLE = "@SomniaEco";
+    this.ADDITIONAL_MENTION = "@chainalphaai";
+    this.GAME_URL = "https://www.spacedefender.xyz/";
   }
 
   /**
@@ -172,14 +174,21 @@ class TwitterVerificationService {
     // Check if the content contains:
     // 1. The verification code
     // 2. The required phrase
-    // 3. The user's handle or mention of your account
+    // 3. Both required mentions
+    // 4. The game URL
     const hasCode = htmlContent.includes(verificationCode);
     const hasPhrase = htmlContent.includes(this.REQUIRED_PHRASE);
-    const hasHandle =
-      htmlContent.toLowerCase().includes(cleanHandle) ||
-      htmlContent.includes(this.YOUR_TWITTER_HANDLE);
+    const hasSomniaMention = htmlContent.includes(this.YOUR_TWITTER_HANDLE);
+    const hasChainAlphaMention = htmlContent.includes(this.ADDITIONAL_MENTION);
+    const hasGameUrl = htmlContent.includes(this.GAME_URL);
 
-    return hasCode && hasPhrase && hasHandle;
+    return (
+      hasCode &&
+      hasPhrase &&
+      hasSomniaMention &&
+      hasChainAlphaMention &&
+      hasGameUrl
+    );
   }
 
   /**
@@ -241,9 +250,21 @@ class TwitterVerificationService {
           // Check if tweet content contains required elements
           const hasCode = htmlContent.includes(verificationCode);
           const hasPhrase = htmlContent.includes(this.REQUIRED_PHRASE);
-          const hasYourHandle = htmlContent.includes(this.YOUR_TWITTER_HANDLE);
+          const hasSomniaMention = htmlContent.includes(
+            this.YOUR_TWITTER_HANDLE
+          );
+          const hasChainAlphaMention = htmlContent.includes(
+            this.ADDITIONAL_MENTION
+          );
+          const hasGameUrl = htmlContent.includes(this.GAME_URL);
 
-          if (hasCode && hasPhrase && hasYourHandle) {
+          if (
+            hasCode &&
+            hasPhrase &&
+            hasSomniaMention &&
+            hasChainAlphaMention &&
+            hasGameUrl
+          ) {
             return {
               success: true,
               username: tweetInfo.username,

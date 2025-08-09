@@ -231,6 +231,9 @@
             <button id="openFeatures" class="btn btn-secondary">
               🚀 Upcoming
             </button>
+            <button id="contactSupport" class="btn btn-secondary">
+              💬 Support
+            </button>
           </div>
           <div class="euclid-link">
             <p>
@@ -240,6 +243,16 @@
                 target="_blank"
               >
                 Euclid Swap
+              </a>
+            </p>
+            <p class="support-link">
+              💬 Need help? Contact support: 
+              <a
+                href="https://x.com/chainalphaai"
+                target="_blank"
+                class="support-link-text"
+              >
+                @chainalphaai
               </a>
             </p>
           </div>
@@ -348,18 +361,22 @@
           <!-- Step 2: Tweet Instructions -->
           <div id="twitterStepTweet" class="twitter-step hidden">
             <h3>Step 2: Post Verification Tweet</h3>
-            <p><strong>Post this exact tweet:</strong></p>
+            <p><strong>Your tweet will include:</strong></p>
             <div id="tweetTemplate" class="tweet-template">
               <!-- Will be populated with tweet text -->
             </div>
-            <p>
-              📋
-              <button id="copyTweet" class="btn btn-small">
-                Copy Tweet Text
+            <div class="tweet-actions">
+              <button id="postTweet" class="btn btn-primary">
+                🐦 Post Tweet on Twitter
               </button>
-            </p>
-            <p>
-              <strong>Remember to mention @SomniaEco in your tweet!</strong>
+              <button id="copyTweet" class="btn btn-secondary btn-small">
+                📋 Copy Tweet Text
+              </button>
+            </div>
+            <p class="tweet-info">
+              ✅ Mentions @SomniaEco and @chainalphaai<br />
+              ✅ Includes game URL: https://www.spacedefender.xyz/<br />
+              ✅ Contains your unique verification code
             </p>
           </div>
 
@@ -386,10 +403,15 @@
             </p>
           </div>
 
-          <div id="twitterError" class="error-message hidden"></div>
+                    <div id="twitterError" class="error-message hidden"></div>
           <div id="twitterLoading" class="loading hidden">Verifying...</div>
-
-          <button id="closeTwitter" class="btn btn-secondary">Close</button>
+          
+          <div class="panel-footer">
+            <button id="closeTwitter" class="btn btn-secondary">Close</button>
+            <button id="twitterSupport" class="btn btn-outline">
+              💬 Need Help?
+            </button>
+          </div>
         </div>
       </div>
 

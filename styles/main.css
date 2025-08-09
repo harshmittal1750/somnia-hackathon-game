@@ -786,6 +786,29 @@ body::before {
   margin-left: 0.5rem;
 }
 
+.tweet-actions {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.tweet-actions .btn {
+  flex: 1;
+  min-width: 150px;
+}
+
+.tweet-info {
+  background: rgba(76, 175, 80, 0.1);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .twitter-verified {
   text-align: center;
   color: #4caf50;
@@ -810,6 +833,47 @@ body::before {
   color: #4fc3f7;
   font-style: italic;
   margin: 1rem 0;
+}
+
+.panel-footer {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid #4fc3f7;
+  color: #4fc3f7;
+  transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+  background: #4fc3f7;
+  color: #000;
+  transform: translateY(-2px);
+}
+
+.support-link {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #aaa;
+  text-align: center;
+}
+
+.support-link-text {
+  color: #4fc3f7;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.support-link-text:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
 }
 
 /* Features List Styles */
