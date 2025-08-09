@@ -1602,10 +1602,21 @@ class GameApp {
   }
 
   showTwitterStepGenerate() {
-    document.getElementById("twitterStepGenerate").classList.remove("hidden");
-    document.getElementById("twitterStepTweet").classList.add("hidden");
-    document.getElementById("twitterStepSubmit").classList.add("hidden");
-    document.getElementById("twitterVerified").classList.add("hidden");
+    const stepGenerate = document.getElementById("twitterStepGenerate");
+    const stepTweet = document.getElementById("twitterStepTweet");
+    const stepSubmit = document.getElementById("twitterStepSubmit");
+    const verified = document.getElementById("twitterVerified");
+    
+    if (!stepGenerate) {
+      console.error("Twitter UI elements not found - HTML not deployed yet");
+      this.showNotification("Twitter verification UI not available. Please refresh the page.", "error");
+      return;
+    }
+    
+    stepGenerate.classList.remove("hidden");
+    stepTweet?.classList.add("hidden");
+    stepSubmit?.classList.add("hidden");
+    verified?.classList.add("hidden");
     this.hideTwitterMessages();
   }
 
@@ -1644,8 +1655,11 @@ class GameApp {
   }
 
   hideTwitterMessages() {
-    document.getElementById("twitterError").classList.add("hidden");
-    document.getElementById("twitterLoading").classList.add("hidden");
+    const errorEl = document.getElementById("twitterError");
+    const loadingEl = document.getElementById("twitterLoading");
+    
+    errorEl?.classList.add("hidden");
+    loadingEl?.classList.add("hidden");
   }
 
   showTwitterError(message) {
@@ -1710,9 +1724,11 @@ class GameApp {
       console.error("Error details:", {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
       });
-      this.showTwitterError(`Failed to generate verification code: ${error.message}`);
+      this.showTwitterError(
+        `Failed to generate verification code: ${error.message}`
+      );
     }
   }
 
