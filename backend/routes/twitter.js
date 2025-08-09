@@ -44,15 +44,23 @@ router.post(
       const verificationCode =
         twitterVerificationService.generateVerificationCode(walletAddress);
 
-      const requiredTweet = `${twitterVerificationService.REQUIRED_PHRASE} ${verificationCode}`;
+      const requiredTweet = `${twitterVerificationService.REQUIRED_PHRASE} ${verificationCode}
+
+${twitterVerificationService.YOUR_TWITTER_HANDLE} ${twitterVerificationService.ADDITIONAL_MENTION}
+
+Play now: ${twitterVerificationService.GAME_URL}`;
+
+      // URL encode for Twitter intent
+      const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(requiredTweet)}`;
 
       res.json({
         success: true,
         verificationCode,
         requiredTweet,
+        tweetUrl,
         instructions: {
-          step1: `Post a tweet with this exact text: "${requiredTweet}"`,
-          step2: `Make sure to mention ${twitterVerificationService.YOUR_TWITTER_HANDLE} in your tweet`,
+          step1: `Click "Post Tweet" to open Twitter with the message pre-filled`,
+          step2: `Post the tweet (includes mentions of ${twitterVerificationService.YOUR_TWITTER_HANDLE} and ${twitterVerificationService.ADDITIONAL_MENTION})`,
           step3: "Copy the tweet URL and submit it below",
           step4: "You'll receive 1 SSD token upon successful verification",
           expiresIn: "30 minutes",
@@ -246,11 +254,11 @@ router.get("/instructions", (req, res) => {
         description:
           "Click 'Generate Code' to get your unique verification code",
       },
-      {
-        step: 2,
-        title: "Post Tweet",
-        description: `Post a tweet with the text: "I just joined Somnia Space Defender #SSDGame [YOUR_CODE]" and mention ${twitterVerificationService.YOUR_TWITTER_HANDLE}`,
-      },
+              {
+          step: 2,
+          title: "Post Tweet",
+          description: `Click "Post Tweet" button to open Twitter with pre-filled message including mentions of ${twitterVerificationService.YOUR_TWITTER_HANDLE} and ${twitterVerificationService.ADDITIONAL_MENTION}`,
+        },
       {
         step: 3,
         title: "Submit Tweet URL",
@@ -265,7 +273,8 @@ router.get("/instructions", (req, res) => {
     ],
     requirements: {
       tweetContent: twitterVerificationService.REQUIRED_PHRASE,
-      mention: twitterVerificationService.YOUR_TWITTER_HANDLE,
+      mentions: `${twitterVerificationService.YOUR_TWITTER_HANDLE} and ${twitterVerificationService.ADDITIONAL_MENTION}`,
+      gameUrl: twitterVerificationService.GAME_URL,
       reward: "1 SSD Token",
       timeLimit: "30 minutes",
     },

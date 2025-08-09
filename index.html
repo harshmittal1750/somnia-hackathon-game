@@ -348,18 +348,22 @@
           <!-- Step 2: Tweet Instructions -->
           <div id="twitterStepTweet" class="twitter-step hidden">
             <h3>Step 2: Post Verification Tweet</h3>
-            <p><strong>Post this exact tweet:</strong></p>
+            <p><strong>Your tweet will include:</strong></p>
             <div id="tweetTemplate" class="tweet-template">
               <!-- Will be populated with tweet text -->
             </div>
-            <p>
-              📋
-              <button id="copyTweet" class="btn btn-small">
-                Copy Tweet Text
+            <div class="tweet-actions">
+              <button id="postTweet" class="btn btn-primary">
+                🐦 Post Tweet on Twitter
               </button>
-            </p>
-            <p>
-              <strong>Remember to mention @SomniaEco in your tweet!</strong>
+              <button id="copyTweet" class="btn btn-secondary btn-small">
+                📋 Copy Tweet Text
+              </button>
+            </div>
+            <p class="tweet-info">
+              ✅ Mentions @SomniaEco and @chainalphaai<br>
+              ✅ Includes game URL: https://www.spacedefender.xyz/<br>
+              ✅ Contains your unique verification code
             </p>
           </div>
 

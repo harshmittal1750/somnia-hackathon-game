@@ -305,6 +305,10 @@ class GameApp {
       this.copyTweetText();
     });
 
+    document.getElementById("postTweet")?.addEventListener("click", () => {
+      this.openTwitterPost();
+    });
+
     document.getElementById("verifyTweet")?.addEventListener("click", () => {
       this.verifyTwitterTweet();
     });
@@ -1606,13 +1610,16 @@ class GameApp {
     const stepTweet = document.getElementById("twitterStepTweet");
     const stepSubmit = document.getElementById("twitterStepSubmit");
     const verified = document.getElementById("twitterVerified");
-    
+
     if (!stepGenerate) {
       console.error("Twitter UI elements not found - HTML not deployed yet");
-      this.showNotification("Twitter verification UI not available. Please refresh the page.", "error");
+      this.showNotification(
+        "Twitter verification UI not available. Please refresh the page.",
+        "error"
+      );
       return;
     }
-    
+
     stepGenerate.classList.remove("hidden");
     stepTweet?.classList.add("hidden");
     stepSubmit?.classList.add("hidden");
@@ -1620,18 +1627,19 @@ class GameApp {
     this.hideTwitterMessages();
   }
 
-  showTwitterStepTweet(verificationCode, requiredTweet) {
+  showTwitterStepTweet(verificationCode, requiredTweet, tweetUrl) {
     document.getElementById("twitterStepGenerate").classList.add("hidden");
     document.getElementById("twitterStepTweet").classList.remove("hidden");
     document.getElementById("twitterStepSubmit").classList.remove("hidden");
     document.getElementById("twitterVerified").classList.add("hidden");
 
-    // Store tweet text for copying
+    // Store tweet text and URL for copying and posting
     this.currentTweetText = requiredTweet;
+    this.currentTweetUrl = tweetUrl;
 
     document.getElementById("tweetTemplate").innerHTML = `
-      <div style="font-size: 16px; line-height: 1.4;">
-        "${requiredTweet}"
+      <div style="font-size: 14px; line-height: 1.6; white-space: pre-line;">
+${requiredTweet}
       </div>
     `;
 
@@ -1657,7 +1665,7 @@ class GameApp {
   hideTwitterMessages() {
     const errorEl = document.getElementById("twitterError");
     const loadingEl = document.getElementById("twitterLoading");
-    
+
     errorEl?.classList.add("hidden");
     loadingEl?.classList.add("hidden");
   }
@@ -1713,7 +1721,7 @@ class GameApp {
       const data = await response.json();
 
       if (data.success) {
-        this.showTwitterStepTweet(data.verificationCode, data.requiredTweet);
+        this.showTwitterStepTweet(data.verificationCode, data.requiredTweet, data.tweetUrl);
       } else {
         this.showTwitterError(
           data.error || "Failed to generate verification code"
@@ -1729,6 +1737,15 @@ class GameApp {
       this.showTwitterError(
         `Failed to generate verification code: ${error.message}`
       );
+    }
+  }
+
+  openTwitterPost() {
+    if (this.currentTweetUrl) {
+      window.open(this.currentTweetUrl, '_blank');
+      this.showNotification("Opening Twitter to post your verification tweet!", "info");
+    } else {
+      this.showNotification("Tweet URL not available", "error");
     }
   }
 
