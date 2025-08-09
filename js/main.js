@@ -992,7 +992,7 @@ class GameApp {
     highScoreElements.forEach((element) => {
       element.textContent = UTILS.formatScore(highScore);
       console.log(
-        "🎯 Updated element:",
+        "🎯 GameApp updated element:",
         element,
         "to:",
         UTILS.formatScore(highScore)

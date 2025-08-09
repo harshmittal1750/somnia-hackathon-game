@@ -97,8 +97,8 @@ class GameEngine {
     // Set up event listeners
     this.setupEventListeners();
 
-    // Load high score
-    this.highScore = web3Manager.getHighScore();
+    // Load high score - use cached value from GameApp if available
+    this.highScore = window.gameApp?.cachedHighScore || web3Manager.getHighScore();
     this.updateUI();
 
     // Initialize first level
@@ -724,6 +724,10 @@ class GameEngine {
     // Update local high score for display
     if (this.score > this.highScore) {
       this.highScore = this.score;
+      // Also update the cached high score in GameApp for consistent display
+      if (window.gameApp) {
+        window.gameApp.cachedHighScore = this.score;
+      }
     }
 
     // Show game over screen with backend comparison
@@ -1136,9 +1140,18 @@ class GameEngine {
     document.getElementById("lives").textContent = this.player
       ? this.player.health
       : this.lives;
-    document.getElementById("highScore").textContent = UTILS.formatScore(
-      this.highScore
-    );
+    // Use the most current high score available (cached from backend or local)
+    const currentHighScore = window.gameApp?.cachedHighScore || this.highScore;
+    const highScoreElement = document.getElementById("highScore");
+    if (highScoreElement) {
+      highScoreElement.textContent = UTILS.formatScore(currentHighScore);
+      console.log("🎯 GameEngine.updateUI() - High score display updated:", {
+        gameEngineHighScore: this.highScore,
+        cachedHighScore: window.gameApp?.cachedHighScore,
+        finalDisplayed: currentHighScore,
+        formatted: UTILS.formatScore(currentHighScore)
+      });
+    }
   }
 
   showGameOverScreen(isNewHighScore) {
