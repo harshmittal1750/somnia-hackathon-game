@@ -16,6 +16,10 @@ class GameEngine {
     this.powerUps = [];
     this.particles = [];
 
+    // Bullet pooling for better performance
+    this.bulletPool = [];
+    this.maxBulletPoolSize = 100;
+
     // Game state
     this.score = 0;
     this.level = 1;
@@ -67,6 +71,9 @@ class GameEngine {
     // Performance tracking
     this.entityCleanupTimer = 0;
     this.performanceMode = false;
+    this.lastFPSCheck = 0;
+    this.frameRateStable = true;
+    this.lowPerformanceDetected = false;
 
     // Visual effects
     this.screenShake = 0;
@@ -178,9 +185,23 @@ class GameEngine {
       }
     });
 
-    // Resize handling
+    // Resize handling with debounce for better performance
+    let resizeTimeout;
     window.addEventListener("resize", () => {
-      this.handleResize();
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        this.handleResize();
+      }, 100); // Debounce resize events
+    });
+
+    // Also handle dev tools opening/closing via visibility change
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && this.canvas) {
+        // Page became visible again, ensure canvas is properly sized
+        setTimeout(() => {
+          this.handleResize();
+        }, 200);
+      }
     });
 
     // Touch controls setup
@@ -202,6 +223,16 @@ class GameEngine {
       case "KeyM":
         this.toggleSound();
         break;
+      case "KeyR":
+        // Ctrl+R or Cmd+R to restore canvas visibility
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          this.restoreCanvasVisibility();
+          console.log(
+            "🔧 Canvas visibility restore triggered by keyboard shortcut (Ctrl/Cmd+R)"
+          );
+        }
+        break;
     }
   }
 
@@ -209,7 +240,7 @@ class GameEngine {
     this.keys[e.code] = false;
   }
 
-  handlePlayerInput() {
+  handlePlayerInput(frameMultiplier = 1.0) {
     if (!this.player || this.gameState !== GAME_STATES.PLAYING) return;
 
     // Keyboard movement
@@ -249,16 +280,20 @@ class GameEngine {
     this.player.keys.up = upPressed;
     this.player.keys.down = downPressed;
 
-    // Shooting (keyboard or touch)
+    // Frame rate normalized shooting for consistent behavior across different refresh rates
     const shouldShoot =
       this.keys["Space"] ||
       this.keys["KeyJ"] ||
       this.touchControls.fireButton.active;
+
     if (shouldShoot) {
-      const newBullets = this.player.shoot();
-      this.bullets.push(...newBullets);
+      // Use frame rate normalization to ensure consistent shooting regardless of display refresh rate
+      const newBullets = this.player.shootWithFrameNormalization
+        ? this.player.shootWithFrameNormalization(frameMultiplier)
+        : this.player.shoot();
 
       if (newBullets.length > 0) {
+        this.bullets.push(...newBullets);
         this.playSound("shootSound");
       }
     }
@@ -377,16 +412,22 @@ class GameEngine {
   }
 
   async gameLoop(currentTime = performance.now()) {
-    // Calculate delta time
-    const deltaTime = Math.min(currentTime - this.lastTime, 50); // Cap delta time
+    // Calculate delta time with better frame rate normalization
+    const rawDeltaTime = currentTime - this.lastTime;
+    const deltaTime = Math.min(rawDeltaTime, 50); // Cap delta time to prevent large jumps
     this.lastTime = currentTime;
 
     // Update FPS
     this.updateFPS(deltaTime);
 
+    // Frame rate normalization for consistent gameplay
+    // Target 60 FPS equivalent timing regardless of actual refresh rate
+    const targetFrameTime = 1000 / 60; // 16.67ms for 60 FPS
+    const frameMultiplier = deltaTime / targetFrameTime;
+
     // Only update game if playing
     if (this.gameState === GAME_STATES.PLAYING && !this.isPaused) {
-      await this.update(deltaTime);
+      await this.update(deltaTime, frameMultiplier);
     }
 
     // Always render
@@ -401,13 +442,13 @@ class GameEngine {
     }
   }
 
-  async update(deltaTime) {
+  async update(deltaTime, frameMultiplier = 1.0) {
     // 🌌 Slow down game during space transitions for better visibility
     const transitionSlowDown = this.isTransitioning ? 0.3 : 1.0;
     const adjustedDeltaTime = deltaTime * transitionSlowDown;
 
-    // Handle input
-    this.handlePlayerInput();
+    // Handle input with frame rate normalization
+    this.handlePlayerInput(frameMultiplier);
 
     // Update player
     if (this.player) {
@@ -1136,12 +1177,42 @@ class GameEngine {
     this.entityCleanupTimer++;
 
     if (this.entityCleanupTimer >= CONFIG.GAME.PERFORMANCE.CLEANUP_INTERVAL) {
-      this.bullets = this.bullets.filter((bullet) => bullet.active);
+      // Remove inactive bullets and return them to pool for reuse
+      this.bullets = this.bullets.filter((bullet) => {
+        if (!bullet.active) {
+          this.returnBulletToPool(bullet);
+          return false;
+        }
+        return true;
+      });
+
       this.aliens = this.aliens.filter((alien) => alien.active);
       this.powerUps = this.powerUps.filter((powerUp) => powerUp.active);
       this.particles = this.particles.filter((particle) => particle.active);
 
       this.entityCleanupTimer = 0;
+    }
+  }
+
+  // Bullet pooling methods for better performance on low-end hardware
+  getBulletFromPool(x, y, vx, vy, bulletType) {
+    let bullet;
+
+    if (this.bulletPool.length > 0) {
+      bullet = this.bulletPool.pop();
+      bullet.reset(x, y, vx, vy, bulletType);
+    } else {
+      bullet = new Bullet(x, y, vx, vy, bulletType);
+    }
+
+    return bullet;
+  }
+
+  returnBulletToPool(bullet) {
+    if (this.bulletPool.length < this.maxBulletPoolSize) {
+      bullet.active = false;
+      bullet.trail = []; // Clear trail for next use
+      this.bulletPool.push(bullet);
     }
   }
 
@@ -1583,9 +1654,64 @@ class GameEngine {
 
     if (this.fpsUpdateTime >= 1000) {
       this.fps = (this.frameCount * 1000) / this.fpsUpdateTime;
+
+      // Performance monitoring and automatic optimization
+      this.monitorPerformance();
+
       this.frameCount = 0;
       this.fpsUpdateTime = 0;
     }
+  }
+
+  monitorPerformance() {
+    const now = Date.now();
+    if (now - this.lastFPSCheck < 2000) return; // Check every 2 seconds
+
+    this.lastFPSCheck = now;
+
+    // Detect consistent low performance
+    if (this.fps < 45) {
+      if (!this.lowPerformanceDetected) {
+        this.lowPerformanceDetected = true;
+        console.warn("⚠️ Low performance detected, enabling optimizations...");
+        this.enablePerformanceOptimizations();
+      }
+    } else if (this.fps > 55 && this.lowPerformanceDetected) {
+      // Performance recovered
+      this.lowPerformanceDetected = false;
+      console.log(
+        "✅ Performance recovered, disabling emergency optimizations"
+      );
+      this.disableEmergencyOptimizations();
+    }
+  }
+
+  enablePerformanceOptimizations() {
+    // Reduce particle count
+    if (this.particles.length > 50) {
+      this.particles = this.particles.slice(0, 50);
+    }
+
+    // Enable performance mode
+    this.performanceMode = true;
+
+    // Reduce bullet trail length for better performance
+    this.bullets.forEach((bullet) => {
+      if (bullet.maxTrailLength > 4) {
+        bullet.maxTrailLength = 4;
+      }
+    });
+
+    console.log("🔧 Performance optimizations enabled");
+  }
+
+  disableEmergencyOptimizations() {
+    // Only disable emergency optimizations, keep performanceMode if manually set
+    this.bullets.forEach((bullet) => {
+      bullet.maxTrailLength = 8; // Restore normal trail length
+    });
+
+    console.log("🔧 Emergency optimizations disabled");
   }
 
   updateUI() {
@@ -1961,7 +2087,18 @@ class GameEngine {
   handleResize() {
     // Handle responsive canvas resizing if needed
     const container = this.canvas.parentElement;
+    if (!container) {
+      console.warn("Canvas container not found during resize");
+      return;
+    }
+
     const containerRect = container.getBoundingClientRect();
+
+    // Check if container is actually visible and has dimensions
+    if (containerRect.width === 0 || containerRect.height === 0) {
+      console.warn("Container has zero dimensions, skipping resize");
+      return;
+    }
 
     // Maintain aspect ratio
     const aspectRatio = CONFIG.GAME.CANVAS_WIDTH / CONFIG.GAME.CANVAS_HEIGHT;
@@ -1973,8 +2110,95 @@ class GameEngine {
       newWidth = newHeight * aspectRatio;
     }
 
+    // Ensure minimum canvas size for visibility
+    const minWidth = 200;
+    const minHeight = 150;
+
+    if (newWidth < minWidth) {
+      newWidth = minWidth;
+      newHeight = newWidth / aspectRatio;
+    }
+
+    if (newHeight < minHeight) {
+      newHeight = minHeight;
+      newWidth = newHeight * aspectRatio;
+    }
+
+    // Update canvas display size
     this.canvas.style.width = newWidth + "px";
     this.canvas.style.height = newHeight + "px";
+
+    // Ensure canvas internal dimensions match config
+    this.canvas.width = CONFIG.GAME.CANVAS_WIDTH;
+    this.canvas.height = CONFIG.GAME.CANVAS_HEIGHT;
+
+    // Force canvas to be visible and properly positioned
+    this.canvas.style.display = "block";
+    this.canvas.style.visibility = "visible";
+
+    // Log resize info for debugging
+    console.log(
+      `🔄 Canvas resized: ${newWidth}x${newHeight} (display), ${this.canvas.width}x${this.canvas.height} (internal)`
+    );
+
+    // Ensure the canvas context is still valid
+    if (!this.ctx || this.ctx.canvas !== this.canvas) {
+      console.warn("Canvas context lost during resize, reinitializing...");
+      this.ctx = this.canvas.getContext("2d");
+    }
+
+    // Force a redraw if game is active
+    if (
+      this.gameState === GAME_STATES.PLAYING ||
+      this.gameState === GAME_STATES.PAUSED
+    ) {
+      requestAnimationFrame(() => {
+        this.render();
+      });
+    }
+  }
+
+  // 🔧 Failsafe method to restore canvas visibility
+  restoreCanvasVisibility() {
+    console.log("🔧 Attempting to restore canvas visibility...");
+
+    if (!this.canvas) {
+      console.error("Canvas not found!");
+      return false;
+    }
+
+    // Force canvas to be visible
+    this.canvas.style.display = "block";
+    this.canvas.style.visibility = "visible";
+    this.canvas.style.opacity = "1";
+
+    // Reset any potential positioning issues
+    this.canvas.style.position = "relative";
+    this.canvas.style.zIndex = "1";
+
+    // Ensure canvas has proper dimensions
+    this.canvas.width = CONFIG.GAME.CANVAS_WIDTH;
+    this.canvas.height = CONFIG.GAME.CANVAS_HEIGHT;
+
+    // Reinitialize context if needed
+    if (!this.ctx || this.ctx.canvas !== this.canvas) {
+      this.ctx = this.canvas.getContext("2d");
+      console.log("🔧 Canvas context reinitialized");
+    }
+
+    // Force a resize to ensure proper sizing
+    this.handleResize();
+
+    // Force a redraw
+    if (
+      this.gameState === GAME_STATES.PLAYING ||
+      this.gameState === GAME_STATES.PAUSED
+    ) {
+      this.render();
+    }
+
+    console.log("✅ Canvas visibility restoration complete");
+    return true;
   }
 
   // 🛡️ Generate unique session ID for anti-cheat

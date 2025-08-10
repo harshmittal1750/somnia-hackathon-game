@@ -1412,7 +1412,21 @@ class GameApp {
 
   // Global Event Handlers
   handleGlobalKeyDown(e) {
-    // Only handle global shortcuts when not in game
+    // Handle canvas restoration shortcut globally (F5 key as alternative to Ctrl+R)
+    if (e.code === "F5") {
+      e.preventDefault();
+      this.restoreCanvas();
+      return;
+    }
+
+    // Handle performance mode toggle (F3 key)
+    if (e.code === "F3") {
+      e.preventDefault();
+      this.togglePerformanceMode();
+      return;
+    }
+
+    // Only handle other global shortcuts when not in game
     if (this.currentState === GAME_STATES.PLAYING) return;
 
     switch (e.code) {
@@ -1616,6 +1630,71 @@ class GameApp {
     CONFIG.DEBUG.SHOW_FPS = false;
     CONFIG.DEBUG.SHOW_HITBOXES = false;
     console.log("🐛 Debug mode disabled");
+  }
+
+  // Performance Methods
+  togglePerformanceMode() {
+    CONFIG.PERFORMANCE.FORCE_PERFORMANCE_MODE =
+      !CONFIG.PERFORMANCE.FORCE_PERFORMANCE_MODE;
+
+    if (typeof gameEngine !== "undefined") {
+      gameEngine.performanceMode = CONFIG.PERFORMANCE.FORCE_PERFORMANCE_MODE;
+
+      if (CONFIG.PERFORMANCE.FORCE_PERFORMANCE_MODE) {
+        gameEngine.enablePerformanceOptimizations();
+        console.log(
+          "🚀 Performance mode enabled - optimized for low-end hardware"
+        );
+        this.showNotification("🚀 Performance mode enabled", "success");
+      } else {
+        console.log(
+          "⚡ Performance mode disabled - full visual effects restored"
+        );
+        this.showNotification("⚡ Performance mode disabled", "info");
+      }
+    }
+
+    return CONFIG.PERFORMANCE.FORCE_PERFORMANCE_MODE;
+  }
+
+  enablePerformanceMode() {
+    CONFIG.PERFORMANCE.FORCE_PERFORMANCE_MODE = true;
+    if (typeof gameEngine !== "undefined") {
+      gameEngine.performanceMode = true;
+      gameEngine.enablePerformanceOptimizations();
+    }
+    console.log("🚀 Performance mode enabled manually");
+    this.showNotification(
+      "🚀 Performance mode enabled for low-end hardware",
+      "success",
+      4000
+    );
+  }
+
+  // 🔧 Canvas Recovery Methods
+  restoreCanvas() {
+    console.log("🔧 Manual canvas restoration triggered from main app");
+
+    if (
+      typeof gameEngine !== "undefined" &&
+      gameEngine.restoreCanvasVisibility
+    ) {
+      const success = gameEngine.restoreCanvasVisibility();
+      if (success) {
+        this.showNotification(
+          "🔧 Canvas visibility restored!",
+          "success",
+          2000
+        );
+      } else {
+        this.showNotification("❌ Failed to restore canvas", "error", 3000);
+      }
+      return success;
+    } else {
+      console.error("Game engine not available for canvas restoration");
+      this.showNotification("❌ Game engine not available", "error", 3000);
+      return false;
+    }
   }
 
   // 🛍️ SSD SHOP FUNCTIONALITY

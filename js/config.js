@@ -490,10 +490,19 @@ const CONFIG = {
 
   // Development Settings
   DEBUG: {
-    SHOW_FPS: false,
+    SHOW_FPS: true,
     SHOW_HITBOXES: false,
-    GOD_MODE: false,
+    GOD_MODE: true,
     SKIP_INTRO: false,
+  },
+
+  // Performance Settings
+  PERFORMANCE: {
+    AUTO_OPTIMIZATION: true, // Automatically enable optimizations on low-end hardware
+    FORCE_PERFORMANCE_MODE: false, // Manually force performance mode
+    BULLET_POOLING: true, // Use bullet object pooling for better memory management
+    REDUCED_PARTICLES: false, // Reduce particle effects for better performance
+    SIMPLIFIED_TRAILS: false, // Use simpler bullet trails
   },
 };
 

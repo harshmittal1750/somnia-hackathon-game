@@ -224,6 +224,15 @@ class Player extends Entity {
     return Date.now() - this.lastShot >= this.weaponCooldown;
   }
 
+  // Frame rate normalized shooting for consistent behavior across different refresh rates
+  canShootWithFrameNormalization(frameMultiplier) {
+    // Normalize cooldown based on frame rate to maintain consistent shooting rate
+    // regardless of display refresh rate (60Hz vs 100Hz vs 144Hz etc.)
+    const normalizedCooldown =
+      this.weaponCooldown / Math.max(frameMultiplier, 0.5);
+    return Date.now() - this.lastShot >= normalizedCooldown;
+  }
+
   getCurrentWeaponType() {
     // Check for weapon power-ups in priority order (strongest first)
     if (this.powerUps.has("plasma_weapon")) return "PLASMA";
@@ -250,25 +259,113 @@ class Player extends Entity {
       `🔫 SHOOTING - weapon: ${weaponType}, multiShot: ${this.multiShotActive}`
     );
 
+    return this.createBullets(bullets, centerX, topY, weaponType);
+  }
+
+  // Frame rate normalized shooting method
+  shootWithFrameNormalization(frameMultiplier = 1.0) {
+    if (!this.canShootWithFrameNormalization(frameMultiplier)) return [];
+
+    this.lastShot = Date.now();
+    this.weaponHeat = Math.min(1, this.weaponHeat + 0.2); // Add weapon heat
+
+    const bullets = [];
+    const centerX = this.x + this.width / 2;
+    const topY = this.y;
+    const weaponType = this.currentWeaponType || "STANDARD";
+
+    // 🔫 Enhanced shooting with weapon types and frame rate normalization
+    console.log(
+      `🔫 NORMALIZED SHOOTING - weapon: ${weaponType}, multiShot: ${
+        this.multiShotActive
+      }, frameMultiplier: ${frameMultiplier.toFixed(2)}`
+    );
+
+    return this.createBullets(bullets, centerX, topY, weaponType);
+  }
+
+  // Extract bullet creation logic to reduce code duplication
+  createBullets(bullets, centerX, topY, weaponType) {
+    // Get reference to game engine for bullet pooling
+    const gameEngine = window.gameEngine;
+
     if (this.multiShotActive) {
       // Multi-shot: 3 bullets in a spread pattern
-      bullets.push(
-        new Bullet(centerX - 2, topY, 0, -CONFIG.GAME.BULLET.SPEED, weaponType)
-      );
-      bullets.push(
-        new Bullet(centerX - 8, topY, -1, -CONFIG.GAME.BULLET.SPEED, weaponType)
-      );
-      bullets.push(
-        new Bullet(centerX + 6, topY, 1, -CONFIG.GAME.BULLET.SPEED, weaponType)
-      );
+      const bullet1 = gameEngine?.getBulletFromPool
+        ? gameEngine.getBulletFromPool(
+            centerX - 2,
+            topY,
+            0,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          )
+        : new Bullet(
+            centerX - 2,
+            topY,
+            0,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          );
+
+      const bullet2 = gameEngine?.getBulletFromPool
+        ? gameEngine.getBulletFromPool(
+            centerX - 8,
+            topY,
+            -1,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          )
+        : new Bullet(
+            centerX - 8,
+            topY,
+            -1,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          );
+
+      const bullet3 = gameEngine?.getBulletFromPool
+        ? gameEngine.getBulletFromPool(
+            centerX + 6,
+            topY,
+            1,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          )
+        : new Bullet(
+            centerX + 6,
+            topY,
+            1,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          );
+
+      bullets.push(bullet1, bullet2, bullet3);
     } else {
       // Single shot with current weapon type
-      bullets.push(
-        new Bullet(centerX - 2, topY, 0, -CONFIG.GAME.BULLET.SPEED, weaponType)
-      );
+      const bullet = gameEngine?.getBulletFromPool
+        ? gameEngine.getBulletFromPool(
+            centerX - 2,
+            topY,
+            0,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          )
+        : new Bullet(
+            centerX - 2,
+            topY,
+            0,
+            -CONFIG.GAME.BULLET.SPEED,
+            weaponType
+          );
+
+      bullets.push(bullet);
     }
 
-    console.log(`🔫 Total bullets created: ${bullets.length}`);
+    console.log(
+      `🔫 Total bullets created: ${bullets.length} (${
+        gameEngine?.getBulletFromPool ? "pooled" : "new"
+      })`
+    );
     return bullets;
   }
 
@@ -524,6 +621,16 @@ class Player extends Entity {
 class Bullet extends Entity {
   constructor(x, y, vx, vy, bulletType = "STANDARD") {
     super(x, y, CONFIG.GAME.BULLET.WIDTH, CONFIG.GAME.BULLET.HEIGHT);
+    this.initialize(x, y, vx, vy, bulletType);
+  }
+
+  initialize(x, y, vx, vy, bulletType = "STANDARD") {
+    // Reset position and size
+    this.x = x;
+    this.y = y;
+    this.width = CONFIG.GAME.BULLET.WIDTH;
+    this.height = CONFIG.GAME.BULLET.HEIGHT;
+    this.active = true;
 
     // Get bullet configuration
     this.bulletConfig =
@@ -556,6 +663,11 @@ class Bullet extends Entity {
 
     // Type-specific initialization
     this.initializeSpecialEffects();
+  }
+
+  // Reset method for bullet pooling
+  reset(x, y, vx, vy, bulletType = "STANDARD") {
+    this.initialize(x, y, vx, vy, bulletType);
   }
 
   initializeSpecialEffects() {
