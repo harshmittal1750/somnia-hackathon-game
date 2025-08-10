@@ -198,11 +198,20 @@ class HybridWeb3Manager {
         this.activateProvider("metamask");
         await this.handleAccountsChanged(accounts);
 
-        // Verify network
-        const networkCorrect = await this.verifyNetworkConnection();
-        if (networkCorrect) {
+        // Verify network with enhanced error handling
+        const networkResult = await this.verifyNetworkConnectionWithFallback();
+        if (networkResult.success) {
           console.log("✅ MetaMask: Network verified");
           return true;
+        } else {
+          console.warn(
+            `⚠️ MetaMask: Network verification failed: ${networkResult.error}`
+          );
+          // Don't fail immediately - might be timing issue
+          if (!networkResult.wrongNetwork) {
+            console.log("🔄 Scheduling network retry for hybrid manager...");
+            this.scheduleNetworkRetry();
+          }
         }
       }
     } catch (error) {
@@ -891,6 +900,113 @@ class HybridWeb3Manager {
   async refreshConnection() {
     console.log("🔄 Refreshing connection...");
     await this.init();
+  }
+
+  // Enhanced network verification with better error handling and fallbacks (inherited from web3Manager)
+  async verifyNetworkConnectionWithFallback(maxRetries = 5) {
+    console.log("🌐 Starting enhanced network verification (Hybrid)...");
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        let chainId;
+
+        if (
+          this.providerType === "metamask" &&
+          this.primaryProvider?.ethereum
+        ) {
+          chainId = await this.primaryProvider.ethereum.request({
+            method: "eth_chainId",
+          });
+        } else if (
+          this.providerType === "wagmi" &&
+          this.fallbackProvider?.manager
+        ) {
+          // Use Wagmi to get chain ID
+          chainId = await this.fallbackProvider.manager.getChainId();
+        } else {
+          return { success: false, error: "No active provider available" };
+        }
+
+        console.log(
+          `📡 Retrieved chain ID (${this.providerType}): ${chainId}, expected: ${CONFIG.NETWORK.chainId}`
+        );
+
+        this.networkId = chainId;
+
+        if (chainId === CONFIG.NETWORK.chainId) {
+          return { success: true, chainId };
+        } else {
+          // Wrong network detected
+          return {
+            success: false,
+            error: `Wrong network. Connected to ${chainId}, expected ${CONFIG.NETWORK.chainId}`,
+            wrongNetwork: true,
+            currentChainId: chainId,
+            expectedChainId: CONFIG.NETWORK.chainId,
+          };
+        }
+      } catch (error) {
+        console.warn(
+          `🔄 Network verification attempt ${attempt} failed (${this.providerType}):`,
+          error
+        );
+
+        if (attempt === maxRetries) {
+          return {
+            success: false,
+            error: `Network verification failed after ${maxRetries} attempts: ${error.message}`,
+            finalError: error,
+          };
+        }
+
+        // Progressive delay: 200ms, 400ms, 800ms, 1600ms
+        const delay = Math.min(200 * Math.pow(2, attempt - 1), 1600);
+        console.log(`⏳ Waiting ${delay}ms before retry...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    return {
+      success: false,
+      error: "Network verification failed - unknown error",
+    };
+  }
+
+  // Schedule a delayed network retry to handle timing issues (inherited from web3Manager)
+  scheduleNetworkRetry() {
+    console.log("📅 Scheduling network retry in 2 seconds (Hybrid)...");
+    setTimeout(async () => {
+      console.log("🔄 Executing scheduled network retry (Hybrid)...");
+      const networkResult = await this.verifyNetworkConnectionWithFallback();
+
+      if (networkResult.success) {
+        console.log("✅ Scheduled network retry succeeded (Hybrid)!");
+        this.handleNetworkChanged(this.networkId);
+
+        // Update UI to show successful connection
+        if (this.isConnected) {
+          this.updateWalletUI();
+        }
+
+        // Notify user of successful recovery
+        if (window.gameApp && window.gameApp.showNotification) {
+          window.gameApp.showNotification(
+            "🌐 Network connection restored!",
+            "success"
+          );
+        }
+      } else {
+        console.warn(
+          "❌ Scheduled network retry also failed (Hybrid):",
+          networkResult.error
+        );
+
+        // Only show error UI if it's actually a wrong network (not just timing)
+        if (networkResult.wrongNetwork) {
+          this.handleNetworkChanged(networkResult.currentChainId);
+        }
+      }
+    }, 2000);
   }
 
   // Delegate other methods to original Web3Manager implementation

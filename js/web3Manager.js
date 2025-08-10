@@ -26,8 +26,8 @@ class Web3Manager {
     // Reset state first
     this.resetState();
 
-    // Small delay to allow MetaMask to fully load
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Enhanced delay and MetaMask readiness check
+    await this.waitForMetaMaskReady();
 
     // Check if MetaMask is installed and available
     if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
@@ -45,9 +45,10 @@ class Web3Manager {
           const isConnected = await this.verifyConnection();
           if (isConnected) {
             await this.handleAccountsChanged(accounts);
-            // Enhanced network verification with retry
-            const networkCorrect = await this.verifyNetworkConnection();
-            if (networkCorrect) {
+            // Enhanced network verification with extended retry and better error handling
+            const networkResult =
+              await this.verifyNetworkConnectionWithFallback();
+            if (networkResult.success) {
               console.log("✅ Network verified and correct");
               this.handleNetworkChanged(this.networkId); // Update UI state
 
@@ -58,8 +59,10 @@ class Web3Manager {
               }
             } else {
               console.warn(
-                "⚠️ Network verification failed or incorrect network"
+                `⚠️ Network verification failed: ${networkResult.error}`
               );
+              // Don't immediately show error - schedule a retry
+              this.scheduleNetworkRetry();
             }
           } else {
             this.handleDisconnect();
@@ -83,6 +86,142 @@ class Web3Manager {
     this.gameContract = null;
     this.leaderboardContract = null;
     this.isConnected = false;
+  }
+
+  // Enhanced MetaMask readiness check
+  async waitForMetaMaskReady(maxWait = 3000) {
+    console.log("⏳ Waiting for MetaMask to be ready...");
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxWait) {
+      try {
+        // Check if MetaMask is present and responsive
+        if (
+          typeof window.ethereum !== "undefined" &&
+          window.ethereum.isMetaMask
+        ) {
+          // Try a simple request to see if MetaMask is responsive
+          await window.ethereum
+            .request({
+              method: "eth_requestAccounts",
+              params: [],
+            })
+            .catch(() => {
+              // This will fail if not connected, but that's OK - we just want to test responsiveness
+            });
+
+          console.log("✅ MetaMask is ready and responsive");
+          return true;
+        }
+      } catch (error) {
+        // MetaMask not ready yet, continue waiting
+      }
+
+      // Wait 100ms before next check
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    console.log("⏰ MetaMask readiness check timed out, proceeding anyway");
+    return false;
+  }
+
+  // Enhanced network verification with better error handling and fallbacks
+  async verifyNetworkConnectionWithFallback(maxRetries = 5) {
+    console.log("🌐 Starting enhanced network verification...");
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (!window.ethereum) {
+          return { success: false, error: "No Ethereum provider found" };
+        }
+
+        console.log(`🔍 Network verification attempt ${attempt}/${maxRetries}`);
+
+        // Try to get the current chain ID
+        const chainId = await window.ethereum.request({
+          method: "eth_chainId",
+        });
+
+        console.log(
+          `📡 Retrieved chain ID: ${chainId}, expected: ${CONFIG.NETWORK.chainId}`
+        );
+
+        this.networkId = chainId;
+
+        if (chainId === CONFIG.NETWORK.chainId) {
+          return { success: true, chainId };
+        } else {
+          // Wrong network detected
+          return {
+            success: false,
+            error: `Wrong network. Connected to ${chainId}, expected ${CONFIG.NETWORK.chainId}`,
+            wrongNetwork: true,
+            currentChainId: chainId,
+            expectedChainId: CONFIG.NETWORK.chainId,
+          };
+        }
+      } catch (error) {
+        console.warn(
+          `🔄 Network verification attempt ${attempt} failed:`,
+          error
+        );
+
+        if (attempt === maxRetries) {
+          return {
+            success: false,
+            error: `Network verification failed after ${maxRetries} attempts: ${error.message}`,
+            finalError: error,
+          };
+        }
+
+        // Progressive delay: 200ms, 400ms, 800ms, 1600ms
+        const delay = Math.min(200 * Math.pow(2, attempt - 1), 1600);
+        console.log(`⏳ Waiting ${delay}ms before retry...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    return {
+      success: false,
+      error: "Network verification failed - unknown error",
+    };
+  }
+
+  // Schedule a delayed network retry to handle timing issues
+  scheduleNetworkRetry() {
+    console.log("📅 Scheduling network retry in 2 seconds...");
+    setTimeout(async () => {
+      console.log("🔄 Executing scheduled network retry...");
+      const networkResult = await this.verifyNetworkConnectionWithFallback();
+
+      if (networkResult.success) {
+        console.log("✅ Scheduled network retry succeeded!");
+        this.handleNetworkChanged(this.networkId);
+
+        // Update UI to show successful connection
+        if (this.isConnected) {
+          this.updateWalletUI();
+        }
+
+        // Notify user of successful recovery
+        if (window.gameApp && window.gameApp.showNotification) {
+          window.gameApp.showNotification(
+            "🌐 Network connection restored!",
+            "success"
+          );
+        }
+      } else {
+        console.warn(
+          "❌ Scheduled network retry also failed:",
+          networkResult.error
+        );
+
+        // Only show error UI if it's actually a wrong network (not just timing)
+        if (networkResult.wrongNetwork) {
+          this.handleNetworkChanged(networkResult.currentChainId);
+        }
+      }
+    }, 2000);
   }
 
   async verifyConnection() {
