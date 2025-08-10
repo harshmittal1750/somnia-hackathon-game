@@ -65,6 +65,22 @@ class WagmiManager {
 
         this.setupEventListeners();
 
+        // Check if we need to switch to Somnia network
+        if (this.chainId !== 50312) {
+          console.log(
+            "🌐 Wagmi: Wrong network detected, attempting to switch to Somnia..."
+          );
+          try {
+            await this.ensureSomniaNetwork();
+          } catch (networkError) {
+            console.warn(
+              "⚠️ Wagmi: Failed to switch to Somnia network:",
+              networkError
+            );
+            // Don't fail the connection, just warn the user
+          }
+        }
+
         if (this.onConnect) {
           this.onConnect(this.account);
         }
@@ -163,8 +179,17 @@ class WagmiManager {
       // Setup listeners after connection
       this.setupEventListeners();
 
-      // Ensure we're on the right network
-      await this.ensureSomniaNetwork();
+      // Ensure we're on the right network (but don't fail if it doesn't work)
+      try {
+        await this.ensureSomniaNetwork();
+      } catch (networkError) {
+        console.warn(
+          "⚠️ Wagmi: Failed to switch to Somnia network during connection:",
+          networkError
+        );
+        // Continue with connection even if network switch fails
+        // The user can manually switch later
+      }
 
       if (this.onConnect) {
         this.onConnect(this.account);
@@ -195,9 +220,7 @@ class WagmiManager {
 
   async ensureSomniaNetwork() {
     try {
-      const { switchChain, addChain } = await import(
-        "https://esm.sh/@wagmi/core@2.x"
-      );
+      const { switchChain } = await import("https://esm.sh/@wagmi/core@2.x");
 
       const targetChainId = 50312; // Somnia testnet
 
@@ -205,21 +228,70 @@ class WagmiManager {
         console.log("🌐 Wagmi: Switching to Somnia network...");
 
         try {
-          await switchChain(this.config, { chainId: targetChainId });
+          // Try to switch to Somnia chain
+          const result = await switchChain(this.config, {
+            chainId: targetChainId,
+          });
+          console.log("✅ Wagmi: Successfully switched to Somnia network");
+          this.chainId = result.id;
         } catch (switchError) {
-          // If network doesn't exist, add it
-          if (switchError.code === 4902) {
-            console.log("🌐 Wagmi: Adding Somnia network...");
+          console.log(
+            "🌐 Wagmi: Chain not found, attempting to add it...",
+            switchError
+          );
+
+          // If network doesn't exist, try to add it with addEthereumChainParameter
+          if (
+            switchError.code === 4902 ||
+            switchError.message?.includes("Unrecognized chain") ||
+            switchError.message?.includes("chain does not exist")
+          ) {
+            console.log(
+              "🌐 Wagmi: Adding Somnia network with chain parameters..."
+            );
 
             if (window.somniaChain) {
-              await addChain(this.config, { chain: window.somniaChain });
+              try {
+                // Use switchChain with addEthereumChainParameter to add the chain
+                const addResult = await switchChain(this.config, {
+                  chainId: targetChainId,
+                  addEthereumChainParameter: {
+                    chainId: `0x${targetChainId.toString(16)}`, // Convert to hex
+                    chainName: window.somniaChain.name,
+                    nativeCurrency: window.somniaChain.nativeCurrency,
+                    rpcUrls: window.somniaChain.rpcUrls.default.http,
+                    blockExplorerUrls: window.somniaChain.blockExplorers
+                      ? [window.somniaChain.blockExplorers.default.url]
+                      : undefined,
+                    iconUrls: ["https://spacedefender.xyz/favicon.svg"],
+                  },
+                });
+                console.log(
+                  "✅ Wagmi: Successfully added and switched to Somnia network"
+                );
+                this.chainId = addResult.id;
+              } catch (addError) {
+                console.error(
+                  "❌ Wagmi: Failed to add Somnia network:",
+                  addError
+                );
+                throw new Error(
+                  `Failed to add Somnia network: ${addError.message}`
+                );
+              }
             } else {
-              throw new Error("Somnia chain configuration not available");
+              throw new Error(
+                "Somnia chain configuration not available in window.somniaChain"
+              );
             }
           } else {
+            // Other errors (user rejection, etc.)
+            console.error("❌ Wagmi: Chain switch failed:", switchError);
             throw switchError;
           }
         }
+      } else {
+        console.log("✅ Wagmi: Already on Somnia network");
       }
     } catch (error) {
       console.error("Wagmi: Failed to ensure Somnia network:", error);
@@ -372,6 +444,16 @@ class WagmiManager {
     } catch (error) {
       console.error("Failed to encode function data:", error);
       return "0x";
+    }
+  }
+
+  async getChainId() {
+    try {
+      const { getChainId } = await import("https://esm.sh/@wagmi/core@2.x");
+      return getChainId(this.config);
+    } catch (error) {
+      console.error("Failed to get chain ID:", error);
+      return this.chainId; // fallback to cached value
     }
   }
 
