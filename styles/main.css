@@ -68,6 +68,15 @@ body::before {
   animation: canvasPulse 3s ease-in-out infinite,
     canvasBorderGlow 2s ease-in-out infinite alternate;
   transition: all 0.3s ease;
+
+  /* Additional resilience properties for dev tools scenarios */
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-width: 200px;
+  min-height: 150px;
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes canvasPulse {
