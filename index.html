@@ -732,26 +732,42 @@
         testnet: true,
       };
 
-      // Create Wagmi config
-      const wagmiConfig = createConfig({
-        chains: [somniaTestnet, mainnet, sepolia],
-        connectors: [
-          injected(),
-          metaMask(),
+      // Create basic connectors (WalletConnect requires project ID)
+      const connectors = [
+        injected(),
+        metaMask(),
+        coinbaseWallet({
+          appName: "Somnia Space Defender",
+          appLogoUrl: "https://spacedefender.xyz/favicon.svg",
+        }),
+      ];
+
+      // Add WalletConnect only if project ID is available
+      // Priority: window.WALLETCONNECT_PROJECT_ID > CONFIG.WALLETCONNECT.PROJECT_ID
+      // Get a project ID from: https://cloud.walletconnect.com/
+      const walletConnectProjectId =
+        window.WALLETCONNECT_PROJECT_ID ||
+        (typeof CONFIG !== "undefined"
+          ? CONFIG.WALLETCONNECT?.PROJECT_ID
+          : null);
+      if (walletConnectProjectId) {
+        connectors.push(
           walletConnect({
-            projectId: process.env.PROJECT_ID,
+            projectId: walletConnectProjectId,
             metadata: {
               name: "Somnia Space Defender",
               description: "Web3 Space Defense Game",
               url: "https://spacedefender.xyz",
               icons: ["https://spacedefender.xyz/favicon.svg"],
             },
-          }),
-          coinbaseWallet({
-            appName: "Somnia Space Defender",
-            appLogoUrl: "https://spacedefender.xyz/favicon.svg",
-          }),
-        ],
+          })
+        );
+      }
+
+      // Create Wagmi config
+      const wagmiConfig = createConfig({
+        chains: [somniaTestnet, mainnet, sepolia],
+        connectors,
       });
 
       // Make Wagmi config available globally

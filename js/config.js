@@ -33,6 +33,12 @@ const CONFIG = {
     RETRY_ATTEMPTS: 3,
   },
 
+  // // WalletConnect Configuration (optional)
+  // WALLETCONNECT: {
+  //   PROJECT_ID: process.env.PROJECT_ID,
+  //   // Get a project ID from: https://cloud.walletconnect.com/
+  // },
+
   // 🎮 SSD Token Integration
   SSD: {
     REWARD_PER_KILL: "0.01", // SSD tokens per alien kill
