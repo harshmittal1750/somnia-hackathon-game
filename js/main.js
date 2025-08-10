@@ -702,12 +702,48 @@ class GameApp {
   async refreshConnection() {
     console.log("🔄 Manually refreshing connection...");
     try {
-      // Re-check wallet connection status
-      await this.checkWalletConnection();
+      // Show immediate feedback
+      this.showNotification("🔄 Refreshing connection...", "info", 1000);
+
+      // Get the active manager and force a network recheck
+      const manager = this.getActiveWeb3Manager();
+
+      // Force a fresh network verification
+      if (manager.verifyNetworkConnectionWithFallback) {
+        console.log("🌐 Forcing fresh network verification...");
+        const networkResult =
+          await manager.verifyNetworkConnectionWithFallback();
+
+        if (networkResult.success) {
+          console.log("✅ Manual network refresh succeeded!");
+          this.showNotification("✅ Network connection verified!", "success");
+
+          // Update the UI state
+          if (manager.isConnected) {
+            manager.updateWalletUI();
+            this.onWalletConnected(manager.account);
+          }
+        } else {
+          console.warn(
+            "❌ Manual network refresh failed:",
+            networkResult.error
+          );
+          this.showNotification(
+            `❌ ${
+              networkResult.wrongNetwork
+                ? "Wrong network detected"
+                : "Network verification failed"
+            }`,
+            "error"
+          );
+        }
+      } else {
+        // Fallback to old method
+        await this.checkWalletConnection();
+      }
 
       // Show success message
-      console.log("✅ Connection refreshed successfully");
-      this.showNotification("🔄 Connection refreshed successfully", "success");
+      console.log("✅ Connection refresh completed");
     } catch (error) {
       console.error("Failed to refresh connection:", error);
       this.showNotification(
@@ -728,6 +764,9 @@ class GameApp {
       console.log("📊 Connection info:", manager.getConnectionInfo());
     }
 
+    // Show checking status to user
+    this.showNotification("🔍 Verifying network connection...", "info", 1000);
+
     // Refresh the Web3 connection state
     await manager.refreshConnection();
 
@@ -738,9 +777,30 @@ class GameApp {
       manager.isConnected &&
       manager.networkId !== CONFIG.NETWORK.chainId
     ) {
-      // Connected but wrong network
+      // Connected but wrong network - be more specific about the issue
       console.warn("⚠️ Connected to wrong network");
-      this.showWalletPanel(); // Stay on wallet panel with network warning
+      const currentChainId = manager.networkId;
+      const expectedChainId = CONFIG.NETWORK.chainId;
+
+      // Check if it's likely a timing issue (networkId is null or undefined)
+      if (!currentChainId || currentChainId === "0x" || currentChainId === "") {
+        console.log("📡 Network ID appears unresolved, may be timing issue");
+        this.showNotification(
+          "🔄 Network detection in progress...",
+          "warning",
+          2000
+        );
+
+        // Schedule a recheck
+        setTimeout(() => {
+          this.checkWalletConnection();
+        }, 1500);
+      } else {
+        console.log(
+          `❌ Definite wrong network: ${currentChainId} vs ${expectedChainId}`
+        );
+        this.showWalletPanel(); // Stay on wallet panel with network warning
+      }
     } else {
       // Not connected or other issues
       this.onWalletDisconnected();
