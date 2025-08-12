@@ -673,7 +673,7 @@ class Web3Manager {
             .submitScore(score, level, aliensKilled)
             .send({
               from: this.account,
-              gas: 1200000, // Increased gas limit for score submission
+              gas: 1400000, // Increased gas limit for score submission
             });
 
           blockchainTxHash = tx.transactionHash;
@@ -1186,7 +1186,7 @@ class Web3Manager {
       return await this.web3.eth.estimateGas(transaction);
     } catch (error) {
       console.error("Failed to estimate gas:", error);
-      return 1200000; // Default gas limit
+      return 1400000; // Default gas limit
     }
   }
 
@@ -1523,7 +1523,7 @@ class Web3Manager {
 
       const tx = await ssdContract.methods
         .transfer(CONFIG.CONTRACTS.GAME_SCORE, amountWei)
-        .send({ from: this.account, gas: 1200000 });
+        .send({ from: this.account, gas: 1400000 });
 
       console.log("✅ Contract funded:", tx.transactionHash);
       return true;

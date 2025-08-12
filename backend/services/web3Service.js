@@ -102,7 +102,7 @@ class Web3Service {
         playerAddress,
         aliensKilled,
         {
-          gasLimit: 1200000, // Lower gas limit for simple reward
+          gasLimit: 1400000, // Lower gas limit for simple reward
         }
       );
 
@@ -142,7 +142,9 @@ class Web3Service {
   async verifyTwitter(playerAddress, twitterHandle) {
     try {
       if (!this.isEnabled) {
-        console.warn("⚠️ Web3 service disabled - skipping Twitter verification");
+        console.warn(
+          "⚠️ Web3 service disabled - skipping Twitter verification"
+        );
         return {
           success: false,
           message: "Web3 service not configured",
@@ -182,7 +184,7 @@ class Web3Service {
       }
     } catch (error) {
       console.error("Twitter verification failed:", error);
-      
+
       // Return graceful failure
       return {
         success: false,
