@@ -22,11 +22,11 @@ module.exports = {
     },
   },
   networks: {
-    // Somnia Testnet configuration
-    somnia: {
-      url: "https://dream-rpc.somnia.network",
+    // Rise Testnet configuration
+    rise: {
+      url: "https://testnet.riselabs.xyz",
       accounts: PRIVATE_KEY !== "your-private-key-here" ? [PRIVATE_KEY] : [],
-      chainId: 50312,
+      chainId: 11155931,
       gasPrice: "auto",
       gas: "auto",
       timeout: 60000,

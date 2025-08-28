@@ -3,7 +3,7 @@ require("dotenv").config();
 
 class Web3Service {
   constructor() {
-    this.provider = new ethers.JsonRpcProvider(process.env.SOMNIA_RPC_URL);
+    this.provider = new ethers.JsonRpcProvider(process.env.RISE_RPC_URL);
 
     // Check if private key is valid before creating wallet
     if (

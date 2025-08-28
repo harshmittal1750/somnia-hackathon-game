@@ -1,4 +1,4 @@
-// Somnia Space Defender - Wagmi Connection Manager
+// Rise Space Defender - Wagmi Connection Manager
 class WagmiManager {
   constructor() {
     this.config = null;
@@ -65,16 +65,16 @@ class WagmiManager {
 
         this.setupEventListeners();
 
-        // Check if we need to switch to Somnia network
-        if (this.chainId !== 50312) {
+        // Check if we need to switch to Rise network
+        if (this.chainId !== 11155931) {
           console.log(
-            "🌐 Wagmi: Wrong network detected, attempting to switch to Somnia..."
+            "🌐 Wagmi: Wrong network detected, attempting to switch to Rise..."
           );
           try {
-            await this.ensureSomniaNetwork();
+            await this.ensureRiseNetwork();
           } catch (networkError) {
             console.warn(
-              "⚠️ Wagmi: Failed to switch to Somnia network:",
+              "⚠️ Wagmi: Failed to switch to Rise network:",
               networkError
             );
             // Don't fail the connection, just warn the user
@@ -181,10 +181,10 @@ class WagmiManager {
 
       // Ensure we're on the right network (but don't fail if it doesn't work)
       try {
-        await this.ensureSomniaNetwork();
+        await this.ensureRiseNetwork();
       } catch (networkError) {
         console.warn(
-          "⚠️ Wagmi: Failed to switch to Somnia network during connection:",
+          "⚠️ Wagmi: Failed to switch to Rise network during connection:",
           networkError
         );
         // Continue with connection even if network switch fails
@@ -218,21 +218,21 @@ class WagmiManager {
     return this.connectWithConnector("injected");
   }
 
-  async ensureSomniaNetwork() {
+  async ensureRiseNetwork() {
     try {
       const { switchChain } = await import("https://esm.sh/@wagmi/core@2.x");
 
-      const targetChainId = 50312; // Somnia testnet
+      const targetChainId = 11155931; // Rise testnet
 
       if (this.chainId !== targetChainId) {
-        console.log("🌐 Wagmi: Switching to Somnia network...");
+        console.log("🌐 Wagmi: Switching to Rise network...");
 
         try {
           // Try to switch to Somnia chain
           const result = await switchChain(this.config, {
             chainId: targetChainId,
           });
-          console.log("✅ Wagmi: Successfully switched to Somnia network");
+          console.log("✅ Wagmi: Successfully switched to Rise network");
           this.chainId = result.id;
         } catch (switchError) {
           console.log(
@@ -247,41 +247,41 @@ class WagmiManager {
             switchError.message?.includes("chain does not exist")
           ) {
             console.log(
-              "🌐 Wagmi: Adding Somnia network with chain parameters..."
+              "🌐 Wagmi: Adding Rise network with chain parameters..."
             );
 
-            if (window.somniaChain) {
+            if (window.riseChain) {
               try {
                 // Use switchChain with addEthereumChainParameter to add the chain
                 const addResult = await switchChain(this.config, {
                   chainId: targetChainId,
                   addEthereumChainParameter: {
                     chainId: `0x${targetChainId.toString(16)}`, // Convert to hex
-                    chainName: window.somniaChain.name,
-                    nativeCurrency: window.somniaChain.nativeCurrency,
-                    rpcUrls: window.somniaChain.rpcUrls.default.http,
-                    blockExplorerUrls: window.somniaChain.blockExplorers
-                      ? [window.somniaChain.blockExplorers.default.url]
+                    chainName: window.riseChain.name,
+                    nativeCurrency: window.riseChain.nativeCurrency,
+                    rpcUrls: window.riseChain.rpcUrls.default.http,
+                    blockExplorerUrls: window.riseChain.blockExplorers
+                      ? [window.riseChain.blockExplorers.default.url]
                       : undefined,
                     iconUrls: ["https://spacedefender.xyz/favicon.svg"],
                   },
                 });
                 console.log(
-                  "✅ Wagmi: Successfully added and switched to Somnia network"
+                  "✅ Wagmi: Successfully added and switched to Rise network"
                 );
                 this.chainId = addResult.id;
               } catch (addError) {
                 console.error(
-                  "❌ Wagmi: Failed to add Somnia network:",
+                  "❌ Wagmi: Failed to add Rise network:",
                   addError
                 );
                 throw new Error(
-                  `Failed to add Somnia network: ${addError.message}`
+                  `Failed to add Rise network: ${addError.message}`
                 );
               }
             } else {
               throw new Error(
-                "Somnia chain configuration not available in window.somniaChain"
+                "Rise chain configuration not available in window.riseChain"
               );
             }
           } else {
@@ -291,10 +291,10 @@ class WagmiManager {
           }
         }
       } else {
-        console.log("✅ Wagmi: Already on Somnia network");
+        console.log("✅ Wagmi: Already on Rise network");
       }
     } catch (error) {
-      console.error("Wagmi: Failed to ensure Somnia network:", error);
+      console.error("Wagmi: Failed to ensure Rise network:", error);
       throw error;
     }
   }
@@ -457,8 +457,8 @@ class WagmiManager {
     }
   }
 
-  isOnSomniaNetwork() {
-    return this.chainId === 50312;
+  isOnRiseNetwork() {
+    return this.chainId === 11155931;
   }
 
   getConnectionInfo() {

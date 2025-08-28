@@ -1,4 +1,4 @@
-// Somnia Space Defender - Web3 Manager
+// Rise Space Defender - Web3 Manager
 class Web3Manager {
   constructor() {
     this.web3 = null;
@@ -273,7 +273,7 @@ class Web3Manager {
 
       if (accounts.length > 0) {
         await this.handleAccountsChanged(accounts);
-        await this.ensureSomniaNetwork();
+        await this.ensureRiseNetwork();
         return true;
       }
     } catch (error) {
@@ -284,23 +284,23 @@ class Web3Manager {
     return false;
   }
 
-  async ensureSomniaNetwork() {
+  async ensureRiseNetwork() {
     try {
       const currentChainId = await window.ethereum.request({
         method: "eth_chainId",
       });
 
       if (currentChainId !== CONFIG.NETWORK.chainId) {
-        await this.switchToSomniaNetwork();
+        await this.switchToRiseNetwork();
       }
     } catch (error) {
-      console.error("Failed to ensure Somnia network:", error);
+      console.error("Failed to ensure Rise network:", error);
     }
   }
 
-  async switchToSomniaNetwork() {
+  async switchToRiseNetwork() {
     try {
-      // Try to switch to Somnia testnet
+      // Try to switch to Rise testnet
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
         params: [{ chainId: CONFIG.NETWORK.chainId }],
@@ -322,14 +322,14 @@ class Web3Manager {
             ],
           });
         } catch (addError) {
-          console.error("Failed to add Somnia network:", addError);
+          console.error("Failed to add Rise network:", addError);
           this.showError(
-            "Failed to add Somnia network. Please add it manually."
+            "Failed to add Rise network. Please add it manually."
           );
         }
       } else {
-        console.error("Failed to switch to Somnia network:", switchError);
-        this.showError("Please switch to Somnia testnet manually.");
+        console.error("Failed to switch to Rise network:", switchError);
+        this.showError("Please switch to Rise testnet manually.");
       }
     }
   }
@@ -371,7 +371,7 @@ class Web3Manager {
         CONFIG.NETWORK.chainId
       );
       this.showWarning(
-        "Please switch to Somnia testnet for full functionality."
+        "Please switch to Rise testnet for full functionality."
       );
 
       // Disable game functionality on wrong network
@@ -888,12 +888,12 @@ class Web3Manager {
       scores.splice(100);
     }
 
-    localStorage.setItem("somniaSpaceDefender_scores", JSON.stringify(scores));
+    localStorage.setItem("riseSpaceDefender_scores", JSON.stringify(scores));
   }
 
   getLocalScores() {
     try {
-      const scores = localStorage.getItem("somniaSpaceDefender_scores");
+      const scores = localStorage.getItem("riseSpaceDefender_scores");
       return scores ? JSON.parse(scores) : [];
     } catch (error) {
       console.error("Failed to load local scores:", error);
@@ -1190,7 +1190,7 @@ class Web3Manager {
     }
   }
 
-  isOnSomniaNetwork() {
+  isOnRiseNetwork() {
     return this.networkId === CONFIG.NETWORK.chainId;
   }
 

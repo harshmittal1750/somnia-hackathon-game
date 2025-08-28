@@ -1,23 +1,23 @@
-// Somnia Space Defender - Configuration
+// Rise Space Defender - Configuration
 const GAME = {
   BASE_WIDTH: 800,
   BASE_HEIGHT: 600,
 };
 const CONFIG = {
-  // Somnia Testnet Configuration
+  // Rise Testnet Configuration
   NETWORK: {
-    chainId: "0xc488", // Somnia Testnet Chain ID (50312 in hex)
-    chainName: "Somnia Testnet",
-    rpcUrls: ["https://dream-rpc.somnia.network"],
-    blockExplorerUrls: ["https://shannon-explorer.somnia.network"],
+    chainId: "0xAA36FB", // Rise Testnet Chain ID (11155931 in hex)
+    chainName: "RISE Testnet",
+    rpcUrls: ["https://testnet.riselabs.xyz"],
+    blockExplorerUrls: ["https://explorer.testnet.riselabs.xyz"],
     nativeCurrency: {
-      name: "STT",
-      symbol: "STT",
+      name: "ETH",
+      symbol: "ETH",
       decimals: 18,
     },
   },
 
-  // Smart Contract Addresses (Deployed on Somnia Testnet)
+  // Smart Contract Addresses (Deployed on Rise Testnet)
   CONTRACTS: {
     GAME_SCORE: "0x4AB51147CB615DF6630BD91b3a6dCfe5BbEe1041", // 🛡️ MINIMAL SSD REWARDS CONTRACT!
     SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SSD Token Contract ✅
@@ -33,13 +33,11 @@ const CONFIG = {
     RETRY_ATTEMPTS: 3,
   },
 
-
   // // WalletConnect Configuration (optional)
   // WALLETCONNECT: {
   //   PROJECT_ID: process.env.PROJECT_ID,
   //   // Get a project ID from: https://cloud.walletconnect.com/
   // },
-
 
   // 🎮 SSD Token Integration
   SSD: {
@@ -47,7 +45,7 @@ const CONFIG = {
     TWITTER_REWARD: "1", // SSD tokens for Twitter verification
     SYMBOL: "SSD",
     DECIMALS: 18,
-    EUCLID_SWAP_URL: "https://testnet.euclidswap.io/pools/ssd.eucl-stt",
+    EUCLID_SWAP_URL: "https://testnet.euclidswap.io/pools/ssd.eucl-eth",
   },
 
   // Game Constants
@@ -638,4 +636,4 @@ const GAME_STATES = {
   LEADERBOARD: "leaderboard",
 };
 
-console.log("🚀 Somnia Space Defender Config Loaded");
+console.log("🚀 Rise Space Defender Config Loaded");

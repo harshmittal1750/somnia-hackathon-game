@@ -2,9 +2,9 @@
 pragma solidity ^0.8.19;
 
 /**
- * @title Somnia Space Defender with SSD Token Integration
+ * @title Rise Space Defender with SSD Token Integration
  * @dev Smart contract for on-chain game scoring, leaderboards, and SSD rewards
- * @author Somnia Hackathon Team
+ * @author harshmittal.dev
  */
 
 // Interface for SSD Token
@@ -20,7 +20,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract SomniaSpaceDefender {
+contract RiseSpaceDefender {
     // Events
     event ScoreSubmitted(
         address indexed player,

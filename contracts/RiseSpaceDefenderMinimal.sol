@@ -2,9 +2,9 @@
 pragma solidity ^0.8.19;
 
 /**
- * @title Somnia Space Defender - Minimal Contract for SSD Rewards & Shop
+ * @title Rise Space Defender - Minimal Contract for SSD Rewards & Shop
  * @dev Gas-optimized contract focusing only on token rewards and shop functionality
- * @author Somnia Hackathon Team
+ * @author harshmittal.dev
  */
 
 // Interface for SSD Token
@@ -20,7 +20,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract SomniaSpaceDefenderMinimal {
+contract RiseSpaceDefenderMinimal {
     // Events
     event SSDRewardClaimed(
         address indexed player,
