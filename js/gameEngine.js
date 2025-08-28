@@ -335,7 +335,7 @@ class GameEngine {
     this.score = 0;
     this.aliensKilled = 0;
     this.level = startLevel;
-    this.sessionSSDEarned = 0; // Track SSD earned this session
+    this.sessionSSDEarned = 0; // Track SD earned this session
     this.lives = CONFIG.GAME.PLAYER.MAX_HEALTH;
     this.scoreMultiplier = 1; // Reset score multiplier
 
@@ -344,7 +344,7 @@ class GameEngine {
     const playerY = CONFIG.GAME.CANVAS_HEIGHT - CONFIG.GAME.PLAYER.HEIGHT - 20;
     this.player = new Player(playerX, playerY);
 
-    // 🛍️ Apply active SSD shop boosts to player
+    // 🛍️ Apply active SD shop boosts to player
     this.applyActiveBoosts();
 
     // Clear all entities
@@ -906,11 +906,11 @@ class GameEngine {
       );
     }
 
-    // Track SSD earned this session
-    const ssdPerKill = parseFloat(CONFIG.SSD.REWARD_PER_KILL);
+    // Track SD earned this session
+    const ssdPerKill = parseFloat(CONFIG.SD.REWARD_PER_KILL);
     this.sessionSSDEarned += ssdPerKill;
 
-    // Update SSD display in real-time (if available)
+    // Update SD display in real-time (if available)
     if (window.gameApp && window.gameApp.updateSessionSSD) {
       window.gameApp.updateSessionSSD(this.sessionSSDEarned);
     }
@@ -1743,7 +1743,7 @@ class GameEngine {
     document.getElementById("finalLevel").textContent = this.level;
     document.getElementById("aliensKilled").textContent = this.aliensKilled;
 
-    // Show SSD earned this session
+    // Show SD earned this session
     const sessionSSDElement = document.getElementById("sessionSSDEarned");
     if (sessionSSDElement) {
       sessionSSDElement.textContent = this.sessionSSDEarned.toFixed(2);
@@ -1764,13 +1764,13 @@ class GameEngine {
     document.getElementById("pauseMenu").classList.remove("hidden");
   }
 
-  // 🛍️ SSD SHOP BOOSTS INTEGRATION
+  // 🛍️ SD SHOP BOOSTS INTEGRATION
 
   async applyActiveBoosts() {
     if (!this.player || !web3Manager.isConnected) return;
 
     try {
-      console.log("🛍️ Checking for active SSD shop boosts...");
+      console.log("🛍️ Checking for active SD shop boosts...");
 
       // Check each boost type
       const boostChecks = [
@@ -1792,7 +1792,7 @@ class GameEngine {
         }
       }
     } catch (error) {
-      console.error("Failed to apply SSD boosts:", error);
+      console.error("Failed to apply SD boosts:", error);
     }
   }
 

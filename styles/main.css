@@ -403,6 +403,365 @@ body::before {
   color: #ccffcc;
 }
 
+/* Network Selection */
+.network-selection {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(
+    145deg,
+    rgba(20, 20, 60, 0.4),
+    rgba(40, 40, 80, 0.4)
+  );
+  border: 1px solid rgba(100, 150, 255, 0.5);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.network-selection h4 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.network-description {
+  text-align: center;
+  color: #ccc;
+  margin-bottom: 20px;
+  font-size: 0.9em;
+}
+
+.network-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.btn-network {
+  background: linear-gradient(
+    145deg,
+    rgba(30, 30, 70, 0.6),
+    rgba(50, 50, 90, 0.6)
+  );
+  border: 2px solid rgba(100, 150, 255, 0.3);
+  border-radius: 12px;
+  padding: 15px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  min-height: 80px;
+}
+
+.btn-network:hover {
+  background: linear-gradient(
+    145deg,
+    rgba(50, 50, 90, 0.8),
+    rgba(70, 70, 110, 0.8)
+  );
+  border-color: rgba(100, 150, 255, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(100, 150, 255, 0.3);
+}
+
+.btn-network:active {
+  transform: translateY(0);
+}
+
+.network-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.network-icon {
+  font-size: 2em;
+  min-width: 50px;
+  text-align: center;
+}
+
+.network-details {
+  flex: 1;
+}
+
+.network-name {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.network-status {
+  font-size: 0.9em;
+  color: #90ff90;
+  margin-bottom: 3px;
+}
+
+.network-features {
+  font-size: 0.8em;
+  color: #ccc;
+}
+
+.network-help {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(20, 20, 20, 0.3);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.help-text {
+  text-align: center;
+  color: #ccc;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+}
+
+.network-resources {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resource-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.resource-group strong {
+  color: #fff;
+  min-width: 120px;
+}
+
+.resource-link {
+  display: inline-block;
+  padding: 5px 10px;
+  background: rgba(100, 150, 255, 0.2);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 5px;
+  color: #ccc;
+  text-decoration: none;
+  font-size: 0.8em;
+  transition: all 0.3s ease;
+}
+
+.resource-link:hover {
+  background: rgba(100, 150, 255, 0.3);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Network Selection Responsive */
+@media (min-width: 768px) {
+  .network-options {
+    flex-direction: row;
+    gap: 20px;
+  }
+
+  .btn-network {
+    flex: 1;
+  }
+
+  .network-resources {
+    flex-direction: row;
+    justify-content: space-around;
+  }
+
+  .resource-group {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+/* Game Header with Network Switcher */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.game-header h2 {
+  margin: 0;
+  flex: 1;
+}
+
+/* Network Switcher in Game Menu */
+.network-switcher {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.current-network-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(20, 20, 60, 0.6);
+  border: 1px solid rgba(100, 150, 255, 0.4);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.current-network-display:hover {
+  background: rgba(30, 30, 70, 0.8);
+  border-color: rgba(100, 150, 255, 0.6);
+}
+
+.network-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.network-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #90ff90;
+  animation: pulse 2s infinite;
+}
+
+.network-dot.disconnected {
+  background: #ff6b6b;
+}
+
+.network-dot.unsupported {
+  background: #ffa500;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.network-text {
+  font-size: 0.9em;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.network-switch-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 1em;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.network-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: rotate(180deg);
+}
+
+.network-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: rgba(20, 20, 60, 0.95);
+  border: 1px solid rgba(100, 150, 255, 0.5);
+  border-radius: 10px;
+  padding: 8px;
+  min-width: 220px;
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.network-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 4px;
+}
+
+.network-option:last-child {
+  margin-bottom: 0;
+}
+
+.network-option:hover {
+  background: rgba(50, 50, 90, 0.6);
+}
+
+.network-option.active {
+  background: rgba(100, 150, 255, 0.2);
+  border: 1px solid rgba(100, 150, 255, 0.4);
+}
+
+.network-option-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.network-option .network-icon {
+  font-size: 1.2em;
+}
+
+.network-option .network-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.network-option .network-name {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: #fff;
+}
+
+.network-option .network-features {
+  font-size: 0.75em;
+  color: #ccc;
+}
+
+.network-status {
+  font-size: 0.9em;
+}
+
+/* Responsive Network Switcher */
+@media (max-width: 767px) {
+  .game-header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .network-switcher {
+    align-items: center;
+  }
+
+  .network-dropdown {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
 /* Game Over Stats */
 .game-over-stats {
   margin: 20px 0;

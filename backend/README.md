@@ -1,14 +1,14 @@
-# Somnia Space Defender Backend
+# Space Defender Backend
 
-A high-performance Node.js backend API for the Somnia Space Defender game with MongoDB database and Web3 integration.
+A high-performance Node.js backend API for the Space Defender game with MongoDB database and Web3 integration.
 
 ## 🚀 Features
 
-- **Gas-Optimized Architecture**: Moved scores, leaderboards, and achievements off-chain to reduce gas costs from 2M+ to minimal SSD rewards only
+- **Gas-Optimized Architecture**: Moved scores, leaderboards, and achievements off-chain to reduce gas costs from 2M+ to minimal SD rewards only
 - **Anti-Cheat System**: Server-side score validation with multiple layers of protection
 - **Real-time Leaderboards**: Fast, cached leaderboard system with multiple ranking types
 - **Achievement System**: Comprehensive achievement tracking and unlocking
-- **SSD Token Integration**: Seamless Web3 integration for token rewards
+- **SD Token Integration**: Seamless Web3 integration for token rewards
 - **High Performance**: MongoDB with optimized indexes and caching
 - **RESTful API**: Clean, documented API endpoints
 - **Security**: Rate limiting, validation, and data sanitization
@@ -287,8 +287,8 @@ The backend implements comprehensive anti-cheat validation:
     achievementId: String,
     unlockedAt: Date
   }],
-  ssdEarned: Number,         // Total SSD tokens earned
-  ssdSpent: Number,          // Total SSD tokens spent
+  ssdEarned: Number,         // Total SD tokens earned
+  ssdSpent: Number,          // Total SD tokens spent
   twitterHandle: String,     // Social media handle
   twitterVerified: Boolean,  // Verification status
   lastSubmissionTime: Date,  // Anti-cheat timing
@@ -312,7 +312,7 @@ The backend implements comprehensive anti-cheat validation:
   accuracy: Number,          // Shooting accuracy percentage
   validated: Boolean,        // Passed anti-cheat validation
   validationDetails: Object, // Validation breakdown
-  ssdRewarded: Number,       // SSD tokens awarded
+  ssdRewarded: Number,       // SD tokens awarded
   txHash: String,            // Blockchain transaction hash
   createdAt: Date
 }
@@ -329,7 +329,7 @@ The backend implements comprehensive anti-cheat validation:
   achievementType: String,   // Type (score/level/aliens/games/time/special)
   category: String,          // Category (combat/progression/endurance/social/special)
   rarity: String,            // Rarity (common/rare/epic/legendary)
-  ssdReward: Number,         // SSD tokens awarded
+  ssdReward: Number,         // SD tokens awarded
   isActive: Boolean,         // Whether achievement is active
   order: Number,             // Display order
   createdAt: Date
@@ -461,7 +461,7 @@ npm run seed
 The backend logs all important events:
 
 - Score submissions and validations
-- SSD token rewards
+- SD token rewards
 - Achievement unlocks
 - API errors and warnings
 - Performance metrics

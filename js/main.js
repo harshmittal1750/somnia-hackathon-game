@@ -1,4 +1,4 @@
-// Somnia Space Defender - Main Application Controller
+// Space Defender - Main Application Controller
 class GameApp {
   constructor() {
     this.currentState = GAME_STATES.LOADING;
@@ -12,7 +12,7 @@ class GameApp {
   }
 
   async init() {
-    console.log("🚀 Initializing Somnia Space Defender...");
+    console.log("🚀 Initializing Space Defender...");
 
     try {
       // Mobile optimizations
@@ -311,13 +311,13 @@ class GameApp {
       this.startTutorial();
     });
 
-    // SSD Shop event listeners
+    // SD Shop event listeners
     document.getElementById("openShop")?.addEventListener("click", () => {
-      this.showSSDShop();
+      this.showSDShop();
     });
 
     document.getElementById("closeShop")?.addEventListener("click", () => {
-      this.hideSSDShop();
+      this.hideSDShop();
     });
 
     // Twitter verification event listeners
@@ -844,8 +844,8 @@ class GameApp {
     await this.updateHighScore(); // Load high score from backend
     this.showGameMenu();
 
-    // Initialize SSD balance in HUD
-    this.updateHUDSSDBalance();
+    // Initialize SD balance in HUD
+    this.updateHUDSDBalance();
 
     // Check if user is contract owner and show/hide admin button
     try {
@@ -1043,8 +1043,8 @@ class GameApp {
     // Ensure we have the latest high score before starting
     await this.updateHighScore();
 
-    // Reset session SSD counter
-    this.updateSessionSSD(0);
+    // Reset session SD counter
+    this.updateSessionSD(0);
 
     this.showGameUI();
     gameEngine.startGame(this.selectedLevel);
@@ -1052,8 +1052,8 @@ class GameApp {
   }
 
   restartGame() {
-    // Reset session SSD counter
-    this.updateSessionSSD(0);
+    // Reset session SD counter
+    this.updateSessionSD(0);
 
     gameEngine.startGame(this.selectedLevel);
     document.getElementById("pauseMenu").classList.add("hidden");
@@ -1302,7 +1302,7 @@ class GameApp {
         icon: "💰",
         title: "Web3 Integration",
         description:
-          "Connect your wallet to earn SSD tokens and save high scores on Somnia blockchain",
+          "Connect your wallet to earn SD tokens and save high scores on Somnia blockchain",
         visual: this.createWeb3Demo(),
       },
     ];
@@ -1461,10 +1461,10 @@ class GameApp {
       <div class="web3-demo">
         <div class="wallet-icon">🔗</div>
         <div class="blockchain-benefits">
-          <div class="benefit-item">💰 Earn SSD</div>
+          <div class="benefit-item">💰 Earn SD</div>
           <div class="benefit-item">🏆 Save Scores</div>
           <div class="benefit-item">🛍️ Shop Items</div>
-          <div class="benefit-item">🐦 Verify Twitter (1 SSD)</div>
+          <div class="benefit-item">🐦 Verify Twitter (1 SD)</div>
         </div>
       </div>
     `;
@@ -1564,10 +1564,10 @@ class GameApp {
     }, duration);
   }
 
-  // 🎉 SSD REWARD NOTIFICATION SYSTEM
+  // 🎉 SD REWARD NOTIFICATION SYSTEM
 
-  showSSDReward(ssdAmount, aliensKilled = 0, source = "Gameplay") {
-    // Create animated SSD reward notification
+  showSDReward(ssdAmount, aliensKilled = 0, source = "Gameplay") {
+    // Create animated SD reward notification
     const rewardDiv = document.createElement("div");
     rewardDiv.className = "ssd-reward-popup";
 
@@ -1576,15 +1576,15 @@ class GameApp {
         <div class="reward-icon">🐦</div>
         <div class="reward-text">
           <div class="reward-title">Twitter Verified!</div>
-          <div class="reward-amount">+${ssdAmount} SSD</div>
+          <div class="reward-amount">+${ssdAmount} SD</div>
         </div>
       `;
     } else {
       rewardDiv.innerHTML = `
         <div class="reward-icon">💰</div>
         <div class="reward-text">
-          <div class="reward-title">SSD Earned!</div>
-          <div class="reward-amount">+${ssdAmount} SSD</div>
+          <div class="reward-title">SD Earned!</div>
+          <div class="reward-amount">+${ssdAmount} SD</div>
           <div class="reward-details">${aliensKilled} aliens eliminated</div>
         </div>
       `;
@@ -1608,40 +1608,36 @@ class GameApp {
     }, 4000);
 
     // Also show a regular notification
-    this.showNotification(
-      `🎉 Earned ${ssdAmount} SSD tokens!`,
-      "success",
-      2000
-    );
+    this.showNotification(`🎉 Earned ${ssdAmount} SD tokens!`, "success", 2000);
   }
 
-  // Update SSD balance in HUD
-  async updateHUDSSDBalance() {
+  // Update SD balance in HUD
+  async updateHUDSDBalance() {
     try {
-      const hudBalance = document.getElementById("hudSSDBalance");
+      const hudBalance = document.getElementById("hudSDBalance");
       if (!hudBalance) return;
 
-      const stats = await web3Manager.getSSDStats();
+      const stats = await web3Manager.getSDStats();
       const balance = parseFloat(stats.balance).toFixed(2);
       hudBalance.textContent = balance;
     } catch (error) {
-      console.error("Failed to update HUD SSD balance:", error);
-      const hudBalance = document.getElementById("hudSSDBalance");
+      console.error("Failed to update HUD SD balance:", error);
+      const hudBalance = document.getElementById("hudSDBalance");
       if (hudBalance) hudBalance.textContent = "0";
     }
   }
 
-  // Update session SSD counter in HUD
-  updateSessionSSD(amount) {
-    const sessionSSDElement = document.getElementById("sessionSSD");
-    if (sessionSSDElement) {
-      sessionSSDElement.textContent = amount.toFixed(2);
+  // Update session SD counter in HUD
+  updateSessionSD(amount) {
+    const sessionSDElement = document.getElementById("sessionSD");
+    if (sessionSDElement) {
+      sessionSDElement.textContent = amount.toFixed(2);
 
       // Add a brief highlight effect when updated
       if (amount > 0) {
-        sessionSSDElement.style.animation = "none";
+        sessionSDElement.style.animation = "none";
         setTimeout(() => {
-          sessionSSDElement.style.animation = "pulse 0.5s ease-in-out";
+          sessionSDElement.style.animation = "pulse 0.5s ease-in-out";
         }, 10);
       }
     }
@@ -1655,16 +1651,16 @@ class GameApp {
     return new Date(timestampMs).toLocaleDateString();
   }
 
-  // Refresh SSD balances in UI
-  async refreshSSDBalances() {
+  // Refresh SD balances in UI
+  async refreshSDBalances() {
     try {
       // Update HUD balance
-      await this.updateHUDSSDBalance();
+      await this.updateHUDSDBalance();
 
       // Update shop balance if shop is open
       const shopPanel = document.getElementById("ssdShop");
       if (shopPanel && !shopPanel.classList.contains("hidden")) {
-        await this.loadSSDShop();
+        await this.loadSDShop();
       }
 
       // Update admin panel balance if admin is open
@@ -1673,9 +1669,9 @@ class GameApp {
         await this.loadAdminData();
       }
 
-      console.log("💰 SSD balances refreshed");
+      console.log("💰 SD balances refreshed");
     } catch (error) {
-      console.error("Failed to refresh SSD balances:", error);
+      console.error("Failed to refresh SD balances:", error);
     }
   }
 
@@ -1757,27 +1753,27 @@ class GameApp {
     }
   }
 
-  // 🛍️ SSD SHOP FUNCTIONALITY
+  // 🛍️ SD SHOP FUNCTIONALITY
 
-  showSSDShop() {
+  showSDShop() {
     this.hideAllPanels();
     document.getElementById("ssdShop").classList.remove("hidden");
-    this.loadSSDShop();
+    this.loadSDShop();
   }
 
-  hideSSDShop() {
+  hideSDShop() {
     this.showGameMenu();
   }
 
-  async loadSSDShop() {
+  async loadSDShop() {
     const shopItemsContainer = document.getElementById("shopItems");
     const ssdBalance = document.getElementById("ssdBalance");
     const ssdEarned = document.getElementById("ssdEarned");
     const ssdSpent = document.getElementById("ssdSpent");
 
     try {
-      // Update SSD balance
-      const stats = await web3Manager.getSSDStats();
+      // Update SD balance
+      const stats = await web3Manager.getSDStats();
       ssdBalance.textContent = stats.balance;
       ssdEarned.textContent = stats.earned;
       ssdSpent.textContent = stats.spent;
@@ -1791,7 +1787,7 @@ class GameApp {
         itemDiv.className = "shop-item";
         itemDiv.innerHTML = `
           <h3>${item.name}</h3>
-          <div class="price">${item.price} SSD</div>
+          <div class="price">${item.price} SD</div>
           <div class="duration">${
             item.duration > 0
               ? `Duration: ${Math.round(item.duration / 60)} minutes`
@@ -1804,7 +1800,7 @@ class GameApp {
         shopItemsContainer.appendChild(itemDiv);
       });
     } catch (error) {
-      console.error("Failed to load SSD shop:", error);
+      console.error("Failed to load SD shop:", error);
       shopItemsContainer.innerHTML =
         '<div class="loading">Failed to load shop items</div>';
     }
@@ -1820,10 +1816,10 @@ class GameApp {
       if (success) {
         // Show purchase success with item details
         this.showItemPurchased(item.name, item.price);
-        this.loadSSDShop(); // Refresh shop
+        this.loadSDShop(); // Refresh shop
 
         // Trigger balance update
-        setTimeout(() => this.refreshSSDBalances(), 1000);
+        setTimeout(() => this.refreshSDBalances(), 1000);
       } else {
         this.showNotification("Purchase failed", "error");
       }
@@ -1843,7 +1839,7 @@ class GameApp {
       <div class="reward-text">
         <div class="reward-title">Item Purchased!</div>
         <div class="reward-amount">${itemName}</div>
-        <div class="reward-details">-${itemPrice} SSD</div>
+        <div class="reward-details">-${itemPrice} SD</div>
       </div>
     `;
 
@@ -2148,7 +2144,7 @@ ${requiredTweet}
 
       if (data.success) {
         this.showNotification(
-          "Twitter verified! 1 SSD token credited to your account!",
+          "Twitter verified! 1 SD token credited to your account!",
           "success"
         );
         this.showTwitterVerified(
@@ -2156,9 +2152,9 @@ ${requiredTweet}
           data.verification.verifiedAt
         );
 
-        // Refresh SSD balance
-        if (this.refreshSSDBalances) {
-          this.refreshSSDBalances();
+        // Refresh SD balance
+        if (this.refreshSDBalances) {
+          this.refreshSDBalances();
         }
       } else {
         this.showTwitterError(data.error || "Verification failed");
@@ -2262,20 +2258,20 @@ ${requiredTweet}
 
   async loadAdminData() {
     const contractBalance = document.getElementById("contractBalance");
-    const adminSSDBalance = document.getElementById("adminSSDBalance");
+    const adminSDBalance = document.getElementById("adminSDBalance");
 
     try {
-      // Load contract SSD balance
-      const contractSSD = await web3Manager.getContractSSDBalance();
-      contractBalance.textContent = parseFloat(contractSSD).toFixed(2);
+      // Load contract SD balance
+      const contractSD = await web3Manager.getContractSDBalance();
+      contractBalance.textContent = parseFloat(contractSD).toFixed(2);
 
-      // Load user's SSD balance
-      const userStats = await web3Manager.getSSDStats();
-      adminSSDBalance.textContent = parseFloat(userStats.balance).toFixed(2);
+      // Load user's SD balance
+      const userStats = await web3Manager.getSDStats();
+      adminSDBalance.textContent = parseFloat(userStats.balance).toFixed(2);
     } catch (error) {
       console.error("Failed to load admin data:", error);
       contractBalance.textContent = "Error";
-      adminSSDBalance.textContent = "Error";
+      adminSDBalance.textContent = "Error";
     }
   }
 
@@ -2291,7 +2287,7 @@ ${requiredTweet}
       const success = await web3Manager.fundContract(fundAmount);
       if (success) {
         this.showNotification(
-          `Successfully funded contract with ${fundAmount} SSD!`,
+          `Successfully funded contract with ${fundAmount} SD!`,
           "success"
         );
         this.loadAdminData(); // Refresh balances
@@ -2318,7 +2314,7 @@ ${requiredTweet}
       const success = await web3Manager.withdrawFromContract(withdrawAmount);
       if (success) {
         this.showNotification(
-          `Successfully withdrew ${withdrawAmount} SSD from contract!`,
+          `Successfully withdrew ${withdrawAmount} SD from contract!`,
           "success"
         );
         this.loadAdminData(); // Refresh balances

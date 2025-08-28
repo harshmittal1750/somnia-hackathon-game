@@ -36,11 +36,11 @@ async function main() {
     "SomniaSpaceDefender"
   );
 
-  // SSD Token address (replace with actual address)
+  // SD Token address (replace with actual address)
   const SSD_TOKEN_ADDRESS =
     process.env.SSD_TOKEN_ADDRESS ||
     "0x0000000000000000000000000000000000000000";
-  console.log("🪙 SSD Token Address:", SSD_TOKEN_ADDRESS);
+  console.log("🪙 SD Token Address:", SSD_TOKEN_ADDRESS);
 
   // Estimate gas with constructor parameter
   const estimatedGas = await SomniaSpaceDefender.signer.estimateGas(

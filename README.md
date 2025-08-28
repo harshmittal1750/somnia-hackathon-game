@@ -1,4 +1,4 @@
-# 🚀 Somnia Space Defender
+# 🚀 Space Defender
 
 An addictive 2D space shooter game built for the Somnia Hackathon. Defend the galaxy against alien invasion with smooth gameplay, Web3 integration, and on-chain scoring!
 
@@ -9,7 +9,7 @@ An addictive 2D space shooter game built for the Somnia Hackathon. Defend the ga
 
 ## 🎮 Game Overview
 
-Somnia Space Defender is a modern take on classic space shooter games like "Chicken Invaders". Battle through 10 increasingly difficult levels, collect power-ups, and compete on the global leaderboard powered by Somnia blockchain.
+Space Defender is a modern take on classic space shooter games like "Chicken Invaders". Battle through 10 increasingly difficult levels, collect power-ups, and compete on the global leaderboard powered by Somnia blockchain.
 
 ### ✨ Key Features
 
@@ -21,33 +21,33 @@ Somnia Space Defender is a modern take on classic space shooter games like "Chic
 - **Space Transition Effects**: Cinematic level changes with themed environments
 - **Achievement System**: Unlock achievements and track statistics
 - **Global Leaderboard**: Compete with players worldwide
-- **SSD Token Economy**: Play-to-earn with blockchain rewards
+- **SD Token Economy**: Play-to-earn with blockchain rewards
 - **Responsive Design**: Works on desktop and mobile devices
 - **Built-in Faucet Access**: Easy token acquisition through in-game panel
 
-### 💰 SSD Token Integration
+### 💰 SD Token Integration
 
-**Play-to-Earn Space Combat!** Earn SSD tokens while defending the galaxy and spend them on powerful upgrades.
+**Play-to-Earn Space Combat!** Earn SD tokens while defending the galaxy and spend them on powerful upgrades.
 
-#### 🎮 Earning SSD Tokens
+#### 🎮 Earning SD Tokens
 
-- **Kill Rewards**: Earn 0.01 SSD for every alien eliminated
-- **Social Bonus**: Verify your Twitter account for 50 SSD tokens
-- **Achievement Rewards**: Unlock bonus SSD through gameplay milestones
+- **Kill Rewards**: Earn 0.01 SD for every alien eliminated
+- **Social Bonus**: Verify your Twitter account for 50 SD tokens
+- **Achievement Rewards**: Unlock bonus SD through gameplay milestones
 
 #### 🛍️ Power-Up Shop
 
-Spend your earned SSD tokens on game-changing boosts:
+Spend your earned SD tokens on game-changing boosts:
 
-- 🚀 **2x Score Multiplier** (30 minutes) - 15 SSD
-- ⚡ **Rapid Fire Mode** (1 hour) - 10 SSD
-- 🛡️ **Energy Shield** (45 minutes) - 12 SSD
-- 🔫 **Multi-Shot Cannon** (30 minutes) - 8 SSD
-- ❤️ **Extra Life** (permanent until used) - 25 SSD
+- 🚀 **2x Score Multiplier** (30 minutes) - 15 SD
+- ⚡ **Rapid Fire Mode** (1 hour) - 10 SD
+- 🛡️ **Energy Shield** (45 minutes) - 12 SD
+- 🔫 **Multi-Shot Cannon** (30 minutes) - 8 SD
+- ❤️ **Extra Life** (permanent until used) - 25 SD
 
 #### 📱 Social Features
 
-- **Twitter Verification**: Connect your Twitter for 1 SSD reward bonus
+- **Twitter Verification**: Connect your Twitter for 1 SD reward bonus
 - **Community Engagement**: Follow development and participate in events
 - **Built-in Faucet Access**: Get test tokens easily through in-game panel
 <!--
@@ -70,7 +70,7 @@ Spend your earned SSD tokens on game-changing boosts:
 
 #### 💎 Trading & Liquidity
 
-- **Trade SSD**: Buy/sell tokens on [Euclid Swap](https://testnet.euclidswap.io/pools/ssd.eucl-stt)
+- **Trade SD**: Buy/sell tokens on [Euclid Swap](https://testnet.euclidswap.io/pools/ssd.eucl-stt)
 - **Liquidity Mining**: Provide liquidity for additional rewards (coming soon)
 - **Token Economics**: Drive ecosystem growth through gameplay engagement
 
@@ -95,12 +95,12 @@ Spend your earned SSD tokens on game-changing boosts:
 ### 🎯 Game Objectives
 
 1. **Survive**: Avoid alien contact to preserve your health (1 HP system)
-2. **Shoot**: Destroy aliens to earn points and SSD tokens
+2. **Shoot**: Destroy aliens to earn points and SD tokens
 3. **Collect**: Grab power-ups for special weapons and abilities
 4. **Progress**: Advance through 10 increasingly difficult levels
 5. **Explore**: Experience unique space regions with transition effects
 6. **Compete**: Set high scores on the blockchain leaderboard
-7. **Earn**: Accumulate SSD tokens through gameplay achievements
+7. **Earn**: Accumulate SD tokens through gameplay achievements
 
 ### 🎲 Gameplay Mechanics
 
@@ -124,9 +124,9 @@ Spend your earned SSD tokens on game-changing boosts:
 
 **💰 Token Economy:**
 
-- Earn 0.01 SSD per alien killed
-- Bonus SSD through Twitter verification (1 SSD)
-- Spend SSD tokens in the in-game shop for upgrades
+- Earn 0.01 SD per alien killed
+- Bonus SD through Twitter verification (1 SD)
+- Spend SD tokens in the in-game shop for upgrades
 <!--
 
 ### Power-ups & Weapons
@@ -272,7 +272,7 @@ somnia-hackathon-game/
 │       └── apiService.js   # Backend API communication
 ├── contracts/
 │   ├── SomniaSpaceDefender.sol        # Full smart contract
-│   └── SomniaSpaceDefenderMinimal.sol # Minimal SSD rewards contract
+│   └── SomniaSpaceDefenderMinimal.sol # Minimal SD rewards contract
 ├── backend/                # Express.js backend server
 │   ├── api/               # API endpoints
 │   ├── models/            # Database models
@@ -410,7 +410,7 @@ LEVELS: {
 ### Backend/Blockchain
 
 - **Express.js Backend**: RESTful API with anti-cheat verification
-- **Dual Smart Contracts**: Full featured + minimal SSD rewards
+- **Dual Smart Contracts**: Full featured + minimal SD rewards
 - **Somnia Testnet**: High-performance blockchain integration
 - **Database Integration**: Player statistics and leaderboards
 - **Twitter API**: Social verification system
@@ -444,7 +444,7 @@ LEVELS: {
 
 ### ✅ Technical Excellence
 
-- **Dual Smart Contracts**: Deployed on Somnia testnet with optimized SSD rewards
+- **Dual Smart Contracts**: Deployed on Somnia testnet with optimized SD rewards
 - **Production-Ready Architecture**: Express.js backend with anti-cheat verification
 - **Advanced Game Engine**: Particle systems, collision optimization, and 60 FPS performance
 - **Multiple Web3 Integrations**: Web3.js, Wagmi, and hybrid connection management
@@ -458,10 +458,10 @@ LEVELS: {
 
 ### ✅ On-chain Impact
 
-- **Blockchain Gaming**: Scores, achievements, and SSD tokens stored on Somnia
-- **Play-to-Earn Economy**: 0.01 SSD per alien kill + social verification rewards
+- **Blockchain Gaming**: Scores, achievements, and SD tokens stored on Somnia
+- **Play-to-Earn Economy**: 0.01 SD per alien kill + social verification rewards
 - **Transparent Leaderboards**: Global rankings with verifiable blockchain data
-- **Token Integration**: SSD shop, trading, and liquidity features
+- **Token Integration**: SD shop, trading, and liquidity features
 
 <!-- ### ✅ Community Fit
 
@@ -584,7 +584,7 @@ vercel --prod
 
 #### 🏆 Phase 1 (2 weeks)
 
-- **Tournament System**: Weekly tournaments with massive SSD prize pools
+- **Tournament System**: Weekly tournaments with massive SD prize pools
 - **Enhanced Leaderboards**: Season-based rankings and rewards
 
 #### 🎨 Phase 2 (3 weeks)
@@ -604,8 +604,8 @@ vercel --prod
 
 #### 🌊 Phase 5 (2 months)
 
-- **Liquidity Mining**: Earn bonus SSD for providing liquidity on Euclid Swap
-- **Yield Farming**: Stake SSD tokens for additional rewards
+- **Liquidity Mining**: Earn bonus SD for providing liquidity on Euclid Swap
+- **Yield Farming**: Stake SD tokens for additional rewards
 
 #### 📱 Phase 6 (3 months)
 

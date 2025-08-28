@@ -1,38 +1,85 @@
-// Somnia Space Defender - Configuration
+// Space Defender - Configuration
 const GAME = {
   BASE_WIDTH: 800,
   BASE_HEIGHT: 600,
 };
 const CONFIG = {
-  // Somnia Testnet Configuration
+  // Multi-Network Support - RISE and Somnia
+  SUPPORTED_NETWORKS: {
+    "0xaa39db": {
+      // RISE Testnet (11155931)
+      chainId: "0xaa39db",
+      chainName: "RISE Testnet",
+      rpcUrls: ["https://testnet.riselabs.xyz"],
+      blockExplorerUrls: ["https://explorer.testnet.riselabs.xyz"],
+      nativeCurrency: {
+        name: "ETH",
+        symbol: "ETH",
+        decimals: 18,
+      },
+      bridgeUrl: "https://bridge-ui.testnet.riselabs.xyz",
+    },
+    "0xc488": {
+      // Somnia Testnet (50312)
+      chainId: "0xc488",
+      chainName: "Somnia Testnet",
+      rpcUrls: ["https://dream-rpc.somnia.network"],
+      blockExplorerUrls: ["https://shannon-explorer.somnia.network"],
+      nativeCurrency: {
+        name: "STT",
+        symbol: "STT",
+        decimals: 18,
+      },
+      bridgeUrl: "",
+    },
+  },
+
+  // Primary Network (RISE Testnet by default)
   NETWORK: {
-    chainId: "0xc488", // Somnia Testnet Chain ID (50312 in hex)
-    chainName: "Somnia Testnet",
-    rpcUrls: ["https://dream-rpc.somnia.network"],
-    blockExplorerUrls: ["https://shannon-explorer.somnia.network"],
+    chainId: "0xaa39db", // RISE Testnet Chain ID (11155931 in hex)
+    chainName: "RISE Testnet",
+    rpcUrls: ["https://testnet.riselabs.xyz"],
+    blockExplorerUrls: ["https://explorer.testnet.riselabs.xyz"],
     nativeCurrency: {
-      name: "STT",
-      symbol: "STT",
+      name: "ETH",
+      symbol: "ETH",
       decimals: 18,
     },
   },
 
-  // Smart Contract Addresses (Deployed on Somnia Testnet)
+  // Smart Contract Addresses (Multi-Network)
   CONTRACTS: {
-    GAME_SCORE: "0x4AB51147CB615DF6630BD91b3a6dCfe5BbEe1041", // 🛡️ MINIMAL SSD REWARDS CONTRACT!
-    SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SSD Token Contract ✅
+    // RISE Testnet Contracts
+    "0xaa39db": {
+      GAME_SCORE: "0x8FDc1a64c45dD36550fCbd61405bE57de884A29A", // RISE Game Contract
+      SD_TOKEN: "0xe7c120Da02A3dD724f2ED9D7B0eEdC2652475Df8", // RISE SD Token
+    },
+    // Somnia Testnet Contracts
+    "0xc488": {
+      GAME_SCORE: "0x4AB51147CB615DF6630BD91b3a6dCfe5BbEe1041", // Existing Somnia Contract
+      SD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // Existing Somnia SD Token (now SD)
+    },
+  },
+
+  // Helper function to get current network contracts
+  getCurrentContracts() {
+    const currentChainId =
+      (typeof window !== "undefined" && window.ethereum?.chainId) ||
+      this.NETWORK.chainId;
+    return this.CONTRACTS[currentChainId] || this.CONTRACTS["0xaa39db"]; // Default to RISE
   },
 
   // Backend API Configuration
   API: {
-    BASE_URL: window.location.origin.includes("localhost")
-      ? "http://localhost:3000/api"
-      : "https://somnia-space-defender-backend.vercel.app/api",
+    BASE_URL:
+      typeof window !== "undefined" &&
+      window.location.origin.includes("localhost")
+        ? "http://localhost:3000/api"
+        : "https://somnia-space-defender-backend.vercel.app/api",
 
     TIMEOUT: 10000,
     RETRY_ATTEMPTS: 3,
   },
-
 
   // // WalletConnect Configuration (optional)
   // WALLETCONNECT: {
@@ -40,20 +87,47 @@ const CONFIG = {
   //   // Get a project ID from: https://cloud.walletconnect.com/
   // },
 
-
-  // 🎮 SSD Token Integration
-  SSD: {
-    REWARD_PER_KILL: "0.01", // SSD tokens per alien kill
-    TWITTER_REWARD: "1", // SSD tokens for Twitter verification
-    SYMBOL: "SSD",
+  // 🎮 SD Token Integration (Multi-Chain Bridgeable)
+  SD: {
+    REWARD_PER_KILL: "0.01", // SD tokens per alien kill
+    TWITTER_REWARD: "1", // SD tokens for Twitter verification
+    SYMBOL: "SD",
     DECIMALS: 18,
-    EUCLID_SWAP_URL: "https://testnet.euclidswap.io/pools/ssd.eucl-stt",
+    // Bridge configuration for multi-chain support
+    BRIDGE: {
+      ENABLED: true,
+      SUPPORTED_CHAINS: [
+        {
+          chainId: "0xaa39db", // RISE Testnet
+          name: "RISE Testnet",
+          rpcUrl: "https://testnet.riselabs.xyz",
+          explorer: "https://explorer.testnet.riselabs.xyz",
+          bridgeContract: "0x8FDc1a64c45dD36550fCbd61405bE57de884A29A", // RISE Game Contract with bridge functionality
+          tokenContract: "0xe7c120Da02A3dD724f2ED9D7B0eEdC2652475Df8", // RISE SD Token
+        },
+        {
+          chainId: "0xc488", // Somnia Testnet
+          name: "Somnia Testnet",
+          rpcUrl: "https://dream-rpc.somnia.network",
+          explorer: "https://shannon-explorer.somnia.network",
+          bridgeContract: "", // To be deployed
+          tokenContract: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // Existing token
+        },
+      ],
+      BRIDGE_UI_URL: "https://bridge-ui.testnet.riselabs.xyz",
+    },
+    // DEX/Swap integration (to be updated for RISE ecosystem)
+    SWAP_URL: "https://bridge-ui.testnet.riselabs.xyz",
   },
 
   // Game Constants
   GAME: {
-    CANVAS_WIDTH: window.innerWidth * 0.78 || GAME.BASE_WIDTH, // Fullscreen width
-    CANVAS_HEIGHT: window.innerHeight * 0.82 || GAME.BASE_HEIGHT, // Fullscreen height
+    CANVAS_WIDTH:
+      (typeof window !== "undefined" ? window.innerWidth * 0.78 : null) ||
+      GAME.BASE_WIDTH, // Fullscreen width
+    CANVAS_HEIGHT:
+      (typeof window !== "undefined" ? window.innerHeight * 0.82 : null) ||
+      GAME.BASE_HEIGHT, // Fullscreen height
     FPS: 60,
 
     // Player Ship Settings
@@ -519,6 +593,44 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = CONFIG;
 }
 
+// Network Utility Functions
+const NETWORK_UTILS = {
+  // Check if a network is supported
+  isSupportedNetwork(chainId) {
+    return !!CONFIG.SUPPORTED_NETWORKS[chainId];
+  },
+
+  // Get network info by chain ID
+  getNetworkInfo(chainId) {
+    return CONFIG.SUPPORTED_NETWORKS[chainId] || null;
+  },
+
+  // Get contracts for current chain
+  getCurrentContracts(chainId) {
+    return CONFIG.CONTRACTS[chainId] || CONFIG.CONTRACTS["0xaa39db"];
+  },
+
+  // Get all supported chain IDs
+  getSupportedChainIds() {
+    return Object.keys(CONFIG.SUPPORTED_NETWORKS);
+  },
+
+  // Get network display name
+  getNetworkName(chainId) {
+    const network = this.getNetworkInfo(chainId);
+    return network ? network.chainName : "Unknown Network";
+  },
+
+  // Check if bridging is available between networks
+  canBridge(fromChainId, toChainId) {
+    return (
+      this.isSupportedNetwork(fromChainId) &&
+      this.isSupportedNetwork(toChainId) &&
+      fromChainId !== toChainId
+    );
+  },
+};
+
 // Utility Functions
 const UTILS = {
   // Clamp value between min and max
@@ -638,4 +750,6 @@ const GAME_STATES = {
   LEADERBOARD: "leaderboard",
 };
 
-console.log("🚀 Somnia Space Defender Config Loaded");
+console.log(
+  "🚀 Space Defender Config Loaded - Multi-Network Support (RISE + Somnia) Ready!"
+);
