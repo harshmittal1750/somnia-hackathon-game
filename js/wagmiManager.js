@@ -1,4 +1,4 @@
-// Rise Space Defender - Wagmi Connection Manager
+// Space Defender - Wagmi Connection Manager
 class WagmiManager {
   constructor() {
     this.config = null;

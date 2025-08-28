@@ -33,7 +33,7 @@ class Web3Service {
     this.contractAddress = process.env.CONTRACT_ADDRESS;
     this.ssdTokenAddress = process.env.SSD_TOKEN_ADDRESS;
 
-    // Minimal contract ABI for SSD rewards
+    // Minimal contract ABI for SD rewards
     this.contractABI = [
       "function claimSSDReward(address player, uint16 aliensKilled) external",
       "function verifyTwitter(string memory _twitterHandle) external",
@@ -54,16 +54,16 @@ class Web3Service {
       );
     }
 
-    this.SSD_PER_KILL = ethers.parseEther("0.01"); // 0.01 SSD per kill
+    this.SSD_PER_KILL = ethers.parseEther("0.01"); // 0.01 SD per kill
   }
 
   /**
-   * Reward SSD tokens to player for aliens killed
+   * Reward SD tokens to player for aliens killed
    */
   async rewardSSD(playerAddress, aliensKilled) {
     try {
       if (!this.isEnabled) {
-        console.warn("⚠️ Web3 service disabled - skipping SSD reward");
+        console.warn("⚠️ Web3 service disabled - skipping SD reward");
         return {
           success: false,
           message: "Web3 service not configured",
@@ -80,7 +80,7 @@ class Web3Service {
       }
 
       console.log(
-        `💰 Rewarding SSD to ${playerAddress} for ${aliensKilled} aliens killed`
+        `💰 Rewarding SD to ${playerAddress} for ${aliensKilled} aliens killed`
       );
 
       // Check contract balance first
@@ -89,7 +89,7 @@ class Web3Service {
       const rewardAmount = this.SSD_PER_KILL.mul(aliensKilled);
 
       if (contractBalance.lt(rewardAmount)) {
-        console.warn("⚠️ Insufficient contract balance for SSD reward");
+        console.warn("⚠️ Insufficient contract balance for SD reward");
         return {
           success: false,
           error: "Insufficient contract balance",
@@ -106,14 +106,14 @@ class Web3Service {
         }
       );
 
-      console.log(`🔗 SSD reward transaction sent: ${tx.hash}`);
+      console.log(`🔗 SD reward transaction sent: ${tx.hash}`);
 
       // Wait for confirmation
       const receipt = await tx.wait();
 
       if (receipt.status === 1) {
         const ssdAmount = parseFloat(ethers.formatEther(rewardAmount));
-        console.log(`✅ SSD reward successful: ${ssdAmount} SSD`);
+        console.log(`✅ SD reward successful: ${ssdAmount} SD`);
 
         return {
           success: true,
@@ -125,7 +125,7 @@ class Web3Service {
         throw new Error("Transaction failed");
       }
     } catch (error) {
-      console.error("❌ SSD reward failed:", error);
+      console.error("❌ SD reward failed:", error);
 
       // Return graceful failure - don't break score submission
       return {
@@ -137,7 +137,7 @@ class Web3Service {
   }
 
   /**
-   * Verify Twitter account and reward SSD tokens
+   * Verify Twitter account and reward SD tokens
    */
   async verifyTwitter(playerAddress, twitterHandle) {
     try {
@@ -195,7 +195,7 @@ class Web3Service {
   }
 
   /**
-   * Get player's SSD statistics from contract
+   * Get player's SD statistics from contract
    */
   async getPlayerSSDStats(playerAddress) {
     try {
@@ -203,9 +203,8 @@ class Web3Service {
         throw new Error("Invalid player address");
       }
 
-      const [earned, spent, balance] = await this.contract.getPlayerSSDStats(
-        playerAddress
-      );
+      const [earned, spent, balance] =
+        await this.contract.getPlayerSSDStats(playerAddress);
 
       return {
         earned: parseFloat(ethers.formatEther(earned)),
@@ -213,7 +212,7 @@ class Web3Service {
         balance: parseFloat(ethers.formatEther(balance)),
       };
     } catch (error) {
-      console.error("Failed to get player SSD stats:", error);
+      console.error("Failed to get player SD stats:", error);
       return {
         earned: 0,
         spent: 0,
@@ -223,7 +222,7 @@ class Web3Service {
   }
 
   /**
-   * Fund the contract with SSD tokens (admin function)
+   * Fund the contract with SD tokens (admin function)
    */
   async fundContract(amount) {
     try {

@@ -1,4 +1,4 @@
-// Rise Space Defender - Configuration
+// Space Defender - Configuration
 const GAME = {
   BASE_WIDTH: 800,
   BASE_HEIGHT: 600,
@@ -19,8 +19,8 @@ const CONFIG = {
 
   // Smart Contract Addresses (Deployed on Rise Testnet)
   CONTRACTS: {
-    GAME_SCORE: "0x4AB51147CB615DF6630BD91b3a6dCfe5BbEe1041", // 🛡️ MINIMAL SSD REWARDS CONTRACT!
-    SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SSD Token Contract ✅
+    GAME_SCORE: "0x4AB51147CB615DF6630BD91b3a6dCfe5BbEe1041", // 🛡️ MINIMAL SD REWARDS CONTRACT!
+    SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SD Token Contract ✅
   },
 
   // Backend API Configuration
@@ -39,13 +39,13 @@ const CONFIG = {
   //   // Get a project ID from: https://cloud.walletconnect.com/
   // },
 
-  // 🎮 SSD Token Integration
-  SSD: {
-    REWARD_PER_KILL: "0.01", // SSD tokens per alien kill
-    TWITTER_REWARD: "1", // SSD tokens for Twitter verification
-    SYMBOL: "SSD",
+  // 🎮 SD Token Integration
+  SD: {
+    REWARD_PER_KILL: "0.01", // SD tokens per alien kill
+    TWITTER_REWARD: "1", // SD tokens for Twitter verification
+    SYMBOL: "SD",
     DECIMALS: 18,
-    EUCLID_SWAP_URL: "https://testnet.euclidswap.io/pools/ssd.eucl-eth",
+    EUCLID_SWAP_URL: "https://testnet.euclidswap.io/pools/sd.eucl-eth",
   },
 
   // Game Constants
@@ -636,4 +636,4 @@ const GAME_STATES = {
   LEADERBOARD: "leaderboard",
 };
 
-console.log("🚀 Rise Space Defender Config Loaded");
+console.log("🚀 Space Defender Config Loaded");

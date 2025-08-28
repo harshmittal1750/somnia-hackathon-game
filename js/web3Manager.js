@@ -1,4 +1,4 @@
-// Rise Space Defender - Web3 Manager
+// Space Defender - Web3 Manager
 class Web3Manager {
   constructor() {
     this.web3 = null;
@@ -323,9 +323,7 @@ class Web3Manager {
           });
         } catch (addError) {
           console.error("Failed to add Rise network:", addError);
-          this.showError(
-            "Failed to add Rise network. Please add it manually."
-          );
+          this.showError("Failed to add Rise network. Please add it manually.");
         }
       } else {
         console.error("Failed to switch to Rise network:", switchError);
@@ -370,9 +368,7 @@ class Web3Manager {
         "Expected:",
         CONFIG.NETWORK.chainId
       );
-      this.showWarning(
-        "Please switch to Rise testnet for full functionality."
-      );
+      this.showWarning("Please switch to Rise testnet for full functionality.");
 
       // Disable game functionality on wrong network
       this.onWrongNetwork();
@@ -498,7 +494,7 @@ class Web3Manager {
         stateMutability: "view",
         type: "function",
       },
-      // SSD Shop functions
+      // SD Shop functions
       {
         inputs: [{ name: "_itemId", type: "uint256" }],
         name: "buyShopItem",
@@ -567,7 +563,7 @@ class Web3Manager {
         stateMutability: "view",
         type: "function",
       },
-      // SSD stats function
+      // SD stats function
       {
         inputs: [{ name: "_player", type: "address" }],
         name: "getPlayerSSDStats",
@@ -677,7 +673,7 @@ class Web3Manager {
             });
 
           blockchainTxHash = tx.transactionHash;
-          ssdReward = aliensKilled * 0.01; // 0.01 SSD per alien
+          ssdReward = aliensKilled * 0.01; // 0.01 SD per alien
 
           console.log("✅ Blockchain submission successful!", {
             txHash: blockchainTxHash,
@@ -687,7 +683,7 @@ class Web3Manager {
           // Update local high score immediately after blockchain success
           this.saveScoreLocally(score, level);
 
-          // Show SSD reward notification immediately
+          // Show SD reward notification immediately
           this.showSSDRewardNotification(ssdReward, aliensKilled);
         } catch (blockchainError) {
           console.error("❌ Blockchain submission failed:", blockchainError);
@@ -725,7 +721,7 @@ class Web3Manager {
         playerAddress:
           this.account || "0x0000000000000000000000000000000000000000",
         blockchainTxHash, // Include blockchain transaction hash
-        ssdAlreadyRewarded: ssdReward > 0, // Tell backend SSD was already rewarded
+        ssdAlreadyRewarded: ssdReward > 0, // Tell backend SD was already rewarded
       };
 
       const result = await apiService.submitScore(submitData);
@@ -888,12 +884,12 @@ class Web3Manager {
       scores.splice(100);
     }
 
-    localStorage.setItem("riseSpaceDefender_scores", JSON.stringify(scores));
+    localStorage.setItem("spaceDefender_scores", JSON.stringify(scores));
   }
 
   getLocalScores() {
     try {
-      const scores = localStorage.getItem("riseSpaceDefender_scores");
+      const scores = localStorage.getItem("spaceDefender_scores");
       return scores ? JSON.parse(scores) : [];
     } catch (error) {
       console.error("Failed to load local scores:", error);
@@ -1194,14 +1190,14 @@ class Web3Manager {
     return this.networkId === CONFIG.NETWORK.chainId;
   }
 
-  // 🎉 SSD REWARD NOTIFICATION SYSTEM
+  // 🎉 SD REWARD NOTIFICATION SYSTEM
 
   showSSDRewardNotification(ssdAmount, aliensKilled = 0, source = "Gameplay") {
     if (window.gameApp && window.gameApp.showSSDReward) {
       window.gameApp.showSSDReward(ssdAmount, aliensKilled, source);
     } else {
       // Fallback notification
-      console.log(`🎉 SSD REWARD: +${ssdAmount} SSD from ${source}!`);
+      console.log(`🎉 SD REWARD: +${ssdAmount} SD from ${source}!`);
     }
 
     // Also trigger balance refresh
@@ -1229,7 +1225,7 @@ class Web3Manager {
     }
   }
 
-  // Check if player has an active boost from SSD shop
+  // Check if player has an active boost from SD shop
   async hasActiveBoost(itemId) {
     if (!this.gameContract || !this.account) {
       return false;
@@ -1247,7 +1243,7 @@ class Web3Manager {
     }
   }
 
-  // 🛍️ SSD SHOP FUNCTIONALITY
+  // 🛍️ SD SHOP FUNCTIONALITY
 
   async getShopItems() {
     if (!this.gameContract) {
@@ -1282,11 +1278,11 @@ class Web3Manager {
       const itemPrice = item.price;
 
       console.log(
-        `💰 Item price: ${this.web3.utils.fromWei(itemPrice, "ether")} SSD`
+        `💰 Item price: ${this.web3.utils.fromWei(itemPrice, "ether")} SD`
       );
 
-      // Step 1: Approve SSD token spending
-      console.log("📝 Approving SSD token spending...");
+      // Step 1: Approve SD token spending
+      console.log("📝 Approving SD token spending...");
       const ssdContract = new this.web3.eth.Contract(
         [
           {
@@ -1307,7 +1303,7 @@ class Web3Manager {
         .approve(CONFIG.CONTRACTS.GAME_SCORE, itemPrice)
         .send({ from: this.account, gas: 1200000 });
 
-      console.log("✅ SSD approval successful:", approveTx.transactionHash);
+      console.log("✅ SD approval successful:", approveTx.transactionHash);
 
       // Step 2: Purchase the item
       console.log("🛒 Purchasing item...");
@@ -1355,7 +1351,7 @@ class Web3Manager {
       console.log("✅ Twitter verified:", tx.transactionHash);
 
       // 🎉 Show Twitter reward notification
-      const twitterReward = parseFloat(CONFIG.SSD.TWITTER_REWARD);
+      const twitterReward = parseFloat(CONFIG.SD.TWITTER_REWARD);
       this.showSSDRewardNotification(twitterReward, 0, "Twitter Verification");
 
       return true;
@@ -1395,7 +1391,7 @@ class Web3Manager {
     }
   }
 
-  // 💰 SSD STATS FUNCTIONALITY
+  // 💰 SD STATS FUNCTIONALITY
 
   async getSSDStats() {
     if (!this.gameContract || !this.account) {
@@ -1412,7 +1408,7 @@ class Web3Manager {
         balance: this.web3.utils.fromWei(stats.balance, "ether"),
       };
     } catch (error) {
-      console.error("Failed to get SSD stats:", error);
+      console.error("Failed to get SD stats:", error);
       return { earned: "0", spent: "0", balance: "0" };
     }
   }
@@ -1470,7 +1466,7 @@ class Web3Manager {
     }
 
     try {
-      // Get SSD token contract
+      // Get SD token contract
       const ssdContract = new this.web3.eth.Contract(
         [
           {
@@ -1489,7 +1485,7 @@ class Web3Manager {
         .call();
       return this.web3.utils.fromWei(balance, "ether");
     } catch (error) {
-      console.error("Failed to get contract SSD balance:", error);
+      console.error("Failed to get contract SD balance:", error);
       return "0";
     }
   }
@@ -1500,9 +1496,9 @@ class Web3Manager {
     }
 
     try {
-      console.log(`💰 Funding contract with ${amount} SSD tokens...`);
+      console.log(`💰 Funding contract with ${amount} SD tokens...`);
 
-      // Get SSD token contract
+      // Get SD token contract
       const ssdContract = new this.web3.eth.Contract(
         [
           {
@@ -1539,7 +1535,7 @@ class Web3Manager {
     }
 
     try {
-      console.log(`💸 Withdrawing ${amount} SSD from contract...`);
+      console.log(`💸 Withdrawing ${amount} SD from contract...`);
 
       const amountWei = this.web3.utils.toWei(amount.toString(), "ether");
 

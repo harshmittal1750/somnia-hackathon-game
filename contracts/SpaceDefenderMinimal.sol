@@ -2,12 +2,12 @@
 pragma solidity ^0.8.19;
 
 /**
- * @title Rise Space Defender - Minimal Contract for SSD Rewards & Shop
+ * @title Space Defender - Minimal Contract for SD Rewards & Shop
  * @dev Gas-optimized contract focusing only on token rewards and shop functionality
  * @author harshmittal.dev
  */
 
-// Interface for SSD Token
+// Interface for SD Token
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 
@@ -20,7 +20,7 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract RiseSpaceDefenderMinimal {
+contract SpaceDefenderMinimal {
     // Events
     event SSDRewardClaimed(
         address indexed player,
@@ -38,10 +38,10 @@ contract RiseSpaceDefenderMinimal {
         uint256 reward
     );
 
-    // 🎮 SSD Token Integration
+    // 🎮 SD Token Integration
     IERC20 public ssdToken;
-    uint256 public constant SSD_PER_KILL = 10000000000000000; // 0.01 SSD (18 decimals)
-    uint256 public constant TWITTER_REWARD = 1000000000000000000; // 1 SSD
+    uint256 public constant SSD_PER_KILL = 10000000000000000; // 0.01 SD (18 decimals)
+    uint256 public constant TWITTER_REWARD = 1000000000000000000; // 1 SD
 
     // Track rewards and spending
     mapping(address => uint256) public ssdEarned;
@@ -95,10 +95,10 @@ contract RiseSpaceDefenderMinimal {
             15000000000000000000,
             1800,
             true
-        ); // 15 SSD
+        ); // 15 SD
 
         // Rapid Fire (1 hour)
-        shopItems[1] = ShopItem("Rapid Fire", 10000000000000000000, 3600, true); // 10 SSD
+        shopItems[1] = ShopItem("Rapid Fire", 10000000000000000000, 3600, true); // 10 SD
 
         // Energy Shield (45 minutes)
         shopItems[2] = ShopItem(
@@ -106,19 +106,19 @@ contract RiseSpaceDefenderMinimal {
             12000000000000000000,
             2700,
             true
-        ); // 12 SSD
+        ); // 12 SD
 
         // Multi-Shot (30 minutes)
-        shopItems[3] = ShopItem("Multi-Shot", 8000000000000000000, 1800, true); // 8 SSD
+        shopItems[3] = ShopItem("Multi-Shot", 8000000000000000000, 1800, true); // 8 SD
 
         // Extra Life (permanent until used)
-        shopItems[4] = ShopItem("Extra Life", 25000000000000000000, 0, true); // 25 SSD
+        shopItems[4] = ShopItem("Extra Life", 25000000000000000000, 0, true); // 25 SD
 
         shopItemCount = 5;
     }
 
     /**
-     * @dev Submit score and claim SSD rewards (called directly by players)
+     * @dev Submit score and claim SD rewards (called directly by players)
      */
     function submitScore(
         uint256 _score,
@@ -129,14 +129,11 @@ contract RiseSpaceDefenderMinimal {
         require(_level >= 1 && _level <= 10, "Invalid level");
         require(_aliensKilled > 0, "No aliens killed");
 
-        // Calculate and transfer SSD reward
+        // Calculate and transfer SD reward
         uint256 ssdReward = _aliensKilled * SSD_PER_KILL;
-        require(
-            ssdToken.transfer(msg.sender, ssdReward),
-            "SSD transfer failed"
-        );
+        require(ssdToken.transfer(msg.sender, ssdReward), "SD transfer failed");
 
-        // Update player's earned SSD
+        // Update player's earned SD
         ssdEarned[msg.sender] += ssdReward;
 
         // Emit reward event
@@ -146,7 +143,7 @@ contract RiseSpaceDefenderMinimal {
     }
 
     /**
-     * @dev Claim SSD rewards for aliens killed (called by backend after score validation)
+     * @dev Claim SD rewards for aliens killed (called by backend after score validation)
      */
     function claimSSDReward(
         address player,
@@ -155,14 +152,14 @@ contract RiseSpaceDefenderMinimal {
         require(aliensKilled > 0, "No aliens killed");
 
         uint256 ssdReward = aliensKilled * SSD_PER_KILL;
-        require(ssdToken.transfer(player, ssdReward), "SSD transfer failed");
+        require(ssdToken.transfer(player, ssdReward), "SD transfer failed");
 
         ssdEarned[player] += ssdReward;
         emit SSDRewardClaimed(player, aliensKilled, ssdReward);
     }
 
     /**
-     * @dev Purchase shop item with SSD tokens
+     * @dev Purchase shop item with SD tokens
      */
     function buyShopItem(uint256 _itemId) external contractIsActive {
         require(_itemId < shopItemCount, "Invalid item ID");
@@ -232,7 +229,7 @@ contract RiseSpaceDefenderMinimal {
         twitterVerified[msg.sender] = true;
         twitterHandles[msg.sender] = _twitterHandle;
 
-        // Reward SSD tokens for verification
+        // Reward SD tokens for verification
         require(
             ssdToken.transfer(msg.sender, TWITTER_REWARD),
             "Twitter reward transfer failed"
@@ -250,7 +247,7 @@ contract RiseSpaceDefenderMinimal {
     }
 
     /**
-     * @dev Get player's SSD statistics
+     * @dev Get player's SD statistics
      */
     function getPlayerSSDStats(
         address _player
@@ -283,7 +280,7 @@ contract RiseSpaceDefenderMinimal {
     }
 
     /**
-     * @dev Fund contract with SSD tokens (admin only)
+     * @dev Fund contract with SD tokens (admin only)
      */
     function fundContract(uint256 _amount) external onlyOwner {
         require(
@@ -293,14 +290,14 @@ contract RiseSpaceDefenderMinimal {
     }
 
     /**
-     * @dev Withdraw SSD tokens (admin only)
+     * @dev Withdraw SD tokens (admin only)
      */
     function withdrawSSD(uint256 _amount) external onlyOwner {
         require(ssdToken.transfer(owner, _amount), "Withdrawal failed");
     }
 
     /**
-     * @dev Update SSD token contract (admin only)
+     * @dev Update SD token contract (admin only)
      */
     function updateSSDToken(address _newTokenAddress) external onlyOwner {
         ssdToken = IERC20(_newTokenAddress);

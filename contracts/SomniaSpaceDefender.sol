@@ -2,12 +2,12 @@
 pragma solidity ^0.8.19;
 
 /**
- * @title Rise Space Defender with SSD Token Integration
- * @dev Smart contract for on-chain game scoring, leaderboards, and SSD rewards
+ * @title Space Defender with SD Token Integration
+ * @dev Smart contract for on-chain game scoring, leaderboards, and SD rewards
  * @author harshmittal.dev
  */
 
-// Interface for SSD Token
+// Interface for SD Token
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 
@@ -71,9 +71,9 @@ contract RiseSpaceDefender {
     mapping(address => uint256) public lastSubmissionTime;
     uint256 public constant SUBMISSION_COOLDOWN = 5 seconds;
 
-    // 🎮 SSD Token Integration
+    // 🎮 SD Token Integration
     IERC20 public ssdToken;
-    uint256 public constant SSD_PER_KILL = 10000000000000000; // 0.01 SSD (18 decimals)
+    uint256 public constant SSD_PER_KILL = 10000000000000000; // 0.01 SD (18 decimals)
     mapping(address => uint256) public ssdEarned;
     mapping(address => uint256) public ssdSpent;
 
@@ -92,7 +92,7 @@ contract RiseSpaceDefender {
     // 📱 Social Media Integration
     mapping(address => bool) public twitterVerified;
     mapping(address => string) public twitterHandles;
-    uint256 public constant TWITTER_REWARD = 1000000000000000000; // 1 SSD
+    uint256 public constant TWITTER_REWARD = 1000000000000000000; // 1 SD
 
     uint256 public constant MAX_LEADERBOARD_SIZE = 100;
     uint256 public achievementCount;
@@ -191,10 +191,10 @@ contract RiseSpaceDefender {
             15000000000000000000,
             1800,
             true
-        ); // 15 SSD
+        ); // 15 SD
 
         // Rapid Fire (1 hour)
-        shopItems[1] = ShopItem("Rapid Fire", 10000000000000000000, 3600, true); // 10 SSD
+        shopItems[1] = ShopItem("Rapid Fire", 10000000000000000000, 3600, true); // 10 SD
 
         // Energy Shield (45 minutes)
         shopItems[2] = ShopItem(
@@ -202,19 +202,19 @@ contract RiseSpaceDefender {
             12000000000000000000,
             2700,
             true
-        ); // 12 SSD
+        ); // 12 SD
 
         // Multi-Shot (30 minutes)
-        shopItems[3] = ShopItem("Multi-Shot", 8000000000000000000, 1800, true); // 8 SSD
+        shopItems[3] = ShopItem("Multi-Shot", 8000000000000000000, 1800, true); // 8 SD
 
         // Extra Life (permanent until used)
-        shopItems[4] = ShopItem("Extra Life", 25000000000000000000, 0, true); // 25 SSD
+        shopItems[4] = ShopItem("Extra Life", 25000000000000000000, 0, true); // 25 SD
 
         shopItemCount = 5;
     }
 
     /**
-     * @dev Submit a game score with anti-cheat validation and SSD rewards
+     * @dev Submit a game score with anti-cheat validation and SD rewards
      */
     function submitScore(
         uint256 _score,
@@ -230,7 +230,7 @@ contract RiseSpaceDefender {
         require(_checkSubmissionRate(msg.sender), "Submission rate exceeded");
         address player = msg.sender;
 
-        // 🎮 SSD REWARDS FOR ALIEN KILLS
+        // 🎮 SD REWARDS FOR ALIEN KILLS
         uint256 ssdReward = _aliensKilled * SSD_PER_KILL;
         if (ssdReward > 0 && address(ssdToken) != address(0)) {
             ssdToken.transfer(player, ssdReward);
@@ -612,7 +612,7 @@ contract RiseSpaceDefender {
     // 🛍️ SHOP SYSTEM FUNCTIONS
 
     /**
-     * @dev Purchase shop item with SSD tokens
+     * @dev Purchase shop item with SD tokens
      */
     function buyShopItem(uint256 _itemId) external {
         require(_itemId < shopItemCount, "Invalid item ID");
@@ -680,7 +680,7 @@ contract RiseSpaceDefender {
         twitterVerified[msg.sender] = true;
         twitterHandles[msg.sender] = _twitterHandle;
 
-        // Reward SSD tokens for verification
+        // Reward SD tokens for verification
         if (address(ssdToken) != address(0)) {
             ssdToken.transfer(msg.sender, TWITTER_REWARD);
             ssdEarned[msg.sender] += TWITTER_REWARD;
@@ -695,7 +695,7 @@ contract RiseSpaceDefender {
     }
 
     /**
-     * @dev Get player's SSD statistics
+     * @dev Get player's SD statistics
      */
     function getPlayerSSDStats(
         address _player
@@ -722,17 +722,17 @@ contract RiseSpaceDefender {
     }
 
     /**
-     * @dev Update SSD token contract (admin only)
+     * @dev Update SD token contract (admin only)
      */
     function updateSSDToken(address _newTokenAddress) external onlyOwner {
         ssdToken = IERC20(_newTokenAddress);
     }
 
     /**
-     * @dev Withdraw accumulated SSD tokens (admin only)
+     * @dev Withdraw accumulated SD tokens (admin only)
      */
     function withdrawSSD(uint256 _amount) external onlyOwner {
-        require(address(ssdToken) != address(0), "SSD token not set");
+        require(address(ssdToken) != address(0), "SD token not set");
         ssdToken.transfer(owner, _amount);
     }
 }

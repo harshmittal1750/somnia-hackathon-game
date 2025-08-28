@@ -1,8 +1,8 @@
-// Deploy script for Somnia Space Defender smart contract
+// Deploy script for Space Defender smart contract
 const { ethers } = require("hardhat");
 
 async function main() {
-  console.log("🚀 Deploying Somnia Space Defender to Somnia Testnet...");
+  console.log("🚀 Deploying Space Defender to Rise Testnet...");
 
   // Get the deployer account
   const signers = await ethers.getSigners();
@@ -13,7 +13,7 @@ async function main() {
     console.error("   1. Create a .env file in the project root");
     console.error("   2. Add: PRIVATE_KEY=your_actual_private_key_here");
     console.error("   3. Make sure your account has STT tokens for deployment");
-    console.error("   4. Get STT tokens from Somnia testnet faucet if needed");
+    console.error("   4. Get ETH tokens from Rise testnet faucet if needed");
     process.exit(1);
   }
 
@@ -22,34 +22,34 @@ async function main() {
 
   // Check balance
   const balance = await deployer.getBalance();
-  console.log("💰 Account balance:", ethers.utils.formatEther(balance), "STT");
+  console.log("💰 Account balance:", ethers.utils.formatEther(balance), "ETH");
 
   if (balance.lt(ethers.utils.parseEther("0.01"))) {
     console.warn(
-      "⚠️  Low balance! You may need more STT tokens for deployment."
+      "⚠️  Low balance! You may need more ETH tokens for deployment."
     );
   }
 
   // Deploy the contract
-  console.log("🔨 Compiling and deploying SomniaSpaceDefender...");
-  const SomniaSpaceDefender = await ethers.getContractFactory(
-    "SomniaSpaceDefender"
+  console.log("🔨 Compiling and deploying SpaceDefender...");
+  const SpaceDefender = await ethers.getContractFactory(
+    "SpaceDefender"
   );
 
-  // SSD Token address (replace with actual address)
+  // SD Token address (replace with actual address)
   const SSD_TOKEN_ADDRESS =
     process.env.SSD_TOKEN_ADDRESS ||
     "0x0000000000000000000000000000000000000000";
-  console.log("🪙 SSD Token Address:", SSD_TOKEN_ADDRESS);
+  console.log("🪙 SD Token Address:", SSD_TOKEN_ADDRESS);
 
   // Estimate gas with constructor parameter
-  const estimatedGas = await SomniaSpaceDefender.signer.estimateGas(
-    SomniaSpaceDefender.getDeployTransaction(SSD_TOKEN_ADDRESS)
+  const estimatedGas = await SpaceDefender.signer.estimateGas(
+    SpaceDefender.getDeployTransaction(SSD_TOKEN_ADDRESS)
   );
   console.log("⛽ Estimated gas:", estimatedGas.toString());
 
   // Deploy with gas optimization
-  const contract = await SomniaSpaceDefender.deploy(SSD_TOKEN_ADDRESS, {
+  const contract = await SpaceDefender.deploy(SSD_TOKEN_ADDRESS, {
     gasLimit: estimatedGas.mul(120).div(100), // 20% buffer
   });
 

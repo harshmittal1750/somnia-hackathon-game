@@ -693,7 +693,7 @@ body::before {
   }
 }
 
-/* SSD Shop Styles */
+/* SD Shop Styles */
 .shop-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1020,7 +1020,7 @@ body::before {
   display: none; /* Hidden by default, shown only to contract owner */
 }
 
-/* SSD Reward Popup Styles */
+/* SD Reward Popup Styles */
 .ssd-reward-popup {
   position: fixed;
   top: 20%;
