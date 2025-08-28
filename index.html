@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Somnia Space Defender - Web3 Game</title>
+    <title>Space Defender - Web3 Game</title>
     <link rel="stylesheet" href="styles/main.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,7 +22,7 @@
       <!-- Web3 Connection Panel -->
       <div id="web3Panel" class="panel hidden">
         <div class="panel-content">
-          <h1>🚀 Somnia Space Defender</h1>
+          <h1>🚀 Space Defender</h1>
           <p>Defend the galaxy against alien invasion!</p>
 
           <!-- Wallet Detection Status -->
@@ -140,13 +140,13 @@
                   💧 Faucet.trade
                 </a>
                 <hr class="dropdown-divider" />
-                <h4>💱 Trade SSD Tokens</h4>
+                <h4>💱 Trade SD Tokens</h4>
                 <a
                   href="https://testnet.euclidswap.io/swap"
                   target="_blank"
                   class="dropdown-link"
                 >
-                  🔄 Euclid Swap (SSD Trading)
+                  🔄 Euclid Swap (SD Trading)
                 </a>
               </div>
             </div>
@@ -179,13 +179,13 @@
             </div>
             <div class="stat" style="color: #ffd700">
               <span class="label">💰 Session:</span>
-              <span id="sessionSSD">0</span>
+              <span id="sessionSD">0</span>
             </div>
           </div>
           <div class="hud-right">
             <div class="stat">
-              <span class="label">💰 SSD:</span>
-              <span id="hudSSDBalance">0</span>
+              <span class="label">💰 SD:</span>
+              <span id="hudSDBalance">0</span>
             </div>
             <div class="stat">
               <span class="label">High Score:</span>
@@ -253,9 +253,9 @@
             <button id="openTutorial" class="btn btn-secondary">
               🎓 Tutorial
             </button>
-            <button id="openShop" class="btn btn-secondary">🛍️ SSD Shop</button>
+            <button id="openShop" class="btn btn-secondary">🛍️ SD Shop</button>
             <button id="openTwitter" class="btn btn-secondary">
-              🐦 Twitter (Get 1 SSD)
+              🐦 Twitter (Get 1 SD)
             </button>
             <button id="openFaucets" class="btn btn-secondary">
               🚰 Get Test Tokens
@@ -269,7 +269,7 @@
           </div>
           <div class="euclid-link">
             <p>
-              💎 Trade SSD tokens on
+              💎 Trade SD tokens on
               <a
                 href="https://testnet.euclidswap.io/pools/ssd.eucl-stt"
                 target="_blank"
@@ -322,7 +322,7 @@
             <p>Level Reached: <span id="finalLevel">1</span></p>
             <p>Aliens Defeated: <span id="aliensKilled">0</span></p>
             <p style="color: #ffd700; font-weight: bold">
-              💰 SSD Earned: <span id="sessionSSDEarned">0</span>
+              💰 SD Earned: <span id="sessionSDEarned">0</span>
             </p>
           </div>
           <div id="newHighScore" class="new-record hidden">
@@ -350,12 +350,12 @@
         </div>
       </div>
 
-      <!-- SSD Shop -->
+      <!-- SD Shop -->
       <div id="ssdShop" class="panel overlay hidden">
         <div class="panel-content">
-          <h2>🛍️ SSD Power-Up Shop</h2>
+          <h2>🛍️ SD Power-Up Shop</h2>
           <div class="ssd-balance">
-            <p>💰 SSD Balance: <span id="ssdBalance">0</span> SSD</p>
+            <p>💰 SD Balance: <span id="ssdBalance">0</span> SD</p>
             <p>
               🎮 Earned: <span id="ssdEarned">0</span> | 💸 Spent:
               <span id="ssdSpent">0</span>
@@ -373,7 +373,7 @@
         <div class="panel-content">
           <h2>🐦 Twitter Verification</h2>
           <p>
-            Verify your Twitter account to earn <strong>1 SSD token!</strong>
+            Verify your Twitter account to earn <strong>1 SD token!</strong>
           </p>
 
           <!-- Step 1: Generate Code -->
@@ -422,14 +422,14 @@
               placeholder="https://twitter.com/username/status/..."
             />
             <button id="verifyTweet" class="btn btn-primary">
-              Verify Tweet & Claim 1 SSD
+              Verify Tweet & Claim 1 SD
             </button>
           </div>
 
           <!-- Already Verified -->
           <div id="twitterVerified" class="twitter-verified hidden">
             <p>✅ Twitter Verified: <span id="verifiedHandle"></span></p>
-            <p>🎉 1 SSD token claimed!</p>
+            <p>🎉 1 SD token claimed!</p>
             <p>
               <small>Verified on: <span id="verifiedDate"></span></small>
             </p>
@@ -451,7 +451,7 @@
       <div id="faucetPanel" class="panel overlay hidden">
         <div class="panel-content">
           <h2>🚰 Get Test Tokens</h2>
-          <p>Get free STT tokens to play the game and earn SSD rewards!</p>
+          <p>Get free STT tokens to play the game and earn SD rewards!</p>
 
           <div class="faucet-links">
             <h3>📍 STT Token Faucets</h3>
@@ -489,7 +489,7 @@
               <li>🔗 <strong>Connect your wallet</strong> to Somnia testnet</li>
               <li>🚰 <strong>Visit a faucet</strong> and request STT tokens</li>
               <li>🎮 <strong>Return to the game</strong> and start playing!</li>
-              <li>💰 <strong>Earn SSD tokens</strong> by defeating aliens</li>
+              <li>💰 <strong>Earn SD tokens</strong> by defeating aliens</li>
             </ol>
           </div>
 
@@ -523,7 +523,7 @@
           <div class="features-list">
             <div class="feature-item">
               <h3>🏆 Tournament System</h3>
-              <p>Weekly tournaments with massive SSD prize pools</p>
+              <p>Weekly tournaments with massive SD prize pools</p>
               <span class="eta">ETA: 2 weeks</span>
             </div>
             <div class="feature-item">
@@ -543,7 +543,7 @@
             </div>
             <div class="feature-item">
               <h3>🌊 Liquidity Mining</h3>
-              <p>Earn bonus SSD for providing liquidity</p>
+              <p>Earn bonus SD for providing liquidity</p>
               <span class="eta">ETA: 2 months</span>
             </div>
             <div class="feature-item">
@@ -562,18 +562,18 @@
           <h2>👑 Admin Panel</h2>
           <div class="admin-stats">
             <div class="stat-item">
-              <label>Contract SSD Balance:</label>
-              <span id="contractBalance">Loading...</span> SSD
+              <label>Contract SD Balance:</label>
+              <span id="contractBalance">Loading...</span> SD
             </div>
             <div class="stat-item">
-              <label>Your SSD Balance:</label>
-              <span id="adminSSDBalance">Loading...</span> SSD
+              <label>Your SD Balance:</label>
+              <span id="adminSDBalance">Loading...</span> SD
             </div>
           </div>
 
           <div class="admin-actions">
             <h3>💰 Fund Contract</h3>
-            <p>Transfer SSD tokens to the contract so it can reward players:</p>
+            <p>Transfer SD tokens to the contract so it can reward players:</p>
             <div class="fund-section">
               <input
                 type="number"
@@ -587,7 +587,7 @@
             </div>
 
             <h3>💸 Withdraw from Contract</h3>
-            <p>Withdraw SSD tokens from the contract back to your wallet:</p>
+            <p>Withdraw SD tokens from the contract back to your wallet:</p>
             <div class="withdraw-section">
               <input
                 type="number"
@@ -596,7 +596,7 @@
                 min="1"
               />
               <button id="withdrawContract" class="btn btn-secondary">
-                Withdraw SSD
+                Withdraw SD
               </button>
             </div>
           </div>
@@ -737,7 +737,7 @@
         injected(),
         metaMask(),
         coinbaseWallet({
-          appName: "Somnia Space Defender",
+          appName: "Space Defender",
           appLogoUrl: "https://spacedefender.xyz/favicon.svg",
         }),
       ];
@@ -755,7 +755,7 @@
           walletConnect({
             projectId: walletConnectProjectId,
             metadata: {
-              name: "Somnia Space Defender",
+              name: "Space Defender",
               description: "Web3 Space Defense Game",
               url: "https://spacedefender.xyz",
               icons: ["https://spacedefender.xyz/favicon.svg"],
@@ -784,6 +784,7 @@
     <script src="js/hybridWeb3Manager.js"></script>
     <!-- Keep original Web3Manager for compatibility -->
     <script src="js/web3Manager.js"></script>
+    <script src="js/bridgeManager.js"></script>
     <script src="js/gameEngine.js"></script>
     <script src="js/entities.js"></script>
     <script src="js/levels.js"></script>

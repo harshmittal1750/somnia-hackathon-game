@@ -1,4 +1,4 @@
-// Somnia Space Defender - Game Engine
+//  Space Defender - Game Engine
 class GameEngine {
   constructor() {
     this.canvas = null;
@@ -29,7 +29,7 @@ class GameEngine {
     this.isPaused = false;
     this.gameStartTime = 0;
     this.gameSession = null; // 🛡️ Track session for anti-cheat
-    this.scoreMultiplier = 1; // 🛍️ SSD shop boost: 1x default, 2x with boost
+    this.scoreMultiplier = 1; // 🛍️ SD shop boost: 1x default, 2x with boost
 
     // Additional tracking for backend
     this.totalShots = 0;

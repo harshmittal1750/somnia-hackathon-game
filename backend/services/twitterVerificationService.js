@@ -5,7 +5,7 @@ class TwitterVerificationService {
   constructor() {
     // Generate random codes for verification
     this.verificationCodes = new Map();
-    this.REQUIRED_PHRASE = "I just joined Somnia Space Defender #SSDGame";
+    this.REQUIRED_PHRASE = "I just joined Space Defender #SDGame";
     this.YOUR_TWITTER_HANDLE = "@SomniaEco";
     this.ADDITIONAL_MENTION = "@chainalphaai";
     this.GAME_URL = "https://www.spacedefender.xyz/";
@@ -320,8 +320,11 @@ class TwitterVerificationService {
 const twitterVerificationService = new TwitterVerificationService();
 
 // Clean up expired codes every hour
-setInterval(() => {
-  twitterVerificationService.cleanupExpiredCodes();
-}, 60 * 60 * 1000);
+setInterval(
+  () => {
+    twitterVerificationService.cleanupExpiredCodes();
+  },
+  60 * 60 * 1000
+);
 
 module.exports = twitterVerificationService;

@@ -1,7 +1,7 @@
 {
-    "name": "somnia-space-defender-backend",
-    "version": "1.0.0",
-    "description": "Backend API for Somnia Space Defender game with MongoDB",
+    "name": "space-defender-backend",
+    "version": "2.0.0",
+    "description": "Backend API for Space Defender game with MongoDB and multi-chain SD token support",
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
@@ -38,10 +38,14 @@
         "game",
         "web3",
         "blockchain",
-        "somnia",
+        "rise",
         "api",
-        "mongodb"
+        "mongodb",
+        "multi-chain",
+        "bridge",
+        "sd-token",
+        "somnia"
     ],
-    "author": "Somnia Hackathon Team",
+    "author": "harshmittal.dev",
     "license": "MIT"
 }

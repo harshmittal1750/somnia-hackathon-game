@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Somnia Space Defender Backend Startup Script
+# Space Defender Backend Startup Script
 
-echo "🚀 Starting Somnia Space Defender Backend..."
+echo "🚀 Starting Space Defender Backend..."
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then

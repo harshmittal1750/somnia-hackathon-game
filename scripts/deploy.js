@@ -1,8 +1,8 @@
-// Deploy script for Somnia Space Defender smart contract
+// Deploy script for Space Defender smart contract
 const { ethers } = require("hardhat");
 
 async function main() {
-  console.log("🚀 Deploying Somnia Space Defender to Somnia Testnet...");
+  console.log("🚀 Deploying Space Defender to Somnia Testnet...");
 
   // Get the deployer account
   const signers = await ethers.getSigners();

@@ -1,7 +1,7 @@
 const hre = require("hardhat");
 
 async function main() {
-  console.log("🚀 Deploying Minimal Somnia Space Defender Contract...");
+  console.log("🚀 Deploying Minimal Space Defender Contract...");
 
   // Get the contract factory
   const SomniaSpaceDefenderMinimal = await hre.ethers.getContractFactory(

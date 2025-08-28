@@ -64,7 +64,7 @@ Play now: ${twitterVerificationService.GAME_URL}`;
           step1: `Click "Post Tweet" to open Twitter with the message pre-filled`,
           step2: `Post the tweet (includes mentions of ${twitterVerificationService.YOUR_TWITTER_HANDLE} and ${twitterVerificationService.ADDITIONAL_MENTION})`,
           step3: "Copy the tweet URL and submit it below",
-          step4: "You'll receive 1 SSD token upon successful verification",
+          step4: "You'll receive 1 SD token upon successful verification",
           expiresIn: "30 minutes",
         },
       });
@@ -76,7 +76,7 @@ Play now: ${twitterVerificationService.GAME_URL}`;
 );
 
 /**
- * Verify Twitter tweet and reward SSD
+ * Verify Twitter tweet and reward SD
  * POST /api/twitter/verify
  */
 router.post(
@@ -149,17 +149,17 @@ router.post(
 
       const updatedPlayer = await Player.findOneAndUpdate(
         { address: walletAddress.toLowerCase() },
-        { $set: updateData, $inc: { ssdEarned: 1 } }, // Add 1 SSD to earned amount
+        { $set: updateData, $inc: { ssdEarned: 1 } }, // Add 1 SD to earned amount
         { new: true, upsert: true }
       );
 
-      // Reward 1 SSD token via blockchain
+      // Reward 1 SD token via blockchain
       let txHash = null;
       let blockchainRewardSuccess = false;
 
       try {
         if (web3Service.isEnabled) {
-          // Call the contract's verifyTwitter function with 1 SSD reward
+          // Call the contract's verifyTwitter function with 1 SD reward
           const rewardResult = await web3Service.verifyTwitter(
             walletAddress,
             updateData.twitterHandle
@@ -177,7 +177,7 @@ router.post(
       res.json({
         success: true,
         message:
-          "Twitter verification successful! 1 SSD token has been credited to your account.",
+          "Twitter verification successful! 1 SD token has been credited to your account.",
         player: {
           address: updatedPlayer.address,
           twitterHandle: updatedPlayer.twitterHandle,
@@ -186,7 +186,7 @@ router.post(
         },
         reward: {
           amount: 1,
-          currency: "SSD",
+          currency: "SD",
           txHash: txHash,
           blockchainSuccess: blockchainRewardSuccess,
         },
@@ -273,14 +273,14 @@ router.get("/instructions", (req, res) => {
         step: 4,
         title: "Receive Reward",
         description:
-          "Get 1 SSD token credited to your wallet upon successful verification",
+          "Get 1 SD token credited to your wallet upon successful verification",
       },
     ],
     requirements: {
       tweetContent: twitterVerificationService.REQUIRED_PHRASE,
       mentions: `${twitterVerificationService.YOUR_TWITTER_HANDLE} and ${twitterVerificationService.ADDITIONAL_MENTION}`,
       gameUrl: twitterVerificationService.GAME_URL,
-      reward: "1 SSD Token",
+      reward: "1 SD Token",
       timeLimit: "30 minutes",
     },
   });

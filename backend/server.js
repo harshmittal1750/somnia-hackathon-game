@@ -1,4 +1,4 @@
-console.log("🚀 Starting Somnia Space Defender Backend...");
+console.log("🚀 Starting Space Defender Backend...");
 console.log("Node.js version:", process.version);
 console.log("Environment:", process.env.NODE_ENV || "development");
 
@@ -195,7 +195,7 @@ app.use("*", (req, res) => {
 // Start server (only in development)
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
-    console.log(`🚀 Somnia Space Defender Backend running on port ${PORT}`);
+    console.log(`🚀 Space Defender Backend running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV}`);
     console.log(
       `🔗 MongoDB: ${process.env.MONGODB_URI ? "Connected" : "Not configured"}`

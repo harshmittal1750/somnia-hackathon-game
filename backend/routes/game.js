@@ -156,15 +156,15 @@ router.post(
       // Check for new achievements
       const newAchievements = await checkPlayerAchievements(updatedPlayer);
 
-      // Process SSD reward if aliens were killed and not already rewarded
+      // Process SD reward if aliens were killed and not already rewarded
       let ssdReward = 0;
       let txHash = blockchainTxHash;
 
       if (ssdAlreadyRewarded) {
         ssdReward = aliensKilled * 0.01;
-        console.log(`✅ SSD already rewarded on blockchain: ${ssdReward} SSD`);
+        console.log(`✅ SD already rewarded on blockchain: ${ssdReward} SD`);
 
-        // Update player SSD earned for already rewarded SSD
+        // Update player SD earned for already rewarded SD
         await Player.updateOne(
           { address: playerAddress.toLowerCase() },
           { $inc: { ssdEarned: ssdReward } }
@@ -172,8 +172,8 @@ router.post(
       } else if (aliensKilled > 0) {
         // Fallback: reward via backend if blockchain failed
         try {
-          console.log("🔄 Rewarding SSD via backend fallback...");
-          const rewardResult = await web3Service.rewardSSD(
+          console.log("🔄 Rewarding SD via backend fallback...");
+          const rewardResult = await web3Service.rewardSD(
             playerAddress,
             aliensKilled
           );
@@ -184,14 +184,14 @@ router.post(
             gameScore.txHash = txHash;
             await gameScore.save();
 
-            // Update player SSD earned
+            // Update player SD earned
             await Player.updateOne(
               { address: playerAddress.toLowerCase() },
               { $inc: { ssdEarned: ssdReward } }
             );
           }
         } catch (error) {
-          console.error("SSD reward failed:", error);
+          console.error("SD reward failed:", error);
           // Continue without failing the score submission
         }
       }

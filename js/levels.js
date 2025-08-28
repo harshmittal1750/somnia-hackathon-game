@@ -1,4 +1,4 @@
-// Somnia Space Defender - Level Management System
+// Space Defender - Level Management System
 class LevelManager {
   constructor() {
     this.currentLevel = 1;

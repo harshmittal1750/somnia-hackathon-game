@@ -1,4 +1,4 @@
-// Somnia Space Defender - Hybrid Web3 Manager (MetaMask + Wagmi Fallback)
+// Space Defender - Hybrid Web3 Manager (MetaMask + Wagmi Fallback)
 class HybridWeb3Manager {
   constructor() {
     this.primaryProvider = null; // MetaMask/Web3.js

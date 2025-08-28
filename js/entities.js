@@ -1,4 +1,4 @@
-// Somnia Space Defender - Game Entities
+// Space Defender - Game Entities
 
 // Base Entity Class
 class Entity {
@@ -611,8 +611,8 @@ class Player extends Entity {
       healthPercent > 0.6
         ? "#00ff00"
         : healthPercent > 0.3
-        ? "#ffff00"
-        : "#ff0000";
+          ? "#ffff00"
+          : "#ff0000";
     ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
   }
 }
@@ -1080,8 +1080,8 @@ class Alien extends Entity {
       healthPercent > 0.6
         ? "#00ff00"
         : healthPercent > 0.3
-        ? "#ffff00"
-        : "#ff0000";
+          ? "#ffff00"
+          : "#ff0000";
     ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
   }
 }

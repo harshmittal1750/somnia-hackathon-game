@@ -1,27 +1,31 @@
 {
-    "name": "somnia-space-defender",
-    "version": "1.0.0",
-    "description": "An addictive 2D space shooter game with Web3 integration for the Somnia Hackathon",
+    "name": "space-defender",
+    "version": "2.0.0",
+    "description": "An addictive 2D space shooter game with Web3 integration and multi-chain SD token support.",
     "main": "index.html",
     "scripts": {
         "start": "npx serve .",
         "dev": "npx serve . --cors",
-        "deploy:contract": "npx hardhat run scripts/deploy.js --network somnia",
+        "deploy:contract": "npx hardhat run scripts/deploy-rise.js --network rise",
+        "deploy:legacy": "npx hardhat run scripts/deploy.js --network somnia",
         "compile": "npx hardhat compile",
         "test": "npx hardhat test",
-        "verify": "npx hardhat verify --network somnia",
+        "verify:rise": "npx hardhat verify --network rise",
+        "verify:somnia": "npx hardhat verify --network somnia",
         "build": "echo 'No build step needed for vanilla JS' && exit 0"
     },
     "keywords": [
         "game",
         "web3",
         "blockchain",
-        "somnia",
+        "rise",
         "space-shooter",
         "2d-game",
-        "hackathon"
+        "multi-chain",
+        "bridge",
+        "sd-token"
     ],
-    "author": "Somnia Hackathon Team",
+    "author": "harshmittal.dev",
     "license": "MIT",
     "repository": {
         "type": "git",
