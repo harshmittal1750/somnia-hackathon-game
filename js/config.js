@@ -6,7 +6,7 @@ const GAME = {
 const CONFIG = {
   // Rise Testnet Configuration
   NETWORK: {
-    chainId: "0xAA36FB", // Rise Testnet Chain ID (11155931 in hex)
+    chainId: "0xaa39db", // Rise Testnet Chain ID (11155931 in hex)
     chainName: "RISE Testnet",
     rpcUrls: ["https://testnet.riselabs.xyz"],
     blockExplorerUrls: ["https://explorer.testnet.riselabs.xyz"],
@@ -19,8 +19,8 @@ const CONFIG = {
 
   // Smart Contract Addresses (Deployed on Rise Testnet)
   CONTRACTS: {
-    GAME_SCORE: "0x4AB51147CB615DF6630BD91b3a6dCfe5BbEe1041", // 🛡️ MINIMAL SD REWARDS CONTRACT!
-    SSD_TOKEN: "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F", // SD Token Contract ✅
+    GAME_SCORE: "0x08a4b55b676581733271EccFb27064254Ba906cF", // 🛡️ MINIMAL SD REWARDS CONTRACT!
+    SSD_TOKEN: "0x01582e0Dd198cEb501010103bD92FE7221C3A33C", // SD Token Contract ✅
   },
 
   // Backend API Configuration

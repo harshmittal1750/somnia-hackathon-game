@@ -9,12 +9,12 @@ async function main() {
   );
 
   // SD Token address on Rise testnet
-  const ssdTokenAddress = "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F";
+  const sdTokenAddress = "0x01582e0Dd198cEb501010103bD92FE7221C3A33C";
 
-  console.log("📄 Deploying with SD Token address:", ssdTokenAddress);
+  console.log("📄 Deploying with SD Token address:", sdTokenAddress);
 
   // Deploy the contract
-  const contract = await SpaceDefenderMinimal.deploy(ssdTokenAddress);
+  const contract = await SpaceDefenderMinimal.deploy(sdTokenAddress);
 
   await contract.deployed();
 
@@ -29,8 +29,8 @@ async function main() {
   console.log("");
   console.log("📋 Contract Details:");
   console.log("  Address:", contract.address);
-  console.log("  SD Token:", ssdTokenAddress);
-      console.log("  Network: Rise Testnet");
+  console.log("  SD Token:", sdTokenAddress);
+  console.log("  Network: Rise Testnet");
   console.log("");
   console.log("🔧 Next Steps:");
   console.log("1. Update CONFIG.CONTRACTS.GAME_SCORE in js/config.js");
@@ -48,7 +48,7 @@ async function main() {
     try {
       await hre.run("verify:verify", {
         address: contract.address,
-        constructorArguments: [ssdTokenAddress],
+        constructorArguments: [sdTokenAddress],
       });
       console.log("✅ Contract verified on explorer");
     } catch (error) {

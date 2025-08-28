@@ -8,7 +8,7 @@ const requiredEnvVars = [
   "MONGODB_URI",
   "SOMNIA_RPC_URL",
   "CONTRACT_ADDRESS",
-  "SSD_TOKEN_ADDRESS",
+  "SD_TOKEN_ADDRESS",
 ];
 
 console.log("\n📋 Environment Variables Check:");

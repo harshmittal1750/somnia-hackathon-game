@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Score Submission Debug Tool</title>
+    <style>
+      body {
+        font-family: "Courier New", monospace;
+        background: #1a1a2e;
+        color: #eee;
+        padding: 20px;
+        margin: 0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: #16213e;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #0f3460;
+      }
+      h1 {
+        color: #e94560;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #f39c12;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px;
+        background: #0f3460;
+        border: 1px solid #533483;
+        color: #eee;
+        border-radius: 4px;
+        font-family: inherit;
+      }
+      button {
+        background: #e94560;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        font-family: inherit;
+      }
+      button:hover {
+        background: #c73650;
+      }
+      .output {
+        background: #0f1419;
+        border: 1px solid #533483;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+        white-space: pre-wrap;
+        font-family: "Courier New", monospace;
+        min-height: 200px;
+      }
+      .success {
+        color: #27ae60;
+      }
+      .error {
+        color: #e74c3c;
+      }
+      .warning {
+        color: #f39c12;
+      }
+      .info {
+        color: #3498db;
+      }
+      .validation-rules {
+        background: #2c3e50;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      .validation-rules h3 {
+        color: #f39c12;
+        margin-top: 0;
+      }
+      .validation-rules ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+      .validation-rules li {
+        margin: 5px 0;
+        color: #ecf0f1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 Score Submission Debug Tool</h1>
+
+      <div class="validation-rules">
+        <h3>📋 Smart Contract Validation Rules:</h3>
+        <ul>
+          <li><strong>Max Score:</strong> 1,000,000 points</li>
+          <li><strong>Max Aliens:</strong> 10,000 aliens</li>
+          <li><strong>Score per Alien:</strong> 5-150 points per alien</li>
+          <li>
+            <strong>Zero Aliens:</strong> Max 100 points if no aliens killed
+          </li>
+          <li>
+            <strong>Submission Cooldown:</strong> 5 seconds between submissions
+          </li>
+          <li>
+            <strong>Level Limits:</strong>
+            <ul>
+              <li>Level 1: Max 1,000 points</li>
+              <li>Level 2: Max 3,000 points</li>
+              <li>Level 3: Max 6,000 points</li>
+              <li>Level 4: Max 10,000 points</li>
+              <li>Level 5: Max 15,000 points</li>
+              <li>Level 6: Max 25,000 points</li>
+              <li>Level 7: Max 40,000 points</li>
+              <li>Level 8: Max 60,000 points</li>
+              <li>Level 9: Max 100,000 points</li>
+              <li>Level 10: Max 200,000 points</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+
+      <div class="form-group">
+        <label for="score">Score:</label>
+        <input
+          type="number"
+          id="score"
+          placeholder="Enter your score"
+          value="1500"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="level">Level:</label>
+        <select id="level">
+          <option value="1">Level 1 (Max: 1,000)</option>
+          <option value="2" selected>Level 2 (Max: 3,000)</option>
+          <option value="3">Level 3 (Max: 6,000)</option>
+          <option value="4">Level 4 (Max: 10,000)</option>
+          <option value="5">Level 5 (Max: 15,000)</option>
+          <option value="6">Level 6 (Max: 25,000)</option>
+          <option value="7">Level 7 (Max: 40,000)</option>
+          <option value="8">Level 8 (Max: 60,000)</option>
+          <option value="9">Level 9 (Max: 100,000)</option>
+          <option value="10">Level 10 (Max: 200,000)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="aliensKilled">Aliens Killed:</label>
+        <input
+          type="number"
+          id="aliensKilled"
+          placeholder="Enter aliens killed"
+          value="150"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="gameMode">Game Mode:</label>
+        <input
+          type="text"
+          id="gameMode"
+          placeholder="Game mode"
+          value="normal"
+        />
+      </div>
+
+      <button onclick="validateScore()">🔍 Validate Score</button>
+      <button onclick="testContractState()">🔗 Check Contract State</button>
+      <button onclick="simulateSubmission()">🧪 Simulate Submission</button>
+      <button onclick="clearOutput()">🗑️ Clear Output</button>
+
+      <div id="output" class="output">
+        Ready to debug score submission issues...\n\nEnter your score parameters
+        above and click "Validate Score" to check if they would pass smart
+        contract validation.
+      </div>
+    </div>
+
+    <script>
+      // Smart contract validation logic (replicated from Solidity)
+      function validateScore(score, level, aliensKilled) {
+        const results = [];
+        let isValid = true;
+
+        // 1. Basic bounds checking
+        if (score > 1000000) {
+          results.push("❌ FAIL: Score exceeds maximum (1,000,000)");
+          isValid = false;
+        } else {
+          results.push("✅ PASS: Score within bounds");
+        }
+
+        if (aliensKilled > 10000) {
+          results.push("❌ FAIL: Aliens killed exceeds maximum (10,000)");
+          isValid = false;
+        } else {
+          results.push("✅ PASS: Aliens killed within bounds");
+        }
+
+        // 2. Score-to-aliens ratio validation
+        if (aliensKilled > 0) {
+          const scorePerAlien = Math.floor(score / aliensKilled);
+          if (scorePerAlien < 5 || scorePerAlien > 150) {
+            results.push(
+              `❌ FAIL: Score per alien (${scorePerAlien}) must be between 5-150`
+            );
+            isValid = false;
+          } else {
+            results.push(
+              `✅ PASS: Score per alien (${scorePerAlien}) is valid`
+            );
+          }
+        } else if (score > 100) {
+          results.push("❌ FAIL: Cannot have score > 100 with 0 aliens killed");
+          isValid = false;
+        } else {
+          results.push("✅ PASS: Score valid for 0 aliens killed");
+        }
+
+        // 3. Level-based maximum score validation
+        const maxScorePerLevel = [
+          1000, // Level 1
+          3000, // Level 2
+          6000, // Level 3
+          10000, // Level 4
+          15000, // Level 5
+          25000, // Level 6
+          40000, // Level 7
+          60000, // Level 8
+          100000, // Level 9
+          200000, // Level 10
+        ];
+
+        const maxScore = maxScorePerLevel[level - 1];
+        if (score > maxScore) {
+          results.push(
+            `❌ FAIL: Score (${score}) exceeds level ${level} maximum (${maxScore})`
+          );
+          isValid = false;
+        } else {
+          results.push(
+            `✅ PASS: Score within level ${level} limit (${maxScore})`
+          );
+        }
+
+        return { isValid, results };
+      }
+
+      function validateScore() {
+        const score = parseInt(document.getElementById("score").value) || 0;
+        const level = parseInt(document.getElementById("level").value) || 1;
+        const aliensKilled =
+          parseInt(document.getElementById("aliensKilled").value) || 0;
+
+        const output = document.getElementById("output");
+
+        output.innerHTML = `🔍 VALIDATING SCORE SUBMISSION\n`;
+        output.innerHTML += `================================\n`;
+        output.innerHTML += `Score: ${score.toLocaleString()}\n`;
+        output.innerHTML += `Level: ${level}\n`;
+        output.innerHTML += `Aliens Killed: ${aliensKilled.toLocaleString()}\n`;
+        output.innerHTML += `Game Mode: ${
+          document.getElementById("gameMode").value
+        }\n\n`;
+
+        const validation = validateScore(score, level, aliensKilled);
+
+        validation.results.forEach((result) => {
+          output.innerHTML += result + "\n";
+        });
+
+        output.innerHTML += "\n";
+        if (validation.isValid) {
+          output.innerHTML += `<span class="success">🎉 VALIDATION PASSED! This score should be accepted by the smart contract.</span>\n`;
+        } else {
+          output.innerHTML += `<span class="error">🚫 VALIDATION FAILED! This score will be rejected by the smart contract.</span>\n`;
+          output.innerHTML += `\n<span class="warning">💡 FIX SUGGESTIONS:</span>\n`;
+
+          if (score > 1000000) {
+            output.innerHTML += `- Reduce score to under 1,000,000\n`;
+          }
+          if (aliensKilled > 10000) {
+            output.innerHTML += `- Reduce aliens killed to under 10,000\n`;
+          }
+          if (aliensKilled > 0) {
+            const scorePerAlien = Math.floor(score / aliensKilled);
+            if (scorePerAlien < 5) {
+              output.innerHTML += `- Increase score or reduce aliens killed (currently ${scorePerAlien} points per alien, need 5+)\n`;
+            }
+            if (scorePerAlien > 150) {
+              output.innerHTML += `- Reduce score or increase aliens killed (currently ${scorePerAlien} points per alien, max 150)\n`;
+            }
+          }
+          if (aliensKilled === 0 && score > 100) {
+            output.innerHTML += `- With 0 aliens killed, maximum score is 100\n`;
+          }
+
+          const maxScorePerLevel = [
+            1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000, 100000, 200000,
+          ];
+          const maxScore = maxScorePerLevel[level - 1];
+          if (score > maxScore) {
+            output.innerHTML += `- For level ${level}, maximum score is ${maxScore.toLocaleString()}\n`;
+          }
+        }
+
+        // Calculate potential SD reward
+        const sdReward = aliensKilled * 0.01;
+        output.innerHTML += `\n<span class="info">💰 Potential SD Reward: ${sdReward.toFixed(
+          2
+        )} SD tokens</span>\n`;
+      }
+
+      async function testContractState() {
+        const output = document.getElementById("output");
+        output.innerHTML = `🔗 CHECKING CONTRACT STATE\n`;
+        output.innerHTML += `============================\n`;
+
+        // This would need actual Web3 integration to work
+        output.innerHTML += `<span class="warning">⚠️ This feature requires Web3 integration.</span>\n`;
+        output.innerHTML += `To manually check:\n`;
+        output.innerHTML += `1. Connect your wallet to Rise Testnet\n`;
+        output.innerHTML += `2. Check contract address: 0x9f70F6A64F2eBcD3fa712f300AD2a123Ec1a4Aa8\n`;
+        output.innerHTML += `3. Verify game is active\n`;
+        output.innerHTML += `4. Check your last submission time for cooldown\n`;
+        output.innerHTML += `5. Verify SD token contract has sufficient balance\n`;
+      }
+
+      function simulateSubmission() {
+        const score = parseInt(document.getElementById("score").value) || 0;
+        const level = parseInt(document.getElementById("level").value) || 1;
+        const aliensKilled =
+          parseInt(document.getElementById("aliensKilled").value) || 0;
+        const gameMode = document.getElementById("gameMode").value || "normal";
+
+        const output = document.getElementById("output");
+        output.innerHTML = `🧪 SIMULATING BLOCKCHAIN SUBMISSION\n`;
+        output.innerHTML += `===================================\n`;
+
+        // Step 1: Validate parameters
+        const validation = validateScore(score, level, aliensKilled);
+        output.innerHTML += `Step 1: Parameter Validation\n`;
+        if (validation.isValid) {
+          output.innerHTML += `<span class="success">✅ Parameters valid</span>\n\n`;
+        } else {
+          output.innerHTML += `<span class="error">❌ Parameters invalid - transaction would revert</span>\n\n`;
+          return;
+        }
+
+        // Step 2: Check cooldown (simulated)
+        output.innerHTML += `Step 2: Submission Cooldown Check\n`;
+        output.innerHTML += `<span class="warning">⚠️ Check manually: Has it been 5+ seconds since last submission?</span>\n\n`;
+
+        // Step 3: Check game state
+        output.innerHTML += `Step 3: Game State Check\n`;
+        output.innerHTML += `<span class="warning">⚠️ Check manually: Is the game contract active?</span>\n\n`;
+
+        // Step 4: SD Token transfer
+        const sdReward = aliensKilled * 0.01;
+        output.innerHTML += `Step 4: SD Token Reward Transfer\n`;
+        if (sdReward > 0) {
+          output.innerHTML += `<span class="info">💰 Would attempt to transfer ${sdReward.toFixed(
+            2
+          )} SD tokens</span>\n`;
+          output.innerHTML += `<span class="warning">⚠️ Check manually: Does contract have sufficient SD token balance?</span>\n\n`;
+        } else {
+          output.innerHTML += `<span class="info">ℹ️ No SD reward (0 aliens killed)</span>\n\n`;
+        }
+
+        // Step 5: Gas estimation
+        output.innerHTML += `Step 5: Gas Estimation\n`;
+        output.innerHTML += `<span class="info">⛽ Estimated gas: ~300,000 (current limit: 1,400,000)</span>\n\n`;
+
+        if (validation.isValid) {
+          output.innerHTML += `<span class="success">🎯 SIMULATION RESULT: Transaction should succeed if:</span>\n`;
+          output.innerHTML += `- Cooldown period has passed (5+ seconds)\n`;
+          output.innerHTML += `- Game contract is active\n`;
+          output.innerHTML += `- SD token contract has sufficient balance\n`;
+          output.innerHTML += `- No network issues occur\n`;
+        }
+      }
+
+      function clearOutput() {
+        document.getElementById("output").innerHTML =
+          "Output cleared. Ready for new debug session...";
+      }
+
+      // Auto-validate when values change
+      document.getElementById("score").addEventListener("input", () => {
+        setTimeout(validateScore, 500);
+      });
+      document
+        .getElementById("level")
+        .addEventListener("change", validateScore);
+      document.getElementById("aliensKilled").addEventListener("input", () => {
+        setTimeout(validateScore, 500);
+      });
+
+      // Initial validation
+      validateScore();
+    </script>
+  </body>
+</html>

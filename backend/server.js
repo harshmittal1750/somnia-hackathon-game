@@ -160,7 +160,7 @@ app.get("/health", (req, res) => {
         MONGODB_URI: !!process.env.MONGODB_URI,
         SOMNIA_RPC_URL: !!process.env.SOMNIA_RPC_URL,
         CONTRACT_ADDRESS: !!process.env.CONTRACT_ADDRESS,
-        SSD_TOKEN_ADDRESS: !!process.env.SSD_TOKEN_ADDRESS,
+        SD_TOKEN_ADDRESS: !!process.env.SD_TOKEN_ADDRESS,
       },
     };
 

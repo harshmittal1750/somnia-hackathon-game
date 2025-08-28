@@ -31,7 +31,7 @@ class Web3Service {
     }
 
     this.contractAddress = process.env.CONTRACT_ADDRESS;
-    this.ssdTokenAddress = process.env.SSD_TOKEN_ADDRESS;
+    this.ssdTokenAddress = process.env.SD_TOKEN_ADDRESS;
 
     // Minimal contract ABI for SD rewards
     this.contractABI = [
@@ -203,8 +203,9 @@ class Web3Service {
         throw new Error("Invalid player address");
       }
 
-      const [earned, spent, balance] =
-        await this.contract.getPlayerSSDStats(playerAddress);
+      const [earned, spent, balance] = await this.contract.getPlayerSSDStats(
+        playerAddress
+      );
 
       return {
         earned: parseFloat(ethers.formatEther(earned)),

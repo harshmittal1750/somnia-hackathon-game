@@ -32,24 +32,22 @@ async function main() {
 
   // Deploy the contract
   console.log("🔨 Compiling and deploying SpaceDefender...");
-  const SpaceDefender = await ethers.getContractFactory(
-    "SpaceDefender"
-  );
+  const SpaceDefender = await ethers.getContractFactory("SpaceDefender");
 
   // SD Token address (replace with actual address)
-  const SSD_TOKEN_ADDRESS =
-    process.env.SSD_TOKEN_ADDRESS ||
+  const SD_TOKEN_ADDRESS =
+    process.env.SD_TOKEN_ADDRESS ||
     "0x0000000000000000000000000000000000000000";
-  console.log("🪙 SD Token Address:", SSD_TOKEN_ADDRESS);
+  console.log("🪙 SD Token Address:", SD_TOKEN_ADDRESS);
 
   // Estimate gas with constructor parameter
   const estimatedGas = await SpaceDefender.signer.estimateGas(
-    SpaceDefender.getDeployTransaction(SSD_TOKEN_ADDRESS)
+    SpaceDefender.getDeployTransaction(SD_TOKEN_ADDRESS)
   );
   console.log("⛽ Estimated gas:", estimatedGas.toString());
 
   // Deploy with gas optimization
-  const contract = await SpaceDefender.deploy(SSD_TOKEN_ADDRESS, {
+  const contract = await SpaceDefender.deploy(SD_TOKEN_ADDRESS, {
     gasLimit: estimatedGas.mul(120).div(100), // 20% buffer
   });
 
@@ -73,7 +71,7 @@ async function main() {
   console.log(`   GAME_SCORE: '${contract.address}'`);
   console.log("\n2. Verify contract on block explorer:");
   console.log(
-    `   https://testnet.somniaexplorer.com/address/${contract.address}`
+    `   https://testnet-explorer.riselabs.xyz/address/${contract.address}`
   );
   console.log("\n3. Test the game with the new contract!");
 
@@ -83,7 +81,7 @@ async function main() {
     transactionHash: contract.deployTransaction.hash,
     deployerAddress: deployer.address,
     timestamp: new Date().toISOString(),
-    network: "somnia-testnet",
+    network: "rise-testnet",
     gasUsed: estimatedGas.toString(),
     version: "1.0.0",
   };

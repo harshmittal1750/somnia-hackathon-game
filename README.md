@@ -1,6 +1,6 @@
 # 🚀 Space Defender
 
-An addictive 2D space shooter game built for the Rise Hackathon. Defend the galaxy against alien invasion with smooth gameplay, Web3 integration, and on-chain scoring!
+An addictive 2D space shooter game built for blockchain gaming. Defend the galaxy against alien invasion with smooth gameplay, Web3 integration, and on-chain scoring!
 
 ![Game Banner](https://img.shields.io/badge/Rise-Space%20Defender-blue?style=for-the-badge&logo=ethereum)
 ![Solidity](https://img.shields.io/badge/Solidity-^0.8.19-brightgreen?style=flat-square)
@@ -70,7 +70,7 @@ Spend your earned SD tokens on game-changing boosts:
 
 #### 💎 Trading & Liquidity
 
-- **Trade SD**: Buy/sell tokens on [Euclid Swap](https://testnet.euclidswap.io/pools/ssd.eucl-stt)
+- **Trade SD**: Buy/sell tokens on [Euclid Swap](https://testnet.euclidswap.io/pools/sd.eucl-eth)
 - **Liquidity Mining**: Provide liquidity for additional rewards (coming soon)
 - **Token Economics**: Drive ecosystem growth through gameplay engagement
 
@@ -226,8 +226,8 @@ Experience immersive space travel as you progress through different cosmic regio
 
 ```bash
 # Clone the repository
-git clone https://github.com/[USERNAME]/rise-hackathon-game.git
-cd rise-hackathon-game
+git clone https://github.com/[USERNAME]/space-defender-game.git
+cd space-defender-game
 
 # Serve the files (any static server works)
 # Option A: Python
@@ -255,7 +255,7 @@ http://localhost:8000
 ### Project Structure
 
 ```
-rise-hackathon-game/
+space-defender-game/
 ├── index.html              # Main game page with faucet panel
 ├── styles/
 │   └── main.css            # Enhanced styling with transition effects
@@ -271,8 +271,8 @@ rise-hackathon-game/
 │   └── services/
 │       └── apiService.js   # Backend API communication
 ├── contracts/
-│   ├── RiseSpaceDefender.sol        # Full smart contract
-│   └── RiseSpaceDefenderMinimal.sol # Minimal SSSDewards contract
+│   ├── SpaceDefender.sol        # Full smart contract
+│   └── SpaceDefenderMinimal.sol # Minimal SD rewards contract
 ├── backend/                # Express.js backend server
 │   ├── api/               # API endpoints
 │   ├── models/            # Database models
