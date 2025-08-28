@@ -3,7 +3,12 @@ require("dotenv").config();
 
 class Web3Service {
   constructor() {
-    this.provider = new ethers.JsonRpcProvider(process.env.SOMNIA_RPC_URL);
+    // Default to RISE Testnet, but allow override via environment
+    const rpcUrl =
+      process.env.RPC_URL ||
+      process.env.RISE_RPC_URL ||
+      "https://testnet.riselabs.xyz";
+    this.provider = new ethers.JsonRpcProvider(rpcUrl);
 
     // Check if private key is valid before creating wallet
     if (
@@ -31,19 +36,24 @@ class Web3Service {
     }
 
     this.contractAddress = process.env.CONTRACT_ADDRESS;
-    this.ssdTokenAddress = process.env.SSD_TOKEN_ADDRESS;
+    this.sdTokenAddress =
+      process.env.SD_TOKEN_ADDRESS || process.env.SSD_TOKEN_ADDRESS; // Backward compatibility
 
-    // Minimal contract ABI for SSD rewards
+    // Minimal contract ABI for SD rewards (Multi-chain compatible)
     this.contractABI = [
-      "function claimSSDReward(address player, uint16 aliensKilled) external",
+      "function claimSDReward(address player, uint16 aliensKilled) external",
       "function verifyTwitter(string memory _twitterHandle) external",
       "function isTwitterVerified(address _player) external view returns (bool)",
-      "function getPlayerSSDStats(address player) external view returns (uint256 earned, uint256 spent, uint256 balance)",
+      "function getPlayerSDStats(address player) external view returns (uint256 earned, uint256 spent, uint256 balance)",
       "function fundContract(uint256 amount) external",
-      "function withdrawSSD(uint256 amount) external",
+      "function withdrawSD(uint256 amount) external",
       "function getContractInfo() external view returns (address contractOwner, bool isActive, address tokenAddress, uint256 contractBalance, string memory version)",
-      "event SSDRewardClaimed(address indexed player, uint256 aliensKilled, uint256 ssdAmount)",
-      "event TwitterRewardClaimed(address indexed player, string twitterHandle, uint256 ssdAmount)",
+      // Bridge-related functions for multi-chain support
+      "function bridgeTokens(uint256 amount, uint256 targetChainId) external",
+      "function getBridgeInfo() external view returns (bool isActive, uint256[] memory supportedChains)",
+      "event SDRewardClaimed(address indexed player, uint256 aliensKilled, uint256 sdAmount)",
+      "event TwitterRewardClaimed(address indexed player, string twitterHandle, uint256 sdAmount)",
+      "event TokensBridged(address indexed user, uint256 amount, uint256 targetChainId)",
     ];
 
     if (this.wallet) {
@@ -54,16 +64,16 @@ class Web3Service {
       );
     }
 
-    this.SSD_PER_KILL = ethers.parseEther("0.01"); // 0.01 SSD per kill
+    this.SD_PER_KILL = ethers.parseEther("0.01"); // 0.01 SD per kill
   }
 
   /**
-   * Reward SSD tokens to player for aliens killed
+   * Reward SD tokens to player for aliens killed
    */
-  async rewardSSD(playerAddress, aliensKilled) {
+  async rewardSD(playerAddress, aliensKilled) {
     try {
       if (!this.isEnabled) {
-        console.warn("⚠️ Web3 service disabled - skipping SSD reward");
+        console.warn("⚠️ Web3 service disabled - skipping SD reward");
         return {
           success: false,
           message: "Web3 service not configured",
@@ -80,16 +90,16 @@ class Web3Service {
       }
 
       console.log(
-        `💰 Rewarding SSD to ${playerAddress} for ${aliensKilled} aliens killed`
+        `💰 Rewarding SD to ${playerAddress} for ${aliensKilled} aliens killed`
       );
 
       // Check contract balance first
       const contractInfo = await this.contract.getContractInfo();
       const contractBalance = contractInfo.contractBalance;
-      const rewardAmount = this.SSD_PER_KILL.mul(aliensKilled);
+      const rewardAmount = this.SD_PER_KILL * BigInt(aliensKilled);
 
-      if (contractBalance.lt(rewardAmount)) {
-        console.warn("⚠️ Insufficient contract balance for SSD reward");
+      if (contractBalance < rewardAmount) {
+        console.warn("⚠️ Insufficient contract balance for SD reward");
         return {
           success: false,
           error: "Insufficient contract balance",
@@ -98,7 +108,7 @@ class Web3Service {
       }
 
       // Execute the reward transaction
-      const tx = await this.contract.claimSSDReward(
+      const tx = await this.contract.claimSDReward(
         playerAddress,
         aliensKilled,
         {
@@ -106,26 +116,26 @@ class Web3Service {
         }
       );
 
-      console.log(`🔗 SSD reward transaction sent: ${tx.hash}`);
+      console.log(`🔗 SD reward transaction sent: ${tx.hash}`);
 
       // Wait for confirmation
       const receipt = await tx.wait();
 
       if (receipt.status === 1) {
-        const ssdAmount = parseFloat(ethers.formatEther(rewardAmount));
-        console.log(`✅ SSD reward successful: ${ssdAmount} SSD`);
+        const sdAmount = parseFloat(ethers.formatEther(rewardAmount));
+        console.log(`✅ SD reward successful: ${sdAmount} SD`);
 
         return {
           success: true,
           txHash: tx.hash,
-          amount: ssdAmount,
+          amount: sdAmount,
           blockNumber: receipt.blockNumber,
         };
       } else {
         throw new Error("Transaction failed");
       }
     } catch (error) {
-      console.error("❌ SSD reward failed:", error);
+      console.error("❌ SD reward failed:", error);
 
       // Return graceful failure - don't break score submission
       return {
@@ -137,7 +147,7 @@ class Web3Service {
   }
 
   /**
-   * Verify Twitter account and reward SSD tokens
+   * Verify Twitter account and reward SD tokens
    */
   async verifyTwitter(playerAddress, twitterHandle) {
     try {
@@ -195,17 +205,16 @@ class Web3Service {
   }
 
   /**
-   * Get player's SSD statistics from contract
+   * Get player's SD statistics from contract
    */
-  async getPlayerSSDStats(playerAddress) {
+  async getPlayerSDStats(playerAddress) {
     try {
       if (!ethers.isAddress(playerAddress)) {
         throw new Error("Invalid player address");
       }
 
-      const [earned, spent, balance] = await this.contract.getPlayerSSDStats(
-        playerAddress
-      );
+      const [earned, spent, balance] =
+        await this.contract.getPlayerSDStats(playerAddress);
 
       return {
         earned: parseFloat(ethers.formatEther(earned)),
@@ -213,7 +222,7 @@ class Web3Service {
         balance: parseFloat(ethers.formatEther(balance)),
       };
     } catch (error) {
-      console.error("Failed to get player SSD stats:", error);
+      console.error("Failed to get player SD stats:", error);
       return {
         earned: 0,
         spent: 0,
@@ -223,22 +232,22 @@ class Web3Service {
   }
 
   /**
-   * Fund the contract with SSD tokens (admin function)
+   * Fund the contract with SD tokens (admin function)
    */
   async fundContract(amount) {
     try {
       const amountWei = ethers.parseEther(amount.toString());
 
       // First approve the tokens
-      const ssdContract = new ethers.Contract(
-        this.ssdTokenAddress,
+      const sdContract = new ethers.Contract(
+        this.sdTokenAddress,
         [
           "function approve(address spender, uint256 amount) external returns (bool)",
         ],
         this.wallet
       );
 
-      const approveTx = await ssdContract.approve(
+      const approveTx = await sdContract.approve(
         this.contractAddress,
         amountWei
       );
@@ -283,6 +292,84 @@ class Web3Service {
    */
   isValidAddress(address) {
     return ethers.isAddress(address);
+  }
+
+  /**
+   * Bridge SD tokens to another chain
+   */
+  async bridgeTokens(amount, targetChainId) {
+    try {
+      if (!this.isEnabled) {
+        console.warn("⚠️ Web3 service disabled - skipping bridge");
+        return {
+          success: false,
+          message: "Web3 service not configured",
+          txHash: null,
+        };
+      }
+
+      const amountWei = ethers.parseEther(amount.toString());
+
+      console.log(`🌉 Bridging ${amount} SD tokens to chain ${targetChainId}`);
+
+      // Execute the bridge transaction
+      const tx = await this.contract.bridgeTokens(amountWei, targetChainId, {
+        gasLimit: 500000,
+      });
+
+      console.log(`🔗 Bridge transaction sent: ${tx.hash}`);
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
+
+      if (receipt.status === 1) {
+        console.log(`✅ Bridge successful: ${amount} SD`);
+
+        return {
+          success: true,
+          txHash: tx.hash,
+          amount: parseFloat(amount),
+          targetChainId: targetChainId,
+          blockNumber: receipt.blockNumber,
+        };
+      } else {
+        throw new Error("Bridge transaction failed");
+      }
+    } catch (error) {
+      console.error("❌ Bridge failed:", error);
+      return {
+        success: false,
+        error: error.message,
+        amount: 0,
+      };
+    }
+  }
+
+  /**
+   * Get bridge information
+   */
+  async getBridgeInfo() {
+    try {
+      if (!this.isEnabled) {
+        return {
+          isActive: false,
+          supportedChains: [],
+        };
+      }
+
+      const [isActive, supportedChains] = await this.contract.getBridgeInfo();
+
+      return {
+        isActive,
+        supportedChains: supportedChains.map((chain) => Number(chain)),
+      };
+    } catch (error) {
+      console.error("Failed to get bridge info:", error);
+      return {
+        isActive: false,
+        supportedChains: [],
+      };
+    }
   }
 
   /**

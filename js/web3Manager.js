@@ -1,4 +1,4 @@
-// Somnia Space Defender - Web3 Manager
+// Space Defender - Web3 Manager
 class Web3Manager {
   constructor() {
     this.web3 = null;
@@ -33,6 +33,7 @@ class Web3Manager {
     if (typeof window.ethereum !== "undefined" && window.ethereum.isMetaMask) {
       this.web3 = new Web3(window.ethereum);
       this.setupEventListeners();
+      this.setupNetworkSelection();
 
       // Check if already connected and verify state
       try {
@@ -142,22 +143,24 @@ class Web3Manager {
           method: "eth_chainId",
         });
 
-        console.log(
-          `📡 Retrieved chain ID: ${chainId}, expected: ${CONFIG.NETWORK.chainId}`
-        );
+        console.log(`📡 Retrieved chain ID: ${chainId}`);
 
         this.networkId = chainId;
 
-        if (chainId === CONFIG.NETWORK.chainId) {
-          return { success: true, chainId };
+        // Check if current network is supported
+        if (NETWORK_UTILS.isSupportedNetwork(chainId)) {
+          const networkName = NETWORK_UTILS.getNetworkName(chainId);
+          console.log(`✅ Connected to supported network: ${networkName}`);
+          return { success: true, chainId, networkName };
         } else {
-          // Wrong network detected
+          // Unsupported network detected
+          const supportedNetworks = NETWORK_UTILS.getSupportedChainIds();
           return {
             success: false,
-            error: `Wrong network. Connected to ${chainId}, expected ${CONFIG.NETWORK.chainId}`,
+            error: `Unsupported network. Connected to ${chainId}, supported networks: ${supportedNetworks.join(", ")}`,
             wrongNetwork: true,
             currentChainId: chainId,
-            expectedChainId: CONFIG.NETWORK.chainId,
+            supportedChainIds: supportedNetworks,
           };
         }
       } catch (error) {
@@ -259,6 +262,282 @@ class Web3Manager {
     });
   }
 
+  setupNetworkSelection() {
+    // Network selection buttons (initial connection screen)
+    const selectRiseNetwork = document.getElementById("selectRiseNetwork");
+    const selectSomniaNetwork = document.getElementById("selectSomniaNetwork");
+
+    if (selectRiseNetwork) {
+      selectRiseNetwork.addEventListener("click", () => {
+        this.switchToSupportedNetwork("0xaa39db"); // RISE Testnet
+      });
+    }
+
+    if (selectSomniaNetwork) {
+      selectSomniaNetwork.addEventListener("click", () => {
+        this.switchToSupportedNetwork("0xc488"); // Somnia Testnet
+      });
+    }
+
+    // Game menu network switcher
+    this.setupGameNetworkSwitcher();
+
+    // Show network selection when appropriate
+    this.updateNetworkSelectionVisibility();
+  }
+
+  setupGameNetworkSwitcher() {
+    const networkSwitcherToggle = document.getElementById(
+      "networkSwitcherToggle"
+    );
+    const networkDropdown = document.getElementById("networkDropdown");
+    const currentNetworkDisplay = document.querySelector(
+      ".current-network-display"
+    );
+
+    // Toggle dropdown
+    if (networkSwitcherToggle && currentNetworkDisplay) {
+      const toggleDropdown = () => {
+        networkDropdown.classList.toggle("hidden");
+      };
+
+      networkSwitcherToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleDropdown();
+      });
+
+      currentNetworkDisplay.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleDropdown();
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener("click", (e) => {
+        if (
+          !networkDropdown.classList.contains("hidden") &&
+          !e.target.closest(".network-switcher")
+        ) {
+          networkDropdown.classList.add("hidden");
+        }
+      });
+    }
+
+    // Network option clicks
+    const networkOptions = document.querySelectorAll(".network-option");
+    networkOptions.forEach((option) => {
+      option.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const chainId = option.getAttribute("data-chain-id");
+        if (chainId && chainId !== this.networkId) {
+          this.switchToSupportedNetwork(chainId);
+        }
+        networkDropdown.classList.add("hidden");
+      });
+    });
+
+    // Update the display initially
+    this.updateGameNetworkDisplay();
+  }
+
+  updateNetworkSelectionVisibility() {
+    const networkSelection = document.getElementById("networkSelection");
+    if (!networkSelection) return;
+
+    // Show network selection if:
+    // 1. Wallet is connected but on unsupported network, OR
+    // 2. No wallet connected yet (as an option)
+    const shouldShow =
+      (this.isConnected && !NETWORK_UTILS.isSupportedNetwork(this.networkId)) ||
+      !this.isConnected;
+
+    if (shouldShow) {
+      networkSelection.classList.remove("hidden");
+    } else {
+      networkSelection.classList.add("hidden");
+    }
+  }
+
+  updateGameNetworkDisplay() {
+    const currentNetworkText = document.getElementById("currentNetworkText");
+    const networkDot = document.querySelector(".network-dot");
+    const networkOptions = document.querySelectorAll(".network-option");
+
+    if (!currentNetworkText || !networkDot) return;
+
+    // Update current network display
+    if (this.isConnected && this.networkId) {
+      const networkInfo = NETWORK_UTILS.getNetworkInfo(this.networkId);
+
+      if (networkInfo) {
+        // Supported network
+        currentNetworkText.textContent = networkInfo.chainName;
+        networkDot.className = "network-dot";
+        networkDot.style.background = "#90ff90";
+      } else {
+        // Unsupported network
+        currentNetworkText.textContent = "Unsupported Network";
+        networkDot.className = "network-dot unsupported";
+        networkDot.style.background = "#ffa500";
+      }
+    } else {
+      // Not connected
+      currentNetworkText.textContent = "Not Connected";
+      networkDot.className = "network-dot disconnected";
+      networkDot.style.background = "#ff6b6b";
+    }
+
+    // Update active state in dropdown
+    networkOptions.forEach((option) => {
+      const chainId = option.getAttribute("data-chain-id");
+      if (chainId === this.networkId) {
+        option.classList.add("active");
+      } else {
+        option.classList.remove("active");
+      }
+    });
+  }
+
+  updateDynamicNetworkResources() {
+    const dynamicNetworkResources = document.getElementById(
+      "dynamicNetworkResources"
+    );
+    const networkResourcesTitle = document.getElementById(
+      "networkResourcesTitle"
+    );
+    const networkResourcesContent = document.getElementById(
+      "networkResourcesContent"
+    );
+
+    // Only show in network selection screen, not in game menu
+    const networkSelection = document.getElementById("networkSelection");
+    const isNetworkSelectionVisible =
+      networkSelection && !networkSelection.classList.contains("hidden");
+
+    if (
+      !dynamicNetworkResources ||
+      !networkResourcesTitle ||
+      !networkResourcesContent ||
+      !isNetworkSelectionVisible
+    ) {
+      if (dynamicNetworkResources) {
+        dynamicNetworkResources.classList.add("hidden");
+      }
+      return;
+    }
+
+    // Define network-specific resources
+    const networkResources = {
+      "0xaa39db": {
+        // RISE Testnet
+        name: "RISE Testnet",
+        icon: "🚀",
+        resources: [
+          {
+            icon: "🚰",
+            label: "Get Test ETH",
+            subtitle: "RISE Faucet",
+            url: "https://faucet.risechain.com/",
+          },
+          {
+            icon: "🔍",
+            label: "Block Explorer",
+            subtitle: "View Transactions",
+            url: "https://explorer.testnet.riselabs.xyz",
+          },
+          {
+            icon: "📚",
+            label: "Documentation",
+            subtitle: "Learn More",
+            url: "https://docs.riselabs.xyz",
+          },
+          {
+            icon: "💬",
+            label: "Discord",
+            subtitle: "Community",
+            url: "https://discord.gg/rise",
+          },
+        ],
+      },
+      "0xc488": {
+        // Somnia Testnet
+        name: "Somnia Testnet",
+        icon: "💫",
+        resources: [
+          {
+            icon: "🚰",
+            label: "Get Test STT",
+            subtitle: "Official Faucet",
+            url: "https://testnet.somnia.network",
+          },
+          {
+            icon: "⛽",
+            label: "Gas.zip Faucet",
+            subtitle: "Alternative",
+            url: "https://www.gas.zip/faucet/somnia",
+          },
+          {
+            icon: "🔍",
+            label: "Block Explorer",
+            subtitle: "Shannon Explorer",
+            url: "https://shannon-explorer.somnia.network",
+          },
+          {
+            icon: "🔄",
+            label: "Trade SD Tokens",
+            subtitle: "Euclid Swap",
+            url: "https://testnet.euclidswap.io/swap",
+          },
+        ],
+      },
+    };
+
+    // Show/hide and populate resources based on current network
+    if (
+      this.isConnected &&
+      this.networkId &&
+      networkResources[this.networkId]
+    ) {
+      const currentNetwork = networkResources[this.networkId];
+
+      // Update title with current network
+      networkResourcesTitle.innerHTML = `${currentNetwork.icon} ${currentNetwork.name} Resources`;
+
+      // Clear and populate resources
+      networkResourcesContent.innerHTML = "";
+
+      currentNetwork.resources.forEach((resource) => {
+        const resourceItem = document.createElement("a");
+        resourceItem.href = resource.url;
+        resourceItem.target = "_blank";
+        resourceItem.className = "network-resource-item";
+
+        resourceItem.innerHTML = `
+          <div class="network-resource-icon">${resource.icon}</div>
+          <div class="network-resource-label">
+            ${resource.label}
+            <div class="network-resource-subtitle">${resource.subtitle}</div>
+          </div>
+        `;
+
+        networkResourcesContent.appendChild(resourceItem);
+      });
+
+      dynamicNetworkResources.classList.remove("hidden");
+    } else if (this.isConnected && this.networkId) {
+      // Connected but unsupported network
+      networkResourcesTitle.innerHTML = "⚠️ Unsupported Network";
+      networkResourcesContent.innerHTML = `
+        <div style="text-align: center; color: #ffa500; padding: 20px;">
+          <p>Switch to RISE or Somnia testnet to see network resources</p>
+        </div>
+      `;
+      dynamicNetworkResources.classList.remove("hidden");
+    } else {
+      // Not connected
+      dynamicNetworkResources.classList.add("hidden");
+    }
+  }
+
   async connectWallet() {
     if (!window.ethereum) {
       this.showInstallMetaMaskPrompt();
@@ -273,7 +552,7 @@ class Web3Manager {
 
       if (accounts.length > 0) {
         await this.handleAccountsChanged(accounts);
-        await this.ensureSomniaNetwork();
+        await this.checkCurrentNetwork();
         return true;
       }
     } catch (error) {
@@ -284,52 +563,94 @@ class Web3Manager {
     return false;
   }
 
-  async ensureSomniaNetwork() {
+  async checkCurrentNetwork() {
     try {
       const currentChainId = await window.ethereum.request({
         method: "eth_chainId",
       });
 
-      if (currentChainId !== CONFIG.NETWORK.chainId) {
-        await this.switchToSomniaNetwork();
+      if (!NETWORK_UTILS.isSupportedNetwork(currentChainId)) {
+        console.log(
+          "🔄 Current network not supported, offering to switch to RISE..."
+        );
+        await this.switchToSupportedNetwork("0xaa39db"); // Default to RISE
+      } else {
+        console.log(
+          `✅ Current network is supported: ${NETWORK_UTILS.getNetworkName(currentChainId)}`
+        );
       }
     } catch (error) {
-      console.error("Failed to ensure Somnia network:", error);
+      console.error("Failed to check current network:", error);
     }
   }
 
-  async switchToSomniaNetwork() {
+  async switchToSupportedNetwork(targetChainId) {
+    const networkInfo = NETWORK_UTILS.getNetworkInfo(targetChainId);
+    if (!networkInfo) {
+      console.error("Invalid target network:", targetChainId);
+      return;
+    }
+
+    // Show loading feedback
+    this.showInfo(`🔄 Switching to ${networkInfo.chainName}...`);
+
     try {
-      // Try to switch to Somnia testnet
+      // Try to switch to target network
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
-        params: [{ chainId: CONFIG.NETWORK.chainId }],
+        params: [{ chainId: targetChainId }],
       });
+
+      this.showSuccess(`✅ Successfully switched to ${networkInfo.chainName}!`);
     } catch (switchError) {
       // If network doesn't exist, add it
-      if (switchError.code === 4902) {
+      // Error codes that indicate chain needs to be added:
+      // 4902: Chain not added to wallet
+      // -32603: Internal error (often means chain not recognized)
+      if (
+        switchError.code === 4902 ||
+        switchError.code === -32603 ||
+        (switchError.message &&
+          switchError.message.includes("Unrecognized chain ID"))
+      ) {
         try {
+          this.showInfo(`🔧 Adding ${networkInfo.chainName} to your wallet...`);
+
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
             params: [
               {
-                chainId: CONFIG.NETWORK.chainId,
-                chainName: CONFIG.NETWORK.chainName,
-                rpcUrls: CONFIG.NETWORK.rpcUrls,
-                nativeCurrency: CONFIG.NETWORK.nativeCurrency,
-                blockExplorerUrls: CONFIG.NETWORK.blockExplorerUrls,
+                chainId: networkInfo.chainId,
+                chainName: networkInfo.chainName,
+                rpcUrls: networkInfo.rpcUrls,
+                nativeCurrency: networkInfo.nativeCurrency,
+                blockExplorerUrls: networkInfo.blockExplorerUrls,
               },
             ],
           });
+
+          this.showSuccess(
+            `✅ Successfully added and switched to ${networkInfo.chainName}!`
+          );
         } catch (addError) {
-          console.error("Failed to add Somnia network:", addError);
+          console.error(`Failed to add ${networkInfo.chainName}:`, addError);
           this.showError(
-            "Failed to add Somnia network. Please add it manually."
+            `❌ Failed to add ${networkInfo.chainName}. Please add it manually in your wallet settings.`
           );
         }
+      } else if (switchError.code === 4001) {
+        // User rejected the request
+        this.showWarning(
+          `⚠️ Network switch cancelled. Please switch to ${networkInfo.chainName} to continue.`
+        );
       } else {
-        console.error("Failed to switch to Somnia network:", switchError);
-        this.showError("Please switch to Somnia testnet manually.");
+        console.error(
+          `Failed to switch to ${networkInfo.chainName}:`,
+          switchError
+        );
+        this.showError(
+          `❌ Please switch to ${networkInfo.chainName} manually in your wallet.`
+        );
       }
     }
   }
@@ -343,6 +664,11 @@ class Web3Manager {
 
       // Update UI
       this.updateWalletUI();
+      this.updateNetworkSelectionVisibility();
+      this.updateGameNetworkDisplay();
+
+      // Only update dynamic resources if in network selection screen
+      this.updateDynamicNetworkResources();
 
       // Initialize contracts
       await this.initializeContracts();
@@ -362,27 +688,37 @@ class Web3Manager {
 
     // Update UI to reflect network status
     this.updateWalletUI();
+    this.updateNetworkSelectionVisibility();
+    this.updateGameNetworkDisplay();
 
-    if (chainId !== CONFIG.NETWORK.chainId) {
+    // Only update dynamic resources if in network selection screen
+    this.updateDynamicNetworkResources();
+
+    if (!NETWORK_UTILS.isSupportedNetwork(chainId)) {
+      const supportedNetworks = NETWORK_UTILS.getSupportedChainIds()
+        .map((id) => NETWORK_UTILS.getNetworkName(id))
+        .join(", ");
+
       console.warn(
-        "⚠️ Wrong network detected:",
+        "⚠️ Unsupported network detected:",
         chainId,
-        "Expected:",
-        CONFIG.NETWORK.chainId
+        "Supported:",
+        supportedNetworks
       );
       this.showWarning(
-        "Please switch to Somnia testnet for full functionality."
+        `Please switch to a supported network: ${supportedNetworks}`
       );
 
-      // Disable game functionality on wrong network
+      // Disable game functionality on unsupported network
       this.onWrongNetwork();
     } else {
-      console.log("✅ Connected to correct network:", CONFIG.NETWORK.chainName);
+      const networkName = NETWORK_UTILS.getNetworkName(chainId);
+      console.log("✅ Connected to supported network:", networkName);
       this.onCorrectNetwork();
 
-      // If we're now on the correct network and have an account, enable game functionality
+      // If we're now on a supported network and have an account, enable game functionality
       if (this.account && window.gameApp) {
-        console.log("🎮 Network is now correct, updating game UI");
+        console.log("🎮 Network is supported, updating game UI");
         // Small delay to let UI update
         setTimeout(() => {
           if (window.gameApp.updateGameAvailability) {
@@ -410,6 +746,11 @@ class Web3Manager {
   handleDisconnect() {
     this.resetState();
     this.updateWalletUI();
+    this.updateNetworkSelectionVisibility();
+    this.updateGameNetworkDisplay();
+
+    // Hide dynamic resources when disconnected
+    this.updateDynamicNetworkResources();
 
     if (this.onDisconnect) {
       this.onDisconnect();
@@ -427,18 +768,18 @@ class Web3Manager {
   // Check if we can proceed with game functionality
   canPlayGame() {
     const connected = this.isConnected && this.account;
-    const correctNetwork = this.networkId === CONFIG.NETWORK.chainId;
+    const supportedNetwork = NETWORK_UTILS.isSupportedNetwork(this.networkId);
 
     console.log("🎮 canPlayGame check:", {
       isConnected: this.isConnected,
       hasAccount: !!this.account,
       networkId: this.networkId,
-      expectedNetwork: CONFIG.NETWORK.chainId,
+      networkName: NETWORK_UTILS.getNetworkName(this.networkId),
       connected,
-      correctNetwork,
+      supportedNetwork,
     });
 
-    return connected && correctNetwork;
+    return connected && supportedNetwork;
   }
 
   // Enhanced network check with retry
@@ -451,7 +792,7 @@ class Web3Manager {
           });
           console.log(`🌐 Network verification attempt ${i + 1}: ${chainId}`);
           this.networkId = chainId;
-          return chainId === CONFIG.NETWORK.chainId;
+          return NETWORK_UTILS.isSupportedNetwork(chainId);
         }
       } catch (error) {
         console.warn(`Network check attempt ${i + 1} failed:`, error);
@@ -498,7 +839,7 @@ class Web3Manager {
         stateMutability: "view",
         type: "function",
       },
-      // SSD Shop functions
+      // SD Shop functions
       {
         inputs: [{ name: "_itemId", type: "uint256" }],
         name: "buyShopItem",
@@ -567,10 +908,10 @@ class Web3Manager {
         stateMutability: "view",
         type: "function",
       },
-      // SSD stats function
+      // SD stats function
       {
         inputs: [{ name: "_player", type: "address" }],
-        name: "getPlayerSSDStats",
+        name: "getPlayerSDStats",
         outputs: [
           { name: "earned", type: "uint256" },
           { name: "spent", type: "uint256" },
@@ -582,7 +923,7 @@ class Web3Manager {
       // Admin functions
       {
         inputs: [{ name: "_amount", type: "uint256" }],
-        name: "withdrawSSD",
+        name: "withdrawSD",
         outputs: [],
         stateMutability: "nonpayable",
         type: "function",
@@ -597,7 +938,7 @@ class Web3Manager {
       // Additional needed functions
       {
         inputs: [{ name: "_newTokenAddress", type: "address" }],
-        name: "updateSSDToken",
+        name: "updateSDToken",
         outputs: [],
         stateMutability: "nonpayable",
         type: "function",
@@ -607,14 +948,19 @@ class Web3Manager {
 
   async initializeContracts() {
     try {
-      // Initialize game contract (now deployed!)
-      if (
-        CONFIG.CONTRACTS.GAME_SCORE &&
-        CONFIG.CONTRACTS.GAME_SCORE !== "0x..."
-      ) {
+      // Get contracts for current network
+      const currentContracts = NETWORK_UTILS.getCurrentContracts(
+        this.networkId
+      );
+      const networkName = NETWORK_UTILS.getNetworkName(this.networkId);
+
+      console.log(`📄 Initializing contracts for ${networkName}...`);
+
+      // Initialize game contract if available
+      if (currentContracts.GAME_SCORE && currentContracts.GAME_SCORE !== "") {
         console.log(
           "📄 Initializing game contract:",
-          CONFIG.CONTRACTS.GAME_SCORE
+          currentContracts.GAME_SCORE
         );
 
         // Load the complete ABI from artifacts
@@ -623,13 +969,18 @@ class Web3Manager {
         // Initialize the contract instance with complete ABI
         this.gameContract = new this.web3.eth.Contract(
           contractABI,
-          CONFIG.CONTRACTS.GAME_SCORE
+          currentContracts.GAME_SCORE
         );
 
         console.log("✅ Game contract initialized successfully!");
+      } else {
+        console.warn(`⚠️ No game contract deployed on ${networkName}`);
+        this.gameContract = null;
       }
 
-      console.log("📄 Contracts ready for blockchain interaction!");
+      console.log(
+        `📄 Contracts ready for ${networkName} blockchain interaction!`
+      );
     } catch (error) {
       console.error("Failed to initialize contracts:", error);
     }
@@ -677,7 +1028,7 @@ class Web3Manager {
             });
 
           blockchainTxHash = tx.transactionHash;
-          ssdReward = aliensKilled * 0.01; // 0.01 SSD per alien
+          ssdReward = aliensKilled * 0.01; // 0.01 SD per alien
 
           console.log("✅ Blockchain submission successful!", {
             txHash: blockchainTxHash,
@@ -687,8 +1038,8 @@ class Web3Manager {
           // Update local high score immediately after blockchain success
           this.saveScoreLocally(score, level);
 
-          // Show SSD reward notification immediately
-          this.showSSDRewardNotification(ssdReward, aliensKilled);
+          // Show SD reward notification immediately
+          this.showSDRewardNotification(ssdReward, aliensKilled);
         } catch (blockchainError) {
           console.error("❌ Blockchain submission failed:", blockchainError);
           throw new Error(
@@ -725,7 +1076,7 @@ class Web3Manager {
         playerAddress:
           this.account || "0x0000000000000000000000000000000000000000",
         blockchainTxHash, // Include blockchain transaction hash
-        ssdAlreadyRewarded: ssdReward > 0, // Tell backend SSD was already rewarded
+        ssdAlreadyRewarded: ssdReward > 0, // Tell backend SD was already rewarded
       };
 
       const result = await apiService.submitScore(submitData);
@@ -1060,11 +1411,11 @@ class Web3Manager {
       walletAddress.textContent = UTILS.formatAddress(this.account);
 
       // Update network name
-      if (this.networkId === CONFIG.NETWORK.chainId) {
-        networkName.textContent = CONFIG.NETWORK.chainName;
+      if (NETWORK_UTILS.isSupportedNetwork(this.networkId)) {
+        networkName.textContent = NETWORK_UTILS.getNetworkName(this.networkId);
         networkName.style.color = "#00ff00";
       } else {
-        networkName.textContent = "Wrong Network";
+        networkName.textContent = "Unsupported Network";
         networkName.style.color = "#ff4444";
       }
     }
@@ -1095,7 +1446,10 @@ class Web3Manager {
 
   showWarning(message) {
     console.warn("⚠️", message);
-    // You can implement a toast notification system here
+    // Show user-friendly notification for warnings
+    if (window.gameApp && window.gameApp.showNotification) {
+      window.gameApp.showNotification(message, "warning", 4000);
+    }
   }
 
   showSuccess(message) {
@@ -1103,6 +1457,14 @@ class Web3Manager {
     // Show user-friendly notification instead of console only
     if (window.gameApp && window.gameApp.showNotification) {
       window.gameApp.showNotification(message, "success", 3000);
+    }
+  }
+
+  showInfo(message) {
+    console.log("ℹ️", message);
+    // Show user-friendly notification for info messages
+    if (window.gameApp && window.gameApp.showNotification) {
+      window.gameApp.showNotification(message, "info", 3000);
     }
   }
 
@@ -1190,18 +1552,22 @@ class Web3Manager {
     }
   }
 
-  isOnSomniaNetwork() {
-    return this.networkId === CONFIG.NETWORK.chainId;
+  isOnSupportedNetwork() {
+    return NETWORK_UTILS.isSupportedNetwork(this.networkId);
   }
 
-  // 🎉 SSD REWARD NOTIFICATION SYSTEM
+  getCurrentNetworkName() {
+    return NETWORK_UTILS.getNetworkName(this.networkId);
+  }
 
-  showSSDRewardNotification(ssdAmount, aliensKilled = 0, source = "Gameplay") {
-    if (window.gameApp && window.gameApp.showSSDReward) {
-      window.gameApp.showSSDReward(ssdAmount, aliensKilled, source);
+  // 🎉 SD REWARD NOTIFICATION SYSTEM
+
+  showSDRewardNotification(ssdAmount, aliensKilled = 0, source = "Gameplay") {
+    if (window.gameApp && window.gameApp.showSDReward) {
+      window.gameApp.showSDReward(ssdAmount, aliensKilled, source);
     } else {
       // Fallback notification
-      console.log(`🎉 SSD REWARD: +${ssdAmount} SSD from ${source}!`);
+      console.log(`🎉 SD REWARD: +${ssdAmount} SD from ${source}!`);
     }
 
     // Also trigger balance refresh
@@ -1222,14 +1588,14 @@ class Web3Manager {
   }
 
   triggerBalanceUpdate() {
-    if (window.gameApp && window.gameApp.refreshSSDBalances) {
+    if (window.gameApp && window.gameApp.refreshSDBalances) {
       setTimeout(() => {
-        window.gameApp.refreshSSDBalances();
+        window.gameApp.refreshSDBalances();
       }, 1000); // Delay to allow blockchain confirmation
     }
   }
 
-  // Check if player has an active boost from SSD shop
+  // Check if player has an active boost from SD shop
   async hasActiveBoost(itemId) {
     if (!this.gameContract || !this.account) {
       return false;
@@ -1247,7 +1613,7 @@ class Web3Manager {
     }
   }
 
-  // 🛍️ SSD SHOP FUNCTIONALITY
+  // 🛍️ SD SHOP FUNCTIONALITY
 
   async getShopItems() {
     if (!this.gameContract) {
@@ -1282,11 +1648,11 @@ class Web3Manager {
       const itemPrice = item.price;
 
       console.log(
-        `💰 Item price: ${this.web3.utils.fromWei(itemPrice, "ether")} SSD`
+        `💰 Item price: ${this.web3.utils.fromWei(itemPrice, "ether")} SD`
       );
 
-      // Step 1: Approve SSD token spending
-      console.log("📝 Approving SSD token spending...");
+      // Step 1: Approve SD token spending
+      console.log("📝 Approving SD token spending...");
       const ssdContract = new this.web3.eth.Contract(
         [
           {
@@ -1300,14 +1666,17 @@ class Web3Manager {
             type: "function",
           },
         ],
-        CONFIG.CONTRACTS.SSD_TOKEN
+        NETWORK_UTILS.getCurrentContracts(this.networkId).SD_TOKEN
       );
 
       const approveTx = await ssdContract.methods
-        .approve(CONFIG.CONTRACTS.GAME_SCORE, itemPrice)
+        .approve(
+          NETWORK_UTILS.getCurrentContracts(this.networkId).GAME_SCORE,
+          itemPrice
+        )
         .send({ from: this.account, gas: 1200000 });
 
-      console.log("✅ SSD approval successful:", approveTx.transactionHash);
+      console.log("✅ SD approval successful:", approveTx.transactionHash);
 
       // Step 2: Purchase the item
       console.log("🛒 Purchasing item...");
@@ -1355,8 +1724,8 @@ class Web3Manager {
       console.log("✅ Twitter verified:", tx.transactionHash);
 
       // 🎉 Show Twitter reward notification
-      const twitterReward = parseFloat(CONFIG.SSD.TWITTER_REWARD);
-      this.showSSDRewardNotification(twitterReward, 0, "Twitter Verification");
+      const twitterReward = parseFloat(CONFIG.SD.TWITTER_REWARD);
+      this.showSDRewardNotification(twitterReward, 0, "Twitter Verification");
 
       return true;
     } catch (error) {
@@ -1395,16 +1764,16 @@ class Web3Manager {
     }
   }
 
-  // 💰 SSD STATS FUNCTIONALITY
+  // 💰 SD STATS FUNCTIONALITY
 
-  async getSSDStats() {
+  async getSDStats() {
     if (!this.gameContract || !this.account) {
       return { earned: "0", spent: "0", balance: "0" };
     }
 
     try {
       const stats = await this.gameContract.methods
-        .getPlayerSSDStats(this.account)
+        .getPlayerSDStats(this.account)
         .call();
       return {
         earned: this.web3.utils.fromWei(stats.earned, "ether"),
@@ -1412,7 +1781,7 @@ class Web3Manager {
         balance: this.web3.utils.fromWei(stats.balance, "ether"),
       };
     } catch (error) {
-      console.error("Failed to get SSD stats:", error);
+      console.error("Failed to get SD stats:", error);
       return { earned: "0", spent: "0", balance: "0" };
     }
   }
@@ -1464,13 +1833,13 @@ class Web3Manager {
 
   // 👑 ADMIN FUNCTIONS FOR CONTRACT MANAGEMENT
 
-  async getContractSSDBalance() {
+  async getContractSDBalance() {
     if (!this.gameContract) {
       throw new Error("Game contract not initialized");
     }
 
     try {
-      // Get SSD token contract
+      // Get SD token contract
       const ssdContract = new this.web3.eth.Contract(
         [
           {
@@ -1481,15 +1850,15 @@ class Web3Manager {
             type: "function",
           },
         ],
-        CONFIG.CONTRACTS.SSD_TOKEN
+        NETWORK_UTILS.getCurrentContracts(this.networkId).SD_TOKEN
       );
 
       const balance = await ssdContract.methods
-        .balanceOf(CONFIG.CONTRACTS.GAME_SCORE)
+        .balanceOf(NETWORK_UTILS.getCurrentContracts(this.networkId).GAME_SCORE)
         .call();
       return this.web3.utils.fromWei(balance, "ether");
     } catch (error) {
-      console.error("Failed to get contract SSD balance:", error);
+      console.error("Failed to get contract SD balance:", error);
       return "0";
     }
   }
@@ -1500,9 +1869,9 @@ class Web3Manager {
     }
 
     try {
-      console.log(`💰 Funding contract with ${amount} SSD tokens...`);
+      console.log(`💰 Funding contract with ${amount} SD tokens...`);
 
-      // Get SSD token contract
+      // Get SD token contract
       const ssdContract = new this.web3.eth.Contract(
         [
           {
@@ -1516,13 +1885,16 @@ class Web3Manager {
             type: "function",
           },
         ],
-        CONFIG.CONTRACTS.SSD_TOKEN
+        NETWORK_UTILS.getCurrentContracts(this.networkId).SD_TOKEN
       );
 
       const amountWei = this.web3.utils.toWei(amount.toString(), "ether");
 
       const tx = await ssdContract.methods
-        .transfer(CONFIG.CONTRACTS.GAME_SCORE, amountWei)
+        .transfer(
+          NETWORK_UTILS.getCurrentContracts(this.networkId).GAME_SCORE,
+          amountWei
+        )
         .send({ from: this.account, gas: 1400000 });
 
       console.log("✅ Contract funded:", tx.transactionHash);
@@ -1539,12 +1911,12 @@ class Web3Manager {
     }
 
     try {
-      console.log(`💸 Withdrawing ${amount} SSD from contract...`);
+      console.log(`💸 Withdrawing ${amount} SD from contract...`);
 
       const amountWei = this.web3.utils.toWei(amount.toString(), "ether");
 
       const tx = await this.gameContract.methods
-        .withdrawSSD(amountWei)
+        .withdrawSD(amountWei)
         .send({ from: this.account, gas: 1200000 });
 
       console.log("✅ Withdrawal successful:", tx.transactionHash);

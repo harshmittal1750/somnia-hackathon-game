@@ -762,6 +762,85 @@ body::before {
   }
 }
 
+/* Dynamic Network Resources */
+.dynamic-network-resources {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(
+    145deg,
+    rgba(30, 30, 80, 0.4),
+    rgba(50, 50, 100, 0.4)
+  );
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 10px;
+  backdrop-filter: blur(5px);
+}
+
+.dynamic-network-resources h4 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 12px;
+  font-size: 1em;
+}
+
+.network-resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.network-resource-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background: rgba(20, 20, 60, 0.5);
+  border: 1px solid rgba(100, 150, 255, 0.2);
+  border-radius: 8px;
+  text-decoration: none;
+  color: #ccc;
+  transition: all 0.3s ease;
+  min-height: 70px;
+  justify-content: center;
+}
+
+.network-resource-item:hover {
+  background: rgba(40, 40, 80, 0.7);
+  border-color: rgba(100, 150, 255, 0.4);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 150, 255, 0.2);
+}
+
+.network-resource-icon {
+  font-size: 1.5em;
+  margin-bottom: 5px;
+}
+
+.network-resource-label {
+  font-size: 0.8em;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.network-resource-subtitle {
+  font-size: 0.7em;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+/* Current Network Indicator */
+.current-network-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: rgba(100, 150, 255, 0.2);
+  border: 1px solid rgba(100, 150, 255, 0.3);
+  border-radius: 12px;
+  font-size: 0.8em;
+  color: #ccc;
+  margin-left: 8px;
+}
+
 /* Game Over Stats */
 .game-over-stats {
   margin: 20px 0;

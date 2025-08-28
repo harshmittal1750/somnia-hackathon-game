@@ -8,10 +8,10 @@ async function main() {
     "SomniaSpaceDefenderMinimal"
   );
 
-  // SSD Token address on Somnia testnet
+  // SD Token address on Somnia testnet
   const ssdTokenAddress = "0x1169936CB958c0E39c91Cf4A9A5C0d8B7103FD8F";
 
-  console.log("📄 Deploying with SSD Token address:", ssdTokenAddress);
+  console.log("📄 Deploying with SD Token address:", ssdTokenAddress);
 
   // Deploy the contract
   const contract = await SomniaSpaceDefenderMinimal.deploy(ssdTokenAddress);
@@ -29,13 +29,13 @@ async function main() {
   console.log("");
   console.log("📋 Contract Details:");
   console.log("  Address:", contract.address);
-  console.log("  SSD Token:", ssdTokenAddress);
+  console.log("  SD Token:", ssdTokenAddress);
   console.log("  Network: Somnia Testnet");
   console.log("");
   console.log("🔧 Next Steps:");
   console.log("1. Update CONFIG.CONTRACTS.GAME_SCORE in js/config.js");
   console.log("2. Update CONTRACT_ADDRESS in backend/.env");
-  console.log("3. Fund the contract with SSD tokens for rewards");
+  console.log("3. Fund the contract with SD tokens for rewards");
   console.log("4. Start the backend server");
   console.log("");
   console.log("💰 To fund the contract:");

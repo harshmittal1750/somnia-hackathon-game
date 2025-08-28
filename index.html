@@ -81,6 +81,107 @@
             <p>Network: <span id="networkName"></span></p>
           </div>
 
+          <!-- Network Selection -->
+          <div id="networkSelection" class="network-selection hidden">
+            <h4>🌐 Choose Your Network</h4>
+            <p class="network-description">
+              Select a supported network to play Space Defender:
+            </p>
+            <div class="network-options">
+              <button
+                id="selectRiseNetwork"
+                class="btn btn-network"
+                data-chain-id="0xaa39db"
+              >
+                <div class="network-info">
+                  <div class="network-icon">🚀</div>
+                  <div class="network-details">
+                    <div class="network-name">RISE Testnet</div>
+                    <div class="network-status">✅ Full SD Token Support</div>
+                    <div class="network-features">
+                      Play-to-Earn • Shop • Leaderboards
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                id="selectSomniaNetwork"
+                class="btn btn-network"
+                data-chain-id="0xc488"
+              >
+                <div class="network-info">
+                  <div class="network-icon">💫</div>
+                  <div class="network-details">
+                    <div class="network-name">Somnia Testnet</div>
+                    <div class="network-status">✅ Full SD Token Support</div>
+                    <div class="network-features">
+                      Play-to-Earn • Shop • Leaderboards
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            <div class="network-help">
+              <p class="help-text">
+                💡 Don't have the network? We'll help you add it to your wallet!
+              </p>
+              <div class="network-resources">
+                <div class="resource-group">
+                  <strong>RISE Testnet:</strong>
+                  <a
+                    href="https://faucet.risechain.com/"
+                    target="_blank"
+                    class="resource-link"
+                  >
+                    🚰 Get Test ETH
+                  </a>
+                  <a
+                    href="https://explorer.testnet.riselabs.xyz"
+                    target="_blank"
+                    class="resource-link"
+                  >
+                    🔍 Explorer
+                  </a>
+                </div>
+                <div class="resource-group">
+                  <strong>Somnia Testnet:</strong>
+                  <a
+                    href="https://testnet.somnia.network"
+                    target="_blank"
+                    class="resource-link"
+                  >
+                    🚰 Get Test STT
+                  </a>
+                  <a
+                    href="https://shannon-explorer.somnia.network"
+                    target="_blank"
+                    class="resource-link"
+                  >
+                    🔍 Explorer
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Network Resources -->
+            <div
+              id="dynamicNetworkResources"
+              class="dynamic-network-resources hidden"
+            >
+              <div class="current-network-resources">
+                <h4 id="networkResourcesTitle">🌐 Network Resources</h4>
+                <div
+                  id="networkResourcesContent"
+                  class="network-resources-grid"
+                >
+                  <!-- Resources will be populated dynamically based on connected network -->
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Wallet Download Options -->
           <div
             id="walletDownloadOptions"
@@ -227,7 +328,49 @@
       <!-- Game Menu -->
       <div id="gameMenu" class="panel hidden">
         <div class="panel-content">
-          <h2>🛸 Space Defender</h2>
+          <div class="game-header">
+            <h2>🛸 Space Defender</h2>
+            <!-- Network Switcher in Game Menu -->
+            <div id="gameNetworkSwitcher" class="network-switcher">
+              <div class="current-network-display">
+                <span class="network-indicator" id="currentNetworkIndicator">
+                  <span class="network-dot"></span>
+                  <span class="network-text" id="currentNetworkText"
+                    >Detecting...</span
+                  >
+                </span>
+                <button
+                  id="networkSwitcherToggle"
+                  class="network-switch-btn"
+                  title="Switch Network"
+                >
+                  🔄
+                </button>
+              </div>
+              <div id="networkDropdown" class="network-dropdown hidden">
+                <div class="network-option" data-chain-id="0xaa39db">
+                  <div class="network-option-info">
+                    <span class="network-icon">🚀</span>
+                    <div class="network-details">
+                      <div class="network-name">RISE Testnet</div>
+                      <div class="network-features">Fast • Low Fees</div>
+                    </div>
+                  </div>
+                  <span class="network-status rise-status">✅</span>
+                </div>
+                <div class="network-option" data-chain-id="0xc488">
+                  <div class="network-option-info">
+                    <span class="network-icon">💫</span>
+                    <div class="network-details">
+                      <div class="network-name">Somnia Testnet</div>
+                      <div class="network-features">Established • Reliable</div>
+                    </div>
+                  </div>
+                  <span class="network-status somnia-status">✅</span>
+                </div>
+              </div>
+            </div>
+          </div>
           <div class="level-selector">
             <h3>Select Difficulty Level</h3>
             <div class="level-grid">

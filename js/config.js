@@ -18,6 +18,7 @@ const CONFIG = {
         decimals: 18,
       },
       bridgeUrl: "https://bridge-ui.testnet.riselabs.xyz",
+      faucetUrl: "https://faucet.risechain.com/",
     },
     "0xc488": {
       // Somnia Testnet (50312)
