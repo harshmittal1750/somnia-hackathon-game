@@ -27,7 +27,7 @@ const CONFIG = {
   API: {
     BASE_URL: window.location.origin.includes("localhost")
       ? "http://localhost:3000/api"
-      : "https://somnia-space-defender-backend.vercel.app/api",
+      : "https://somnia-space-defender-backend-new.vercel.app/api",
 
     TIMEOUT: 10000,
     RETRY_ATTEMPTS: 3,
