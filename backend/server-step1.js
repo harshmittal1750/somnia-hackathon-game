@@ -25,6 +25,10 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://www.spacedefender.xyz/",
   "https://somnia-space-defender.vercel.app/",
+  "https://www.rise.spacedefender.xyz/",
+  "https://www.somnia.spacedefender.xyz/",
+  "https://rise.spacedefender.xyz/",
+  "https://somnia.spacedefender.xyz/",
   process.env.CORS_ORIGIN,
   process.env.FRONTEND_URL,
 ].filter(Boolean);
